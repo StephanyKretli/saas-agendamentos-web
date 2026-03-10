@@ -1,19 +1,21 @@
-import type { PublicProfessionalProfile } from "../types/public-booking.types";
-
 type ProfessionalHeaderProps = {
-  profile: PublicProfessionalProfile;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+  };
 };
 
-export function ProfessionalHeader({
-  profile,
-}: ProfessionalHeaderProps) {
-  const initials =
-    profile.name
-      ?.split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "P";
+export function ProfessionalHeader({ user }: ProfessionalHeaderProps) {
+  const displayName = user.name?.trim() || "Profissional";
+  const displayUsername = user.username?.trim() || "sem-username";
+
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
@@ -24,17 +26,11 @@ export function ProfessionalHeader({
 
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {profile.name}
+            {displayName}
           </h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+          <p className="text-sm text-muted-foreground">@{displayUsername}</p>
         </div>
       </div>
-
-      {profile.bio ? (
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          {profile.bio}
-        </p>
-      ) : null}
     </div>
   );
 }

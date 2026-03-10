@@ -20,7 +20,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
             {service.name}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            {service.durationMinutes} min
+            {service.duration} min
           </p>
         </div>
 

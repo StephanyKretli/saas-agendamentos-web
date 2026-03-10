@@ -48,7 +48,7 @@ export default function BookingPage() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-4 py-10">
       <div className="space-y-6">
-        <ProfessionalHeader profile={data} />
+        <ProfessionalHeader user={data.user} />
 
         <section className="space-y-3">
           <div>
