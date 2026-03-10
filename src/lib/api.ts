@@ -21,7 +21,9 @@ export async function apiFetch<T>(
     try {
       const errorBody = await response.json();
       message = errorBody.message ?? message;
-    } catch {}
+    } catch {
+      // mantém mensagem padrão
+    }
 
     throw new Error(message);
   }

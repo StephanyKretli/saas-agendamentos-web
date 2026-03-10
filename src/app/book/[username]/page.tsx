@@ -3,8 +3,11 @@
 import * as React from "react";
 import { useParams } from "next/navigation";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
+import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { ProfessionalHeader } from "@/features/public-booking/components/professional-header";
 import { ServiceList } from "@/features/public-booking/components/service-list";
+import { DatePickerCard } from "@/features/public-booking/components/date-picker-card";
+import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
 import type { PublicService } from "@/features/public-booking/types/public-booking.types";
 
 function formatPrice(priceCents: number) {
@@ -22,6 +25,18 @@ export default function BookingPage() {
 
   const [selectedService, setSelectedService] =
     React.useState<PublicService | null>(null);
+  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
+
+  const availabilityQuery = useBookingAvailability({
+    username,
+    serviceId: selectedService?.id ?? null,
+    date: selectedDate,
+  });
+
+  React.useEffect(() => {
+    setSelectedTime(null);
+  }, [selectedService, selectedDate]);
 
   if (isLoading) {
     return (
@@ -100,6 +115,19 @@ export default function BookingPage() {
               </p>
             </div>
           </section>
+        ) : null}
+
+        {selectedService ? (
+          <DatePickerCard value={selectedDate} onChange={setSelectedDate} />
+        ) : null}
+
+        {selectedService && selectedDate ? (
+          <TimeSlotsGrid
+            slots={availabilityQuery.data?.slots ?? []}
+            selectedTime={selectedTime}
+            onSelectTime={setSelectedTime}
+            isLoading={availabilityQuery.isLoading}
+          />
         ) : null}
       </div>
     </main>

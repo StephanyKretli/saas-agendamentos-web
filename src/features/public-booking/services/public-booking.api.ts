@@ -1,5 +1,8 @@
 import { apiFetch } from "@/lib/api";
-import type { PublicBookingProfileResponse } from "../types/public-booking.types";
+import type {
+  PublicAvailabilityResponse,
+  PublicBookingProfileResponse,
+} from "../types/public-booking.types";
 
 export async function getBookingProfile(
   username: string,
@@ -8,4 +11,23 @@ export async function getBookingProfile(
     method: "GET",
     cache: "no-store",
   });
+}
+
+export async function getBookingAvailability(params: {
+  username: string;
+  serviceId: string;
+  date: string;
+}): Promise<PublicAvailabilityResponse> {
+  const searchParams = new URLSearchParams({
+    serviceId: params.serviceId,
+    date: params.date,
+  });
+
+  return apiFetch<PublicAvailabilityResponse>(
+    `/public/book/${params.username}/availability?${searchParams.toString()}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
 }

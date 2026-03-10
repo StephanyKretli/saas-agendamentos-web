@@ -13,3 +13,9 @@ export type PublicBookingProfileResponse = {
   };
   services: PublicService[];
 };
+
+export type PublicAvailabilityResponse = {
+  date: string;
+  step: number;
+  slots: string[];
+};

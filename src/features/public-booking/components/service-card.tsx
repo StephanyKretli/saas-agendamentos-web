@@ -23,8 +23,8 @@ export function ServiceCard({
       type="button"
       onClick={() => onSelect(service)}
       className={[
-        "w-full rounded-2xl border bg-card p-4 text-left shadow-sm transition-all",
-        "hover:-translate-y-0.5 hover:shadow-md",
+        "block w-full rounded-2xl border bg-card p-4 text-left shadow-sm transition-all",
+        "hover:shadow-md",
         "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         isSelected
           ? "border-primary ring-2 ring-primary/20"
