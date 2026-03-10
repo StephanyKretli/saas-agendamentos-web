@@ -1,9 +1,7 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001";
 
-type RequestOptions = RequestInit & {
-  next?: NextFetchRequestConfig;
-};
+type RequestOptions = RequestInit;
 
 export async function apiFetch<T>(
   path: string,
@@ -23,9 +21,7 @@ export async function apiFetch<T>(
     try {
       const errorBody = await response.json();
       message = errorBody.message ?? message;
-    } catch {
-      // mantém mensagem padrão
-    }
+    } catch {}
 
     throw new Error(message);
   }
