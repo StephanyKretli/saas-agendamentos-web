@@ -1,31 +1,34 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001";
+
+type RequestOptions = RequestInit & {
+  next?: NextFetchRequestConfig;
+};
 
 export async function apiFetch<T>(
   path: string,
-  options?: RequestInit,
+  options: RequestOptions = {},
 ): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(options?.headers || {}),
+      ...(options.headers ?? {}),
     },
-    cache: "no-store",
   });
 
   if (!response.ok) {
-    let message = "Request failed";
+    let message = "Erro ao realizar requisição";
 
     try {
-      const error = await response.json();
-      message = error?.message || message;
+      const errorBody = await response.json();
+      message = errorBody.message ?? message;
     } catch {
-      // ignore parse error
+      // mantém mensagem padrão
     }
 
     throw new Error(message);
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
