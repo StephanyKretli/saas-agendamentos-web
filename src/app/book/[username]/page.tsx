@@ -1,15 +1,27 @@
 "use client";
 
+import * as React from "react";
 import { useParams } from "next/navigation";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { ProfessionalHeader } from "@/features/public-booking/components/professional-header";
 import { ServiceList } from "@/features/public-booking/components/service-list";
+import type { PublicService } from "@/features/public-booking/types/public-booking.types";
+
+function formatPrice(priceCents: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(priceCents / 100);
+}
 
 export default function BookingPage() {
   const params = useParams();
   const username = String(params.username ?? "");
 
   const { data, isLoading, isError, error } = useBookingProfile(username);
+
+  const [selectedService, setSelectedService] =
+    React.useState<PublicService | null>(null);
 
   if (isLoading) {
     return (
@@ -60,8 +72,35 @@ export default function BookingPage() {
             </p>
           </div>
 
-          <ServiceList services={data.services} />
+          <ServiceList
+            services={data.services}
+            selectedServiceId={selectedService?.id ?? null}
+            onSelectService={setSelectedService}
+          />
         </section>
+
+        {selectedService ? (
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <h3 className="text-base font-semibold text-foreground">
+              Serviço selecionado
+            </h3>
+
+            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">Serviço:</span>{" "}
+                {selectedService.name}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Duração:</span>{" "}
+                {selectedService.duration} min
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Preço:</span>{" "}
+                {formatPrice(selectedService.priceCents)}
+              </p>
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );
