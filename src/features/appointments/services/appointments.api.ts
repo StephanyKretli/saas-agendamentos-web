@@ -7,3 +7,17 @@ export async function getMyAppointments(): Promise<PaginatedAppointmentsResponse
     headers: getAuthHeaders(),
   });
 }
+
+export async function completeAppointment(id: string) {
+  return apiFetch(`/appointments/${id}/complete`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+  });
+}
+
+export async function cancelAppointment(id: string) {
+  return apiFetch(`/appointments/${id}/cancel`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+  });
+}
