@@ -1,5 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import type {
+  CreatePublicAppointmentPayload,
+  CreatePublicAppointmentResponse,
   PublicAvailabilityResponse,
   PublicBookingProfileResponse,
 } from "../types/public-booking.types";
@@ -28,6 +30,19 @@ export async function getBookingAvailability(params: {
     {
       method: "GET",
       cache: "no-store",
+    },
+  );
+}
+
+export async function createPublicAppointment(params: {
+  username: string;
+  payload: CreatePublicAppointmentPayload;
+}): Promise<CreatePublicAppointmentResponse> {
+  return apiFetch<CreatePublicAppointmentResponse>(
+    `/public/book/${params.username}/appointments`,
+    {
+      method: "POST",
+      body: JSON.stringify(params.payload),
     },
   );
 }

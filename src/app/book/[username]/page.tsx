@@ -4,11 +4,18 @@ import * as React from "react";
 import { useParams } from "next/navigation";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
+import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
 import { ProfessionalHeader } from "@/features/public-booking/components/professional-header";
 import { ServiceList } from "@/features/public-booking/components/service-list";
 import { DatePickerCard } from "@/features/public-booking/components/date-picker-card";
 import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
-import type { PublicService } from "@/features/public-booking/types/public-booking.types";
+import { BookingForm } from "@/features/public-booking/components/booking-form";
+import { BookingSuccess } from "@/features/public-booking/components/booking-success";
+import type {
+  CreatePublicAppointmentResponse,
+  PublicService,
+} from "@/features/public-booking/types/public-booking.types";
+import type { PublicBookingFormValues } from "@/features/public-booking/schemas/public-booking.schema";
 
 function formatPrice(priceCents: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -27,6 +34,9 @@ export default function BookingPage() {
     React.useState<PublicService | null>(null);
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
+  const [createdAppointment, setCreatedAppointment] =
+    React.useState<CreatePublicAppointmentResponse | null>(null);
+  const [lastClientName, setLastClientName] = React.useState<string>("");
 
   const availabilityQuery = useBookingAvailability({
     username,
@@ -34,9 +44,30 @@ export default function BookingPage() {
     date: selectedDate,
   });
 
+  const createAppointmentMutation = useCreatePublicAppointment();
+
   React.useEffect(() => {
     setSelectedTime(null);
   }, [selectedService, selectedDate]);
+
+  async function handleSubmitBooking(values: PublicBookingFormValues) {
+  if (!selectedService || !selectedDate || !selectedTime) return;
+
+  const response = await createAppointmentMutation.mutateAsync({
+    username,
+    payload: {
+      serviceId: selectedService.id,
+      date: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
+      clientName: values.clientName,
+      clientPhone: values.clientPhone,
+      clientEmail: values.clientEmail || undefined,
+      notes: values.notes || undefined,
+    },
+  });
+
+  setLastClientName(values.clientName);
+  setCreatedAppointment(response);
+}
 
   if (isLoading) {
     return (
@@ -77,58 +108,87 @@ export default function BookingPage() {
       <div className="space-y-6">
         <ProfessionalHeader user={data.user} />
 
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Escolha um serviço
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Selecione abaixo o atendimento que deseja agendar.
-            </p>
-          </div>
-
-          <ServiceList
-            services={data.services}
-            selectedServiceId={selectedService?.id ?? null}
-            onSelectService={setSelectedService}
+        {createdAppointment && selectedService && selectedDate && selectedTime ? (
+          <BookingSuccess
+            clientName={lastClientName}
+            serviceName={selectedService.name}
+            date={selectedDate}
+            time={selectedTime}
           />
-        </section>
+        ) : (
+          <>
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Escolha um serviço
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Selecione abaixo o atendimento que deseja agendar.
+                </p>
+              </div>
 
-        {selectedService ? (
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <h3 className="text-base font-semibold text-foreground">
-              Serviço selecionado
-            </h3>
+              <ServiceList
+                services={data.services}
+                selectedServiceId={selectedService?.id ?? null}
+                onSelectService={setSelectedService}
+              />
+            </section>
 
-            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-              <p>
-                <span className="font-medium text-foreground">Serviço:</span>{" "}
-                {selectedService.name}
-              </p>
-              <p>
-                <span className="font-medium text-foreground">Duração:</span>{" "}
-                {selectedService.duration} min
-              </p>
-              <p>
-                <span className="font-medium text-foreground">Preço:</span>{" "}
-                {formatPrice(selectedService.priceCents)}
-              </p>
-            </div>
-          </section>
-        ) : null}
+            {selectedService ? (
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">
+                  Serviço selecionado
+                </h3>
 
-        {selectedService ? (
-          <DatePickerCard value={selectedDate} onChange={setSelectedDate} />
-        ) : null}
+                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    <span className="font-medium text-foreground">Serviço:</span>{" "}
+                    {selectedService.name}
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Duração:</span>{" "}
+                    {selectedService.duration} min
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Preço:</span>{" "}
+                    {formatPrice(selectedService.priceCents)}
+                  </p>
+                </div>
+              </section>
+            ) : null}
 
-        {selectedService && selectedDate ? (
-          <TimeSlotsGrid
-            slots={availabilityQuery.data?.slots ?? []}
-            selectedTime={selectedTime}
-            onSelectTime={setSelectedTime}
-            isLoading={availabilityQuery.isLoading}
-          />
-        ) : null}
+            {selectedService ? (
+              <DatePickerCard
+                value={selectedDate}
+                onChange={setSelectedDate}
+              />
+            ) : null}
+
+            {selectedService && selectedDate ? (
+              <TimeSlotsGrid
+                slots={availabilityQuery.data?.slots ?? []}
+                selectedTime={selectedTime}
+                onSelectTime={setSelectedTime}
+                isLoading={availabilityQuery.isLoading}
+              />
+            ) : null}
+
+            {selectedService && selectedDate && selectedTime ? (
+              <BookingForm
+                onSubmit={handleSubmitBooking}
+                isSubmitting={createAppointmentMutation.isPending}
+              />
+            ) : null}
+
+            {createAppointmentMutation.isError ? (
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-muted-foreground">
+                {createAppointmentMutation.error instanceof Error
+                  ? createAppointmentMutation.error.message
+                  : "Não foi possível concluir o agendamento."}
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </main>
   );
