@@ -2,25 +2,49 @@
 
 import * as React from "react";
 
-type Props = {
-  onSubmit: (values: {
-    name: string;
-    duration: number;
-    price: number;
-  }) => void;
-  isSubmitting?: boolean;
+type ServiceFormValues = {
+  name: string;
+  duration: number;
+  price: number;
 };
 
-export function ServiceForm({ onSubmit, isSubmitting = false }: Props) {
+type Props = {
+  onSubmit: (values: ServiceFormValues) => void;
+  isSubmitting?: boolean;
+  initialValues?: ServiceFormValues;
+  submitLabel?: string;
+  onCancel?: () => void;
+};
+
+export function ServiceForm({
+  onSubmit,
+  isSubmitting = false,
+  initialValues,
+  submitLabel = "Salvar",
+  onCancel,
+}: Props) {
   const [name, setName] = React.useState("");
   const [duration, setDuration] = React.useState(30);
   const [price, setPrice] = React.useState(0);
+
+  React.useEffect(() => {
+    if (initialValues) {
+      setName(initialValues.name);
+      setDuration(initialValues.duration);
+      setPrice(initialValues.price);
+      return;
+    }
+
+    setName("");
+    setDuration(30);
+    setPrice(0);
+  }, [initialValues]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     onSubmit({
-      name,
+      name: name.trim(),
       duration,
       price,
     });
@@ -76,13 +100,26 @@ export function ServiceForm({ onSubmit, isSubmitting = false }: Props) {
         </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-      >
-        {isSubmitting ? "Salvando..." : "Salvar"}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {isSubmitting ? "Salvando..." : submitLabel}
+        </button>
+
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }

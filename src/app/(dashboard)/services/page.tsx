@@ -1,62 +1,114 @@
 "use client";
 
-import { useCreateService } from "@/features/services/hooks/use-create-service";
-import { useServices } from "@/features/services/hooks/use-services";
-import { ServiceCard } from "@/features/services/components/service-card";
+import * as React from "react";
 import { ServiceForm } from "@/features/services/components/service-form";
-import type { Service } from "@/features/services/types/services.types";
+import { ServiceCard } from "@/features/services/components/service-card";
+import { useServices } from "@/features/services/hooks/use-services";
+import { useCreateService } from "@/features/services/hooks/use-create-service";
+import { useUpdateService } from "@/features/services/hooks/use-update-service";
 
-function normalizeServices(data: unknown): Service[] {
-  if (Array.isArray(data)) {
-    return data as Service[];
-  }
-
-  if (
-    data &&
-    typeof data === "object" &&
-    "items" in data &&
-    Array.isArray((data as { items: unknown }).items)
-  ) {
-    return (data as { items: Service[] }).items;
-  }
-
-  return [];
-}
+type ServiceItem = {
+  id: string;
+  name: string;
+  duration: number;
+  priceCents: number;
+};
 
 export default function ServicesPage() {
   const { data, isLoading, isError, error } = useServices();
-  const createServiceMutation = useCreateService();
+  const createMutation = useCreateService();
+  const updateMutation = useUpdateService();
 
-  const services = normalizeServices(data);
+  const [editingService, setEditingService] = React.useState<ServiceItem | null>(
+    null,
+  );
+
+  const items = React.useMemo<ServiceItem[]>(() => {
+    const rawItems: ServiceItem[] = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+    return rawItems
+      .map((service: ServiceItem) => ({
+        id: service.id,
+        name: service.name,
+        duration: service.duration,
+        priceCents: service.priceCents,
+      }))
+      .sort((a: ServiceItem, b: ServiceItem) => a.name.localeCompare(b.name));
+  }, [data]);
+
+  const isEditing = editingService !== null;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Serviços</h1>
         <p className="text-sm text-muted-foreground">
-          Gerencie os serviços oferecidos.
+          Cadastre, edite e remova os serviços que você oferece.
         </p>
       </div>
 
       <div className="rounded-2xl border border-border p-5 shadow-sm">
-        <h2 className="mb-3 font-medium text-foreground">Novo serviço</h2>
+        <h2 className="mb-3 font-medium text-foreground">
+          {isEditing ? "Editar serviço" : "Novo serviço"}
+        </h2>
 
         <ServiceForm
-          isSubmitting={createServiceMutation.isPending}
-          onSubmit={(values) =>
-            createServiceMutation.mutate({
+          initialValues={
+            editingService
+              ? {
+                  name: editingService.name,
+                  duration: editingService.duration,
+                  price: editingService.priceCents / 100,
+                }
+              : undefined
+          }
+          submitLabel={isEditing ? "Salvar alterações" : "Salvar"}
+          isSubmitting={isSubmitting}
+          onCancel={isEditing ? () => setEditingService(null) : undefined}
+          onSubmit={(values) => {
+            const payload = {
               name: values.name,
               duration: values.duration,
               priceCents: Math.round(values.price * 100),
-            })
-          }
+            };
+
+            if (editingService) {
+              updateMutation.mutate(
+                {
+                  id: editingService.id,
+                  ...payload,
+                },
+                {
+                  onSuccess: () => {
+                    setEditingService(null);
+                  },
+                },
+              );
+              return;
+            }
+
+            createMutation.mutate(payload);
+          }}
         />
 
-        {createServiceMutation.isError ? (
+        {createMutation.isError ? (
           <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-muted-foreground">
-            {createServiceMutation.error instanceof Error
-              ? createServiceMutation.error.message
-              : "Não foi possível salvar o serviço."}
+            {createMutation.error instanceof Error
+              ? createMutation.error.message
+              : "Não foi possível criar o serviço."}
+          </div>
+        ) : null}
+
+        {updateMutation.isError ? (
+          <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-muted-foreground">
+            {updateMutation.error instanceof Error
+              ? updateMutation.error.message
+              : "Não foi possível atualizar o serviço."}
           </div>
         ) : null}
       </div>
@@ -69,14 +121,18 @@ export default function ServicesPage() {
             ? error.message
             : "Não foi possível carregar os serviços."}
         </div>
-      ) : !services.length ? (
+      ) : !items.length ? (
         <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Nenhum serviço encontrado.
+          Nenhum serviço cadastrado.
         </div>
       ) : (
         <div className="grid gap-3">
-          {services.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+          {items.map((item: ServiceItem) => (
+            <ServiceCard
+              key={item.id}
+              service={item}
+              onEdit={() => setEditingService(item)}
+            />
           ))}
         </div>
       )}
