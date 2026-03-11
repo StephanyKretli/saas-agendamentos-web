@@ -4,6 +4,7 @@ import { useBusinessHours } from "@/features/business-hours/hooks/use-business-h
 import { useCreateBusinessHour } from "@/features/business-hours/hooks/use-create-business-hour";
 import { BusinessHourForm } from "@/features/business-hours/components/business-hour-form";
 import { BusinessHourCard } from "@/features/business-hours/components/business-hour-card";
+import { ApplyTemplateCard } from "@/features/business-hours/components/apply-template-card";
 
 export default function BusinessHoursPage() {
   const { data, isLoading, isError, error } = useBusinessHours();
@@ -41,6 +42,8 @@ export default function BusinessHoursPage() {
           </div>
         ) : null}
       </div>
+
+      <ApplyTemplateCard businessHours={items} />
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando horários...</p>
