@@ -74,7 +74,11 @@ export default function DashboardPage() {
         <MetricCard label="Taxa de cancelamento" value={`${data.cancelRate}%`} />
         <MetricCard
           label="Serviço mais agendado"
-          value={data.mostBookedService ?? "Nenhum"}
+          value={
+            data.mostBookedService
+              ? `${data.mostBookedService.name} (${data.mostBookedService.count})`
+              : "Nenhum"
+          }
         />
       </div>
     </div>
