@@ -57,7 +57,7 @@ export default function BookingPage() {
     username,
     payload: {
       serviceId: selectedService.id,
-      date: new Date(`${selectedDate}T${selectedTime}:00`).toISOString(),
+      date: `${selectedDate}T${selectedTime}:00`,
       clientName: values.clientName,
       clientPhone: values.clientPhone,
       clientEmail: values.clientEmail || undefined,

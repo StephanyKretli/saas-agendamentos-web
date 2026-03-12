@@ -4,7 +4,7 @@ import * as React from "react";
 import { useCreateBlockedSlot } from "../hooks/use-create-blocked-slot";
 
 function combineDateTime(date: string, time: string) {
-  return new Date(`${date}T${time}:00`).toISOString();
+  return `${date}T${time}:00`;
 }
 
 export function BlockedSlotForm() {

@@ -5,14 +5,25 @@ import { useMyAppointments } from "@/features/appointments/hooks/use-my-appointm
 import { AppointmentCard } from "@/features/appointments/components/appointment-card";
 
 function formatDateInput(date: Date) {
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getAppointmentLocalDate(value: string) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export default function AgendaPage() {
   const { data, isLoading, isError } = useMyAppointments();
 
   const [selectedDate, setSelectedDate] = React.useState(
-    formatDateInput(new Date())
+    formatDateInput(new Date()),
   );
 
   if (isLoading) {
@@ -27,10 +38,7 @@ export default function AgendaPage() {
 
   const filteredAppointments = appointments
     .filter((appointment) => {
-      const appointmentDate = new Date(appointment.date)
-        .toISOString()
-        .split("T")[0];
-
+      const appointmentDate = getAppointmentLocalDate(appointment.date);
       return appointmentDate === selectedDate;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
