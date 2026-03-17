@@ -30,6 +30,31 @@ function TimelineRow({
   );
 }
 
+function getStatusStyles(status: string) {
+  switch (status) {
+    case "SCHEDULED":
+      return {
+        container: "border-blue-200 bg-blue-50",
+        badge: "bg-blue-100 text-blue-700",
+      };
+    case "COMPLETED":
+      return {
+        container: "border-green-200 bg-green-50",
+        badge: "bg-green-100 text-green-700",
+      };
+    case "CANCELED":
+      return {
+        container: "border-gray-200 bg-gray-50",
+        badge: "bg-gray-100 text-gray-600",
+      };
+    default:
+      return {
+        container: "border-border bg-card",
+        badge: "bg-primary/10 text-primary",
+      };
+  }
+}
+
 function BusyItemCard({
   item,
   selectedDate,
@@ -43,14 +68,16 @@ function BusyItemCard({
   ) => void;
   setRescheduleOpen: (open: boolean) => void;
 }) {
+  const styles = getStatusStyles(item.status);
   const completeMutation = useCompleteAppointment(selectedDate);
   const cancelMutation = useCancelAppointment(selectedDate);
+  const isScheduled = item.status === "SCHEDULED";
 
   const isPending =
     completeMutation.isPending || cancelMutation.isPending;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md">
+    <div className={`rounded-2xl border p-4 shadow-sm transition hover:shadow-md ${styles.container}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">
@@ -61,7 +88,7 @@ function BusyItemCard({
           </p>
         </div>
 
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${styles.badge}`}>
           {item.status}
         </span>
       </div>
@@ -84,6 +111,7 @@ function BusyItemCard({
         ) : null}
       </div>
 
+      {isScheduled ? (
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
@@ -107,14 +135,16 @@ function BusyItemCard({
           type="button"
           disabled={isPending}
           onClick={() => {
+            console.log("Item selecionado para reagendar:", item);
             setSelectedAppointment(item);
             setRescheduleOpen(true);
           }}
           className="rounded-xl border border-border px-3 py-2 text-sm font-medium"
-        >
+          >
           Reagendar
-        </button>
+      </button>
       </div>
+    ) : null}
     </div>
   );
 }
@@ -233,6 +263,7 @@ export default function AgendaPage() {
                   appointmentId: selectedAppointment.appointmentId,
                   start: selectedAppointment.start,
                   end: selectedAppointment.end,
+                  status: selectedAppointment.status,
                   service: {
                     id: selectedAppointment.service.id,
                     name: selectedAppointment.service.name,

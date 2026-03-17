@@ -13,6 +13,7 @@ type RescheduleModalProps = {
     appointmentId: string;
     start: string;
     end: string;
+    status: string;
     service: {
       id: string;
       name: string;
@@ -45,6 +46,7 @@ export function RescheduleModal({
 
   React.useEffect(() => {
     if (!open) return;
+
     setDate(selectedDate);
     setSelectedTime("");
     setSlots([]);
@@ -52,54 +54,53 @@ export function RescheduleModal({
   }, [open, selectedDate]);
 
   React.useEffect(() => {
-  async function loadAvailability() {
-    if (!open || !appointment?.service?.id || !date) return;
+    async function loadAvailability() {
+      if (!open || !appointment?.service?.id || !date) return;
 
-    try {
-      setLoadingSlots(true);
-      setSlotsError(null);
+      try {
+        setLoadingSlots(true);
+        setSlotsError(null);
 
-      const url = `/availability?serviceId=${appointment.service.id}&date=${date}&step=15`;
-      console.log("Buscando disponibilidade:", url);
+        const url = `/availability?serviceId=${appointment.service.id}&date=${date}&step=30`;
 
-      const data = await apiFetch<AvailabilityResponse>(url, {
-        headers: getAuthHeaders(),
-      });
+        const data = await apiFetch<AvailabilityResponse>(url, {
+          headers: getAuthHeaders(),
+        });
 
-      console.log("Resposta da disponibilidade:", data);
-
-      setSlots(data.slots ?? []);
-    } catch (error) {
-      console.error("Erro ao carregar horários:", error);
-      setSlots([]);
-      setSlotsError(
-        error instanceof Error
-          ? error.message
-          : "Erro ao carregar horários disponíveis.",
-      );
-    } finally {
-      setLoadingSlots(false);
+        setSlots(data.slots ?? []);
+      } catch (error) {
+        console.error("Erro ao carregar horários:", error);
+        setSlots([]);
+        setSlotsError(
+          error instanceof Error
+            ? error.message
+            : "Erro ao carregar horários disponíveis.",
+        );
+      } finally {
+        setLoadingSlots(false);
+      }
     }
-  }
 
-  void loadAvailability();
-}, [open, appointment?.service?.id, date]);
+    void loadAvailability();
+  }, [open, appointment?.service?.id, date]);
 
   if (!open || !appointment) return null;
+  console.log("Appointment recebido no modal:", appointment);
 
   async function handleConfirm() {
-    if (!selectedTime) return;
+    if (!appointment || !selectedTime || appointment.status !== "SCHEDULED") {
+        return;
+    }
 
     const newDate = `${date}T${selectedTime}:00`;
 
     await rescheduleMutation.mutateAsync({
-      appointmentId: appointment!.appointmentId,
-      newDate,
+        appointmentId: appointment.appointmentId,
+        newDate,
     });
 
     onClose();
-  }
-
+    }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-xl">
@@ -190,14 +191,19 @@ export function RescheduleModal({
             Cancelar
           </button>
 
-          <button
-            type="button"
-            disabled={!selectedTime || rescheduleMutation.isPending}
-            onClick={() => void handleConfirm()}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {rescheduleMutation.isPending ? "Reagendando..." : "Confirmar"}
-          </button>
+            <button
+                type="button"
+                disabled={
+                    !appointment ||
+                    !selectedTime ||
+                    rescheduleMutation.isPending ||
+                    appointment.status !== "SCHEDULED"
+                }
+                onClick={() => void handleConfirm()}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                {rescheduleMutation.isPending ? "Reagendando..." : "Confirmar"}
+            </button>
         </div>
       </div>
     </div>
