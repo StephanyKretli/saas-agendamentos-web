@@ -192,17 +192,12 @@ export function RescheduleModal({
           </button>
 
             <button
-                type="button"
-                disabled={
-                    !appointment ||
-                    !selectedTime ||
-                    rescheduleMutation.isPending ||
-                    appointment.status !== "SCHEDULED"
-                }
-                onClick={() => void handleConfirm()}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                {rescheduleMutation.isPending ? "Reagendando..." : "Confirmar"}
+              type="button"
+              disabled={!selectedTime || rescheduleMutation.isPending}
+              onClick={() => void handleConfirm()}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {rescheduleMutation.isPending ? "Reagendando..." : "Confirmar"}
             </button>
         </div>
       </div>
