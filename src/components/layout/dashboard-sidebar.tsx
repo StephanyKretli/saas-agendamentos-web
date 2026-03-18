@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeAccessToken } from "@/lib/auth-storage";
+import { useSettingsQuery } from "@/features/settings/hooks/use-settings";
 
 const items = [
   { href: "/dashboard", label: "Dashboard" },
@@ -14,9 +15,14 @@ const items = [
   { href: "/settings", label: "Configurações" },
 ];
 
+function getInitial(name?: string | null) {
+  return name?.trim()?.charAt(0)?.toUpperCase() || "?";
+}
+
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data } = useSettingsQuery();
 
   function handleLogout() {
     removeAccessToken();
@@ -24,15 +30,42 @@ export function DashboardSidebar() {
   }
 
   return (
-    <aside className="w-full border-b border-border bg-card p-4 md:w-64 md:border-b-0 md:border-r">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-foreground">
-          SaaS Agendamentos
-        </h2>
-        <p className="text-sm text-muted-foreground">Painel do profissional</p>
+    <aside className="flex h-full flex-col rounded-3xl border border-border bg-card p-4 shadow-sm">
+      <div className="border-b border-border pb-4">
+        <div className="flex items-center gap-3">
+          {data?.avatarUrl ? (
+            <img
+              src={data.avatarUrl}
+              alt={data.name ?? "Usuário"}
+              className="h-12 w-12 rounded-full border border-border object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+              {getInitial(data?.name)}
+            </div>
+          )}
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {data?.name ?? "SaaS Agendamentos"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              @{data?.username ?? "painel"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-muted/40 px-3 py-3">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+            Navegação
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Organize seu dia, seus serviços e suas configurações.
+          </p>
+        </div>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="mt-4 flex-1 space-y-1">
         {items.map((item) => {
           const isActive = pathname === item.href;
 
@@ -40,12 +73,11 @@ export function DashboardSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={[
-                "block rounded-xl px-3 py-2 text-sm transition",
+              className={`flex items-center rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-muted",
-              ].join(" ")}
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground hover:bg-muted"
+              }`}
             >
               {item.label}
             </Link>
@@ -53,13 +85,15 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="mt-6 w-full rounded-xl border border-border px-3 py-2 text-sm text-foreground transition hover:bg-muted"
-      >
-        Sair
-      </button>
+      <div className="mt-4 border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+        >
+          Sair
+        </button>
+      </div>
     </aside>
   );
 }
