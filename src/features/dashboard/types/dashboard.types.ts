@@ -6,7 +6,7 @@ export type DashboardMetrics = {
   canceled: number;
   expectedRevenueFormatted: string;
   realizedRevenueFormatted: string;
-  cancelRate: number;
+  cancelRate: string | number;
   mostBookedService:
     | {
         name: string;
