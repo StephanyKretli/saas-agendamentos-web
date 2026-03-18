@@ -10,6 +10,7 @@ export type PublicBookingProfileResponse = {
     id: string;
     name: string;
     username: string;
+    avatarUrl?: string | null;
   };
   services: PublicService[];
 };
