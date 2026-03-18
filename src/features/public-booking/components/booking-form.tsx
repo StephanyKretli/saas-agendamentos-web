@@ -1,14 +1,10 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-  publicBookingFormSchema,
-  type PublicBookingFormValues,
-} from "../schemas/public-booking.schema";
+import * as React from "react";
+import type { PublicBookingFormValues } from "../schemas/public-booking.schema";
 
 type BookingFormProps = {
-  onSubmit: (values: PublicBookingFormValues) => void;
+  onSubmit: (values: PublicBookingFormValues) => Promise<void> | void;
   isSubmitting?: boolean;
 };
 
@@ -16,103 +12,120 @@ export function BookingForm({
   onSubmit,
   isSubmitting = false,
 }: BookingFormProps) {
-  const form = useForm<PublicBookingFormValues>({
-    resolver: zodResolver(publicBookingFormSchema),
-    defaultValues: {
-      clientName: "",
-      clientPhone: "",
-      clientEmail: "",
-      notes: "",
-    },
+  const [values, setValues] = React.useState<PublicBookingFormValues>({
+    clientName: "",
+    clientPhone: "",
+    clientEmail: "",
+    notes: "",
   });
 
+  function handleChange(
+    field: keyof PublicBookingFormValues,
+    value: string,
+  ) {
+    setValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!values.clientName || !values.clientPhone) {
+      return;
+    }
+
+    await onSubmit(values);
+  }
+
+  const isDisabled =
+    isSubmitting ||
+    !values.clientName.trim() ||
+    !values.clientPhone.trim();
+
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <h3 className="text-lg font-semibold text-foreground">
           Seus dados
         </h3>
-        <p className="text-sm text-muted-foreground">
-          Preencha as informações para confirmar o agendamento.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Preencha as informações abaixo para confirmar o agendamento.
         </p>
       </div>
 
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="mt-4 space-y-4"
+      {/* Nome */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-foreground">
+          Nome completo
+        </label>
+        <input
+          type="text"
+          value={values.clientName}
+          onChange={(e) => handleChange("clientName", e.target.value)}
+          placeholder="Digite seu nome"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      {/* Telefone */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-foreground">
+          WhatsApp
+        </label>
+        <input
+          type="tel"
+          value={values.clientPhone}
+          onChange={(e) => handleChange("clientPhone", e.target.value)}
+          placeholder="(00) 00000-0000"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      {/* Email */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-foreground">
+          Email (opcional)
+        </label>
+        <input
+          type="email"
+          value={values.clientEmail}
+          onChange={(e) => handleChange("clientEmail", e.target.value)}
+          placeholder="seu@email.com"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      {/* Observações */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-foreground">
+          Observações (opcional)
+        </label>
+        <textarea
+          value={values.notes}
+          onChange={(e) => handleChange("notes", e.target.value)}
+          placeholder="Alguma informação importante?"
+          rows={3}
+          className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      {/* Confiança */}
+      <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Seus dados serão usados apenas para confirmar o agendamento.
+        </p>
+      </div>
+
+      {/* Botão */}
+      <button
+        type="submit"
+        disabled={isDisabled}
+        className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Nome</label>
-          <input
-            type="text"
-            {...form.register("clientName")}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-            placeholder="Seu nome"
-          />
-          {form.formState.errors.clientName ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.clientName.message}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Telefone</label>
-          <input
-            type="text"
-            {...form.register("clientPhone")}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-            placeholder="(31) 99999-9999"
-          />
-          {form.formState.errors.clientPhone ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.clientPhone.message}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            E-mail
-          </label>
-          <input
-            type="email"
-            {...form.register("clientEmail")}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-            placeholder="voce@email.com"
-          />
-          {form.formState.errors.clientEmail ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.clientEmail.message}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Observações
-          </label>
-          <textarea
-            rows={4}
-            {...form.register("notes")}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-            placeholder="Escreva algo importante sobre seu atendimento, se quiser."
-          />
-          {form.formState.errors.notes ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.notes.message}
-            </p>
-          ) : null}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Confirmando agendamento..." : "Confirmar agendamento"}
-        </button>
-      </form>
-    </section>
+        {isSubmitting ? "Confirmando agendamento..." : "Confirmar agendamento"}
+      </button>
+    </form>
   );
 }
