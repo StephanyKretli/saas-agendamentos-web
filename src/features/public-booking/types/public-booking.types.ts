@@ -3,6 +3,7 @@ export type PublicService = {
   name: string;
   duration: number;
   priceCents: number;
+  imageUrl?: string | null;
 };
 
 export type PublicBookingProfileResponse = {
