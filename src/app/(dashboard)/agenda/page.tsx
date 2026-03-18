@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DaySummary } from "@/features/appointments/components/day-summary";
 import { RescheduleModal } from "@/features/appointments/components/reschedule-modal";
 import { TimelineBlockedItemCard } from "@/features/appointments/components/timeline-blocked-item-card";
 import { TimelineBusyItemCard } from "@/features/appointments/components/timeline-busy-item-card";
@@ -18,13 +19,72 @@ function formatDateInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function isToday(date: string) {
+  return date === formatDateInput(new Date());
+}
+
+function getCurrentHourLabel() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:00`;
+}
+
+type SelectedAppointment = {
+  appointmentId: string;
+  start: string;
+  end: string;
+  status: string;
+  service: {
+    id: string;
+    name: string;
+    duration: number;
+  };
+  client: {
+    name: string;
+  } | null;
+};
+
 export default function AgendaPage() {
-  const [selectedDate, setSelectedDate] = React.useState(formatDateInput(new Date()));
+  const [selectedDate, setSelectedDate] = React.useState(
+    formatDateInput(new Date()),
+  );
+
   const { data, isLoading, isError } = useDayTimeline(selectedDate);
   const items: TimelineItem[] = data?.items ?? [];
 
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
-  const [selectedAppointment, setSelectedAppointment] = React.useState<any | null>(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    React.useState<SelectedAppointment | null>(null);
+
+  const summary = React.useMemo(() => {
+    const totalBusy = items.filter((item) => item.type === "busy").length;
+
+    const scheduled = items.filter(
+      (item) => item.type === "busy" && item.status === "SCHEDULED",
+    ).length;
+
+    const completed = items.filter(
+      (item) => item.type === "busy" && item.status === "COMPLETED",
+    ).length;
+
+    const canceled = items.filter(
+      (item) => item.type === "busy" && item.status === "CANCELED",
+    ).length;
+
+    const free = items.filter((item) => item.type === "free").length;
+    const blocked = items.filter((item) => item.type === "blocked").length;
+
+    return {
+      totalBusy,
+      scheduled,
+      completed,
+      canceled,
+      free,
+      blocked,
+    };
+  }, [items]);
+
+  const showCurrentHourHighlight = isToday(selectedDate);
+  const currentHourLabel = getCurrentHourLabel();
 
   return (
     <div className="space-y-6">
@@ -46,6 +106,15 @@ export default function AgendaPage() {
         </div>
       </div>
 
+      <DaySummary
+        totalBusy={summary.totalBusy}
+        scheduled={summary.scheduled}
+        completed={summary.completed}
+        canceled={summary.canceled}
+        free={summary.free}
+        blocked={summary.blocked}
+      />
+
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
           Carregando agenda...
@@ -61,9 +130,16 @@ export default function AgendaPage() {
       ) : (
         <div className="space-y-3">
           {items.map((item: TimelineItem, index: number) => {
+            const isCurrentHour =
+              showCurrentHourHighlight && item.start === currentHourLabel;
+
             if (item.type === "free") {
               return (
-                <TimelineRow key={`free-${item.start}-${index}`} time={item.start}>
+                <TimelineRow
+                  key={`free-${item.start}-${index}`}
+                  time={item.start}
+                  isCurrentHour={isCurrentHour}
+                >
                   <TimelineFreeItemCard start={item.start} end={item.end} />
                 </TimelineRow>
               );
@@ -71,54 +147,59 @@ export default function AgendaPage() {
 
             if (item.type === "blocked") {
               return (
-                <TimelineRow key={`blocked-${item.start}-${index}`} time={item.start}>
+                <TimelineRow
+                  key={`blocked-${item.start}-${index}`}
+                  time={item.start}
+                  isCurrentHour={isCurrentHour}
+                >
                   <TimelineBlockedItemCard start={item.start} end={item.end} />
                 </TimelineRow>
               );
             }
 
             return (
-              <TimelineRow key={item.appointmentId} time={item.start}>
+              <TimelineRow
+                key={item.appointmentId}
+                time={item.start}
+                isCurrentHour={isCurrentHour}
+              >
                 <TimelineBusyItemCard
                   item={item}
                   selectedDate={selectedDate}
                   onReschedule={(selected) => {
-                    setSelectedAppointment(selected);
+                    setSelectedAppointment({
+                      appointmentId: selected.appointmentId,
+                      start: selected.start,
+                      end: selected.end,
+                      status: selected.status,
+                      service: {
+                        id: selected.service.id,
+                        name: selected.service.name,
+                        duration: selected.service.duration,
+                      },
+                      client: selected.client
+                        ? { name: selected.client.name ?? "Cliente" }
+                        : null,
+                    });
+
                     setRescheduleOpen(true);
                   }}
                 />
               </TimelineRow>
             );
           })}
-
-          <RescheduleModal
-            open={rescheduleOpen}
-            onClose={() => {
-              setRescheduleOpen(false);
-              setSelectedAppointment(null);
-            }}
-            selectedDate={selectedDate}
-            appointment={
-              selectedAppointment
-                ? {
-                    appointmentId: selectedAppointment.appointmentId,
-                    start: selectedAppointment.start,
-                    end: selectedAppointment.end,
-                    status: selectedAppointment.status,
-                    service: {
-                      id: selectedAppointment.service.id,
-                      name: selectedAppointment.service.name,
-                      duration: selectedAppointment.service.duration,
-                    },
-                    client: selectedAppointment.client
-                      ? { name: selectedAppointment.client.name }
-                      : null,
-                  }
-                : null
-            }
-          />
         </div>
       )}
+
+      <RescheduleModal
+        open={rescheduleOpen}
+        onClose={() => {
+          setRescheduleOpen(false);
+          setSelectedAppointment(null);
+        }}
+        selectedDate={selectedDate}
+        appointment={selectedAppointment}
+      />
     </div>
   );
 }
