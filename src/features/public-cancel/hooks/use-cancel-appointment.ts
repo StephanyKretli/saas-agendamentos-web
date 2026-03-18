@@ -1,16 +1,27 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { cancelAppointmentByToken } from "../api/cancel-appointment";
+import { apiFetch } from "@/lib/api";
+import { getAuthHeaders } from "@/lib/auth-headers";
+import { queryKeys } from "@/lib/query-keys";
 
-export function useCancelAppointment(token: string) {
+export function useCancelAppointment(date: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => cancelAppointmentByToken(token),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["public-cancel-preview", token],
+    mutationFn: async (appointmentId: string) => {
+      return apiFetch(`/appointments/${appointmentId}/cancel`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.dayTimeline(date),
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["public-booking-availability"],
       });
     },
   });

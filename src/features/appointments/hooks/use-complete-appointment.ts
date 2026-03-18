@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useCompleteAppointment(date: string) {
   const queryClient = useQueryClient();
@@ -16,7 +17,11 @@ export function useCompleteAppointment(date: string) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["appointments-day-timeline", date],
+        queryKey: queryKeys.dayTimeline(date),
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["public-booking-availability"],
       });
     },
   });

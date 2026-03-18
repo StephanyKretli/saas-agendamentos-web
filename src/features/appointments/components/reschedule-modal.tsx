@@ -92,11 +92,11 @@ export function RescheduleModal({
         return;
     }
 
-    const newDate = `${date}T${selectedTime}:00`;
+    const dateTime = `${selectedDate}T${selectedTime}:00`;
 
     await rescheduleMutation.mutateAsync({
-        appointmentId: appointment.appointmentId,
-        newDate,
+      appointmentId: appointment.appointmentId,
+      date: dateTime,
     });
 
     onClose();
