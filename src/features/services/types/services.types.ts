@@ -3,6 +3,7 @@ export type Service = {
   name: string;
   duration: number;
   priceCents: number;
+  imageUrl?: string | null;
 };
 
 export type CreateServicePayload = {

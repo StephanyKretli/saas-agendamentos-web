@@ -12,6 +12,7 @@ type ServiceItem = {
   name: string;
   duration: number;
   priceCents: number;
+  imageUrl?: string | null;
 };
 
 export default function ServicesPage() {
@@ -23,7 +24,7 @@ export default function ServicesPage() {
     null,
   );
 
-  const items = React.useMemo<ServiceItem[]>(() => {
+  const items = React.useMemo(() => {
     const rawItems: ServiceItem[] = Array.isArray(data)
       ? data
       : Array.isArray(data?.items)
@@ -36,6 +37,7 @@ export default function ServicesPage() {
         name: service.name,
         duration: service.duration,
         priceCents: service.priceCents,
+        imageUrl: service.imageUrl ?? null,
       }))
       .sort((a: ServiceItem, b: ServiceItem) => a.name.localeCompare(b.name));
   }, [data]);
@@ -44,18 +46,20 @@ export default function ServicesPage() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Serviços</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Serviços</h1>
         <p className="text-sm text-muted-foreground">
           Cadastre, edite e remova os serviços que você oferece.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border p-5 shadow-sm">
-        <h2 className="mb-3 font-medium text-foreground">
-          {isEditing ? "Editar serviço" : "Novo serviço"}
-        </h2>
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-foreground">
+            {isEditing ? "Editar serviço" : "Novo serviço"}
+          </h2>
+        </div>
 
         <ServiceForm
           initialValues={
@@ -67,9 +71,11 @@ export default function ServicesPage() {
                 }
               : undefined
           }
-          submitLabel={isEditing ? "Salvar alterações" : "Salvar"}
           isSubmitting={isSubmitting}
-          onCancel={isEditing ? () => setEditingService(null) : undefined}
+          submitLabel={isEditing ? "Salvar alterações" : "Cadastrar serviço"}
+          onCancel={
+            isEditing ? () => setEditingService(null) : undefined
+          }
           onSubmit={(values) => {
             const payload = {
               name: values.name,
@@ -97,45 +103,47 @@ export default function ServicesPage() {
         />
 
         {createMutation.isError ? (
-          <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-red-600">
             {createMutation.error instanceof Error
               ? createMutation.error.message
               : "Não foi possível criar o serviço."}
-          </div>
+          </p>
         ) : null}
 
         {updateMutation.isError ? (
-          <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-red-600">
             {updateMutation.error instanceof Error
               ? updateMutation.error.message
               : "Não foi possível atualizar o serviço."}
-          </div>
+          </p>
         ) : null}
-      </div>
+      </section>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Carregando serviços...</p>
-      ) : isError ? (
-        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-muted-foreground">
-          {error instanceof Error
-            ? error.message
-            : "Não foi possível carregar os serviços."}
-        </div>
-      ) : !items.length ? (
-        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Nenhum serviço cadastrado.
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {items.map((item: ServiceItem) => (
+      <section className="space-y-4">
+        {isLoading ? (
+          <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+            Carregando serviços...
+          </div>
+        ) : isError ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
+            {error instanceof Error
+              ? error.message
+              : "Não foi possível carregar os serviços."}
+          </div>
+        ) : !items.length ? (
+          <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+            Nenhum serviço cadastrado.
+          </div>
+        ) : (
+          items.map((item: ServiceItem) => (
             <ServiceCard
               key={item.id}
               service={item}
               onEdit={() => setEditingService(item)}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </section>
     </div>
   );
 }
