@@ -43,10 +43,42 @@ type SelectedAppointment = {
   } | null;
 };
 
+type AgendaFilter =
+  | "all"
+  | "scheduled"
+  | "completed"
+  | "canceled"
+  | "free"
+  | "blocked";
+
+const FILTER_LABELS: Record<AgendaFilter, string> = {
+  all: "Todos",
+  scheduled: "Agendados",
+  completed: "Concluídos",
+  canceled: "Cancelados",
+  free: "Livres",
+  blocked: "Bloqueados",
+};
+
+function matchesFilter(item: TimelineItem, filter: AgendaFilter) {
+  if (filter === "all") return true;
+  if (filter === "free") return item.type === "free";
+  if (filter === "blocked") return item.type === "blocked";
+
+  if (item.type !== "busy") return false;
+
+  if (filter === "scheduled") return item.status === "SCHEDULED";
+  if (filter === "completed") return item.status === "COMPLETED";
+  if (filter === "canceled") return item.status === "CANCELED";
+
+  return true;
+}
+
 export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = React.useState(
     formatDateInput(new Date()),
   );
+  const [filter, setFilter] = React.useState<AgendaFilter>("all");
 
   const { data, isLoading, isError } = useDayTimeline(selectedDate);
   const items: TimelineItem[] = data?.items ?? [];
@@ -83,8 +115,21 @@ export default function AgendaPage() {
     };
   }, [items]);
 
+  const filteredItems = React.useMemo(() => {
+    return items.filter((item) => matchesFilter(item, filter));
+  }, [items, filter]);
+
   const showCurrentHourHighlight = isToday(selectedDate);
   const currentHourLabel = getCurrentHourLabel();
+
+  const filterOptions: AgendaFilter[] = [
+    "all",
+    "scheduled",
+    "completed",
+    "canceled",
+    "free",
+    "blocked",
+  ];
 
   return (
     <div className="space-y-6">
@@ -115,6 +160,27 @@ export default function AgendaPage() {
         blocked={summary.blocked}
       />
 
+      <div className="flex flex-wrap gap-2">
+        {filterOptions.map((option) => {
+          const isActive = filter === option;
+
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setFilter(option)}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              {FILTER_LABELS[option]}
+            </button>
+          );
+        })}
+      </div>
+
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
           Carregando agenda...
@@ -123,13 +189,15 @@ export default function AgendaPage() {
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
           Erro ao carregar agenda.
         </div>
-      ) : !items.length ? (
+      ) : !filteredItems.length ? (
         <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
-          Nenhum item para esta data.
+          {filter === "all"
+            ? "Nenhum item para esta data."
+            : `Nenhum item encontrado para o filtro "${FILTER_LABELS[filter]}".`}
         </div>
       ) : (
         <div className="space-y-3">
-          {items.map((item: TimelineItem, index: number) => {
+          {filteredItems.map((item: TimelineItem, index: number) => {
             const isCurrentHour =
               showCurrentHourHighlight && item.start === currentHourLabel;
 
