@@ -53,16 +53,8 @@ export default function ClientsPage() {
   }, [clients, selectedClientId]);
 
   const historyQuery = useClientHistory(selectedClientId);
-  const rawHistory = historyQuery.data as
-  | { items?: Array<any> }
-  | Array<any>
-  | undefined;
-
-const history = Array.isArray(rawHistory)
-  ? rawHistory
-  : Array.isArray(rawHistory?.items)
-    ? rawHistory.items
-    : [];
+  const history = historyQuery.data?.items ?? [];
+  const summary = historyQuery.data?.summary;
 
   const stats = React.useMemo(() => getClientStats(history), [history]);
 

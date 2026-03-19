@@ -18,7 +18,6 @@ const weekdaysMap: Record<number, string> = {
 
 export function BusinessHourCard({ item }: { item: BusinessHour }) {
   const [isEditing, setIsEditing] = React.useState(false);
-
   const updateMutation = useUpdateBusinessHour();
   const deleteMutation = useDeleteBusinessHour();
 
@@ -43,10 +42,27 @@ export function BusinessHourCard({ item }: { item: BusinessHour }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       {isEditing ? (
         <div className="space-y-4">
-          <h3 className="text-base font-semibold text-foreground">Editar horário</h3>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Editando horário
+              </p>
+              <h3 className="mt-1 text-lg font-semibold text-foreground">
+                {weekdaysMap[item.weekday] ?? `Dia ${item.weekday}`}
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+            >
+              Cancelar
+            </button>
+          </div>
 
           <BusinessHourForm
             defaultValues={{
@@ -56,33 +72,36 @@ export function BusinessHourCard({ item }: { item: BusinessHour }) {
             }}
             onSubmit={handleUpdate}
             isSubmitting={updateMutation.isPending}
-            submitLabel="Atualizar"
+            submitLabel="Salvar alterações"
           />
 
-          <button
-            type="button"
-            onClick={() => setIsEditing(false)}
-            className="rounded-lg border border-border px-4 py-2 text-sm text-foreground"
-          >
-            Cancelar
-          </button>
+          {updateMutation.isError ? (
+            <p className="text-sm text-red-600">
+              {updateMutation.error instanceof Error
+                ? updateMutation.error.message
+                : "Não foi possível atualizar o horário."}
+            </p>
+          ) : null}
         </div>
       ) : (
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-foreground">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Dia
+            </p>
+            <h3 className="mt-1 text-lg font-semibold text-foreground">
               {weekdaysMap[item.weekday] ?? `Dia ${item.weekday}`}
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               {item.start} — {item.end}
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white"
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
             >
               Editar
             </button>
@@ -90,13 +109,22 @@ export function BusinessHourCard({ item }: { item: BusinessHour }) {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white"
+              disabled={deleteMutation.isPending}
+              className="rounded-xl border border-destructive/20 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/5 disabled:opacity-60"
             >
-              Excluir
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
             </button>
           </div>
         </div>
       )}
+
+      {deleteMutation.isError ? (
+        <p className="mt-4 text-sm text-red-600">
+          {deleteMutation.error instanceof Error
+            ? deleteMutation.error.message
+            : "Não foi possível excluir o horário."}
+        </p>
+      ) : null}
     </div>
   );
 }

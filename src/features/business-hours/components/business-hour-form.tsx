@@ -39,7 +39,6 @@ export function BusinessHourForm({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-
     onSubmit({
       weekday,
       start,
@@ -48,46 +47,52 @@ export function BusinessHourForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Dia da semana</label>
-        <select
-          value={weekday}
-          onChange={(event) => setWeekday(Number(event.target.value))}
-          className="w-full rounded-lg border border-input px-3 py-2"
-        >
-          {weekdays.map((day) => (
-            <option key={day.value} value={day.value}>
-              {day.label}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted-foreground">
-          Escolha o dia em que esse horário ficará disponível.
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            Dia da semana
+          </label>
+          <select
+            value={weekday}
+            onChange={(event) => setWeekday(Number(event.target.value))}
+            className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
+          >
+            {weekdays.map((day) => (
+              <option key={day.value} value={day.value}>
+                {day.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Escolha o dia em que esse horário ficará disponível.
+          </p>
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Início</label>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            Início
+          </label>
           <input
             type="time"
             value={start}
             onChange={(event) => setStart(event.target.value)}
-            className="w-full rounded-lg border border-input px-3 py-2"
+            className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
           />
           <p className="text-xs text-muted-foreground">
             Horário inicial de atendimento.
           </p>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Fim</label>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            Fim
+          </label>
           <input
             type="time"
             value={end}
             onChange={(event) => setEnd(event.target.value)}
-            className="w-full rounded-lg border border-input px-3 py-2"
+            className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
           />
           <p className="text-xs text-muted-foreground">
             Horário final de atendimento.
@@ -98,7 +103,7 @@ export function BusinessHourForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        className="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? "Salvando..." : submitLabel}
       </button>

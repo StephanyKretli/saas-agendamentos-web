@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useApplyBusinessHoursTemplate } from "../hooks/use-apply-template"
+import { useMemo, useState } from "react";
+import { useApplyBusinessHoursTemplate } from "../hooks/use-apply-template";
 
 type BusinessHourItem = {
-  id: string
-  weekday: number
-  start: string
-  end: string
-}
+  id: string;
+  weekday: number;
+  start: string;
+  end: string;
+};
 
 type ApplyTemplateCardProps = {
-  businessHours: BusinessHourItem[]
-}
+  businessHours: BusinessHourItem[];
+};
 
 const WEEKDAYS = [
   { value: 0, label: "Domingo" },
@@ -22,101 +22,95 @@ const WEEKDAYS = [
   { value: 4, label: "Quinta-feira" },
   { value: 5, label: "Sexta-feira" },
   { value: 6, label: "Sábado" },
-]
+];
 
 export function ApplyTemplateCard({
   businessHours,
 }: ApplyTemplateCardProps) {
-  const [sourceWeekday, setSourceWeekday] = useState<number | "">("")
-  const [targetWeekdays, setTargetWeekdays] = useState<number[]>([])
-  const [replace, setReplace] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [sourceWeekday, setSourceWeekday] = useState("");
+  const [targetWeekdays, setTargetWeekdays] = useState<number[]>([]);
+  const [replace, setReplace] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { mutateAsync, isPending } = useApplyBusinessHoursTemplate()
+  const { mutateAsync, isPending } = useApplyBusinessHoursTemplate();
 
   const availableSourceDays = useMemo(() => {
     const uniqueWeekdays = Array.from(
       new Set(businessHours.map((item) => item.weekday)),
-    ).sort((a, b) => a - b)
+    ).sort((a, b) => a - b);
 
-    return WEEKDAYS.filter((day) => uniqueWeekdays.includes(day.value))
-  }, [businessHours])
+    return WEEKDAYS.filter((day) => uniqueWeekdays.includes(day.value));
+  }, [businessHours]);
 
   function toggleTargetWeekday(weekday: number) {
     setTargetWeekdays((current) =>
       current.includes(weekday)
         ? current.filter((item) => item !== weekday)
         : [...current, weekday].sort((a, b) => a - b),
-    )
+    );
   }
 
   async function handleApplyTemplate() {
-    setError(null)
+    setError(null);
 
     if (sourceWeekday === "") {
-      setError("Selecione o dia de origem.")
-      return
+      setError("Selecione o dia de origem.");
+      return;
     }
 
     if (!targetWeekdays.length) {
-      setError("Selecione pelo menos um dia de destino.")
-      return
+      setError("Selecione pelo menos um dia de destino.");
+      return;
     }
 
-    if (targetWeekdays.includes(sourceWeekday)) {
-      setError("O dia de origem não pode estar entre os dias de destino.")
-      return
+    if (targetWeekdays.includes(Number(sourceWeekday))) {
+      setError("O dia de origem não pode estar entre os dias de destino.");
+      return;
     }
 
     try {
       await mutateAsync({
-        sourceWeekday,
+        sourceWeekday: Number(sourceWeekday),
         targetWeekdays,
         replace,
-      })
+      });
 
-      setTargetWeekdays([])
+      setTargetWeekdays([]);
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : "Não foi possível copiar os horários."
-
-      setError(message)
+          : "Não foi possível copiar os horários.";
+      setError(message);
     }
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold text-zinc-900">
+        <h2 className="text-lg font-semibold text-foreground">
           Copiar horários para outros dias
         </h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Escolha um dia já configurado e copie os mesmos horários para outros
-          dias da semana.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Escolha um dia já configurado e replique os mesmos horários para
+          outros dias da semana.
         </p>
       </div>
 
       {!availableSourceDays.length ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-5 text-sm text-muted-foreground">
           Cadastre pelo menos um horário antes de usar esta funcionalidade.
         </div>
       ) : (
-        <>
-          <div className="mt-5">
-            <label
-              htmlFor="source-weekday"
-              className="mb-1.5 block text-sm font-medium text-zinc-800"
-            >
+        <div className="mt-5 space-y-5">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-foreground">
               Dia de origem
             </label>
-
             <select
-              id="source-weekday"
               value={sourceWeekday}
-              onChange={(e) => setSourceWeekday(Number(e.target.value))}
-              className="w-full rounded-xl border border-zinc-300 px-3 py-2.5 text-sm outline-none transition focus:border-zinc-900"
+              onChange={(e) => setSourceWeekday(e.target.value)}
+              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
             >
               <option value="">Selecione um dia</option>
               {availableSourceDays.map((day) => (
@@ -125,30 +119,32 @@ export function ApplyTemplateCard({
                 </option>
               ))}
             </select>
-
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               Somente dias que já possuem horários cadastrados aparecem aqui.
             </p>
           </div>
 
-          <div className="mt-5">
-            <p className="mb-2 text-sm font-medium text-zinc-800">
+          <div>
+            <p className="text-sm font-medium text-foreground">
               Dias de destino
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Marque os dias que devem receber os horários do dia de origem.
+            </p>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {WEEKDAYS.map((day) => {
-                const isDisabled = sourceWeekday === day.value
-                const isChecked = targetWeekdays.includes(day.value)
+                const isDisabled = sourceWeekday === String(day.value);
+                const isChecked = targetWeekdays.includes(day.value);
 
                 return (
                   <label
                     key={day.value}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${
-                      isDisabled
-                        ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400"
-                        : "border-zinc-300 text-zinc-700"
-                    }`}
+                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
+                      isChecked
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-background"
+                    } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                   >
                     <input
                       type="checkbox"
@@ -158,53 +154,43 @@ export function ApplyTemplateCard({
                     />
                     <span>{day.label}</span>
                   </label>
-                )
+                );
               })}
             </div>
-
-            <p className="mt-1 text-xs text-zinc-500">
-              Marque os dias que devem receber os horários do dia de origem.
-            </p>
           </div>
 
-          <div className="mt-5">
-            <label className="flex items-start gap-3 rounded-xl border border-zinc-300 px-3 py-3 text-sm text-zinc-700">
-              <input
-                type="checkbox"
-                checked={replace}
-                onChange={(e) => setReplace(e.target.checked)}
-                className="mt-0.5"
-              />
-              <span>
-                <span className="block font-medium text-zinc-800">
-                  Substituir horários existentes
-                </span>
-                <span className="mt-1 block text-zinc-500">
-                  Quando ativado, os horários atuais dos dias de destino serão
-                  removidos antes da cópia.
-                </span>
+          <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm">
+            <input
+              type="checkbox"
+              checked={replace}
+              onChange={(e) => setReplace(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block font-medium text-foreground">
+                Substituir horários existentes
               </span>
-            </label>
-          </div>
+              <span className="mt-1 block text-muted-foreground">
+                Quando ativado, os horários atuais dos dias de destino serão
+                removidos antes da cópia.
+              </span>
+            </span>
+          </label>
 
-          {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error ? (
+            <p className="text-sm text-red-600">{error}</p>
+          ) : null}
 
-          <div className="mt-5">
-            <button
-              type="button"
-              onClick={handleApplyTemplate}
-              disabled={isPending}
-              className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? "Aplicando..." : "Copiar horários"}
-            </button>
-          </div>
-        </>
+          <button
+            type="button"
+            onClick={() => void handleApplyTemplate()}
+            disabled={isPending}
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          >
+            {isPending ? "Aplicando..." : "Copiar horários"}
+          </button>
+        </div>
       )}
     </div>
-  )
+  );
 }

@@ -28,4 +28,22 @@ export type ClientsListResponse = {
   totalPages: number;
 };
 
-export type ClientHistoryResponse = ClientHistoryItem[];
+export type ClientHistoryResponse = {
+  client: {
+    id: string;
+    name: string;
+    phone: string;
+    email?: string | null;
+    notes?: string | null;
+  };
+  summary: {
+    totalAppointments: number;
+    completedAppointments: number;
+    upcomingAppointments: number;
+    totalSpentCents: number;
+    totalSpentFormatted: string;
+    lastAppointment: ClientHistoryItem | null;
+    nextAppointments: ClientHistoryItem[];
+  };
+  items: ClientHistoryItem[];
+};
