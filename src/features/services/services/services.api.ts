@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type {
   CreateServicePayload,
@@ -7,18 +7,13 @@ import type {
 } from "../types/services.types";
 
 export async function getServices(): Promise<ServicesListResponse> {
-  return apiFetch<ServicesListResponse>("/services/me", {
-    headers: getAuthHeaders(),
-  });
+  return api.get("/services/me", {
+    headers: getAuthHeaders()
+  }) as Promise<ServicesListResponse>;
 }
 
-export async function createService(payload: CreateServicePayload) {
-  return apiFetch<Service>("/services", {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+export async function createService(payload: CreateServicePayload): Promise<Service> {
+  return api.post("/services", payload, {
+    headers: getAuthHeaders()
+  }) as Promise<Service>;
 }

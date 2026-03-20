@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRescheduleAppointment } from "@/features/appointments/hooks/use-reschedule-appointment";
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 
 type RescheduleModalProps = {
@@ -63,9 +63,9 @@ export function RescheduleModal({
 
         const url = `/availability?serviceId=${appointment.service.id}&date=${date}&step=30`;
 
-        const data = await apiFetch<AvailabilityResponse>(url, {
+        const data = await api.get(url, {
           headers: getAuthHeaders(),
-        });
+        }) as AvailabilityResponse;
 
         setSlots(data.slots ?? []);
       } catch (error) {

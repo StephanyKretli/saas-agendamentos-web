@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api"
+import { api } from "@/lib/api"
 import { getAuthHeaders } from "@/lib/auth-headers"
 
 export type ApplyBusinessHoursTemplateInput = {
@@ -10,11 +10,7 @@ export type ApplyBusinessHoursTemplateInput = {
 export async function applyBusinessHoursTemplate(
   data: ApplyBusinessHoursTemplateInput,
 ) {
-  return apiFetch("/business-hours/apply-template", {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
+  return api.post("/business-hours/apply-template", {
+    headers: getAuthHeaders(),
   })
 }

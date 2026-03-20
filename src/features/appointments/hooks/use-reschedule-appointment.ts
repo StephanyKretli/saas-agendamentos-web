@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -15,10 +15,8 @@ export function useRescheduleAppointment(currentDate: string) {
 
   return useMutation({
     mutationFn: async ({ appointmentId, date }: RescheduleInput) => {
-      return apiFetch(`/appointments/${appointmentId}/reschedule`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ date }),
+      return api.patch(`/appointments/${appointmentId}/reschedule`, {}, {
+        headers: getAuthHeaders()
       });
     },
     onSuccess: async (_, variables) => {

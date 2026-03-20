@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api"
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers"
 
 export type UpdateServiceInput = {
@@ -12,11 +12,8 @@ export async function updateService({
   id,
   ...data
 }: UpdateServiceInput) {
-  return apiFetch(`/services/${id}`, {
-    method: "PATCH",
-    headers: {
-      ...getAuthHeaders(),
-    },
+  return api.patch(`/services/${id}`, {
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   })
 }

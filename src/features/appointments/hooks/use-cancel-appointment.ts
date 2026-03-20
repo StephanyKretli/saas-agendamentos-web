@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 
 export function useCancelAppointment(date: string) {
@@ -9,8 +9,7 @@ export function useCancelAppointment(date: string) {
 
   return useMutation({
     mutationFn: async (appointmentId: string) => {
-      return apiFetch(`/appointments/${appointmentId}/cancel`, {
-        method: "PATCH",
+      return api.patch(`/appointments/${appointmentId}/cancel`, {}, {
         headers: getAuthHeaders(),
       });
     },

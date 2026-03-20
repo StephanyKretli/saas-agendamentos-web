@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type {
   BusinessHour,
@@ -7,39 +7,34 @@ import type {
 } from "../types/business-hours.types";
 
 export async function getBusinessHours(): Promise<BusinessHour[]> {
-  return apiFetch<BusinessHour[]>("/business-hours", {
+  // GET: (url, config)
+  return api.get("/business-hours", {
     headers: getAuthHeaders(),
-  });
+  }) as Promise<BusinessHour[]>;
 }
 
-export async function createBusinessHour(payload: CreateBusinessHourPayload) {
-  return apiFetch<BusinessHour>("/business-hours", {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+export async function createBusinessHour(
+  payload: CreateBusinessHourPayload
+): Promise<BusinessHour> {
+  // POST: (url, dados, config)
+  return api.post("/business-hours", payload, {
+    headers: getAuthHeaders(),
+  }) as Promise<BusinessHour>;
 }
 
 export async function updateBusinessHour(
   id: string,
-  payload: UpdateBusinessHourPayload,
-) {
-  return apiFetch<BusinessHour>(`/business-hours/${id}`, {
-    method: "PATCH",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  payload: UpdateBusinessHourPayload
+): Promise<BusinessHour> {
+  // PATCH: (url, dados, config)
+  return api.patch(`/business-hours/${id}`, payload, {
+    headers: getAuthHeaders(),
+  }) as Promise<BusinessHour>;
 }
 
-export async function deleteBusinessHour(id: string) {
-  return apiFetch(`/business-hours/${id}`, {
-    method: "DELETE",
+export async function deleteBusinessHour(id: string): Promise<void> {
+  // DELETE: (url, config)
+  return api.delete(`/business-hours/${id}`, {
     headers: getAuthHeaders(),
-  });
+  }) as Promise<void>;
 }

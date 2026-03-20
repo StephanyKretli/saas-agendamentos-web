@@ -1,23 +1,22 @@
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type { PaginatedAppointmentsResponse } from "../types/appointments.types";
+import { promises } from "dns";
 
 export async function getMyAppointments(): Promise<PaginatedAppointmentsResponse> {
-  return apiFetch<PaginatedAppointmentsResponse>("/appointments/me", {
+  return api.get("/appointments/me", {
     headers: getAuthHeaders(),
-  });
+  }) as Promise<PaginatedAppointmentsResponse>;
 }
 
 export async function completeAppointment(id: string) {
-  return apiFetch(`/appointments/${id}/complete`, {
-    method: "PATCH",
+  return api.patch(`/appointments/${id}/complete`, {}, {
     headers: getAuthHeaders(),
   });
 }
 
 export async function cancelAppointment(id: string) {
-  return apiFetch(`/appointments/${id}/cancel`, {
-    method: "PATCH",
+  return api.patch(`/appointments/${id}/cancel`, {}, {
     headers: getAuthHeaders(),
   });
 }

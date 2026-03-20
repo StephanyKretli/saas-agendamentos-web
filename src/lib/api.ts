@@ -1,42 +1,26 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001";
+import axios from 'axios';
 
-type RequestOptions = RequestInit;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3333";
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
-  });
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+});
 
-  if (!response.ok) {
-    let message = "Erro ao realizar requisição";
-
-    try {
-      const errorBody = await response.json();
-      message = errorBody.message ?? message;
-    } catch {
-      // mantém mensagem padrão
+api.interceptors.response.use(
+  (response) => {
+    if (response.data && response.data.data !== undefined) {
+      return response.data.data;
     }
-
-    throw new Error(message);
+    return response.data;
+  },
+  (error) => {
+    if (error.response && error.response.data) {
+      const { message } = error.response.data;
+      return Promise.reject(new Error(message || 'Ocorreu um erro inesperado.'));
+    } else if (error.request) {
+      return Promise.reject(new Error('Não foi possível conectar ao servidor. Verifique sua conexão.'));
+    }
+    
+    return Promise.reject(new Error('Erro interno na aplicação.'));
   }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  const contentType = response.headers.get("content-type");
-
-  if (!contentType?.includes("application/json")) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
-}
+);

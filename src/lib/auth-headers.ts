@@ -1,6 +1,6 @@
 import { getAccessToken } from "./auth-storage";
 
-export function getAuthHeaders(): HeadersInit {
+export function getAuthHeaders(): Record<string, string> {
   const token = getAccessToken();
 
   if (!token) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 
 export type TimelineItem =
@@ -45,12 +45,12 @@ export function useDayTimeline(date: string) {
   return useQuery({
     queryKey: ["appointments-day-timeline", date],
     queryFn: async () => {
-      return apiFetch<DayTimelineResponse>(
+      return api.get(
         `/appointments/day-timeline?date=${date}`,
         {
           headers: getAuthHeaders(),
-        },
-      );
+        }
+      ) as Promise<DayTimelineResponse>; 
     },
     enabled: !!date,
   });

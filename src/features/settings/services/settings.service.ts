@@ -1,24 +1,21 @@
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { Settings, UpdateSettingsInput } from "../types/settings.types";
 
-export async function getSettings(token: string) {
-  return apiFetch<Settings>("/settings", {
-    method: "GET",
+export async function getSettings(token: string): Promise<Settings> {
+  return api.get("/settings", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  });
+  }) as Promise<Settings>;
 }
 
 export async function updateSettings(
   token: string,
   input: UpdateSettingsInput,
-) {
-  return apiFetch<Settings>("/settings", {
-    method: "PATCH",
+): Promise<Settings> {
+  return api.patch("/settings", input, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(input),
-  });
+  }) as Promise<Settings>;
 }

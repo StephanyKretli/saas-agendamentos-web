@@ -1,9 +1,9 @@
-import { apiFetch } from "@/lib/api";
+import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type { DashboardMetrics } from "../types/dashboard.types";
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  return apiFetch<DashboardMetrics>("/dashboard/metrics", {
+  return api.get("/dashboard/metrics", {
     headers: getAuthHeaders(),
   });
 }
