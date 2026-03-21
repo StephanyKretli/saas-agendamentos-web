@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useCreateService } from "../hooks/use-create-service";
+import { Service } from "../types/services.types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type ServiceFormValues = {
   name: string;
@@ -8,47 +12,47 @@ type ServiceFormValues = {
   price: number;
 };
 
-type Props = {
-  onSubmit: (values: ServiceFormValues) => void;
-  isSubmitting?: boolean;
-  initialValues?: ServiceFormValues;
-  submitLabel?: string;
+// Ajustamos a interface para bater com o que a página envia
+interface ServiceFormProps {
+  onSuccess?: () => void;
   onCancel?: () => void;
-};
+  initialValues?: Service; // Usamos o tipo Service do seu projeto
+  submitLabel?: string;
+}
 
 export function ServiceForm({
-  onSubmit,
-  isSubmitting = false,
+  onSuccess,
+  onCancel,
   initialValues,
   submitLabel = "Salvar",
-  onCancel,
-}: Props) {
-  const [name, setName] = React.useState("");
-  const [duration, setDuration] = React.useState(30);
-  const [price, setPrice] = React.useState(0);
+}: ServiceFormProps) {
+  // Integramos a mutação diretamente no formulário
+  const createService = useCreateService();
 
-  React.useEffect(() => {
-    if (initialValues) {
-      setName(initialValues.name);
-      setDuration(initialValues.duration);
-      setPrice(initialValues.price);
-      return;
-    }
+  const [name, setName] = React.useState(initialValues?.name ?? "");
+  const [duration, setDuration] = React.useState(initialValues?.duration ?? 30);
+  const [price, setPrice] = React.useState(initialValues?.price ?? 0);
 
-    setName("");
-    setDuration(30);
-    setPrice(0);
-  }, [initialValues]);
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    onSubmit({
+    const payload = {
       name: name.trim(),
       duration,
       price,
+    };
+
+    // Executa a mutação
+    await createService.mutateAsync(payload, {
+      onSuccess: () => {
+        // Quando o backend responde com sucesso, avisamos a página pai
+        // para fechar o modal e atualizar a lista
+        onSuccess?.();
+      },
     });
   }
+
+  const isPending = createService.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -56,11 +60,12 @@ export function ServiceForm({
         <label className="text-sm font-medium text-foreground">
           Nome do serviço
         </label>
-        <input
+        <Input
           placeholder="Ex.: Corte masculino"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-input px-3 py-2"
+          required
+          disabled={isPending}
         />
         <p className="text-xs text-muted-foreground">
           Digite o nome que será exibido para o cliente no agendamento.
@@ -71,12 +76,13 @@ export function ServiceForm({
         <label className="text-sm font-medium text-foreground">
           Duração
         </label>
-        <input
+        <Input
           type="number"
           placeholder="Ex.: 30"
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
-          className="w-full rounded-lg border border-input px-3 py-2"
+          required
+          disabled={isPending}
         />
         <p className="text-xs text-muted-foreground">
           Informe a duração em minutos. Exemplo: 30, 45, 60.
@@ -87,38 +93,38 @@ export function ServiceForm({
         <label className="text-sm font-medium text-foreground">
           Preço
         </label>
-        <input
+        <Input
           type="number"
           step="0.01"
-          placeholder="Ex.: 50,00"
+          placeholder="Ex.: 50.00"
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
-          className="w-full rounded-lg border border-input px-3 py-2"
+          required
+          disabled={isPending}
         />
         <p className="text-xs text-muted-foreground">
           Informe o valor em reais. Exemplo: 50 para R$ 50,00.
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+      <div className="flex items-center gap-2 pt-2">
+        <Button 
+          type="submit" 
+          disabled={isPending}
         >
-          {isSubmitting ? "Salvando..." : submitLabel}
-        </button>
+          {isPending ? "Salvando..." : submitLabel}
+        </Button>
 
-        {onCancel ? (
-          <button
+        {onCancel && (
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
-            disabled={isSubmitting}
-            className="rounded-lg border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-60"
+            disabled={isPending}
           >
             Cancelar
-          </button>
-        ) : null}
+          </Button>
+        )}
       </div>
     </form>
   );

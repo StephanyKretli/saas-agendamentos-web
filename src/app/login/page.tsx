@@ -24,7 +24,7 @@ export default function LoginPage() {
       saveAccessToken(response.accessToken);
       router.push("/dashboard");
     } catch {
-      // erro tratado abaixo
+
     }
   }
 
@@ -60,14 +60,6 @@ export default function LoginPage() {
               placeholder="********"
             />
           </div>
-
-          {loginMutation.isError ? (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-muted-foreground">
-              {loginMutation.error instanceof Error
-                ? loginMutation.error.message
-                : "Não foi possível fazer login."}
-            </div>
-          ) : null}
 
           <button
             type="submit"

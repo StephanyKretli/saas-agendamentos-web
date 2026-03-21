@@ -3,6 +3,7 @@
 import type { Service } from "../types/services.types";
 import { useDeleteService } from "../hooks/use-delete-service";
 import { ServiceImageUpload } from "./service-image-upload";
+import { Button } from "@/components/ui/button";
 
 function formatPrice(priceCents: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -11,13 +12,24 @@ function formatPrice(priceCents: number) {
   }).format(priceCents / 100);
 }
 
-type Props = {
+interface ServiceCardProps {
   service: Service;
-  onEdit: () => void;
-};
+  onDeleteSuccess?: () => void;
+  onEdit?: () => void; // Adicionamos aqui para evitar erro no botão de editar
+}
 
-export function ServiceCard({ service, onEdit }: Props) {
+export function ServiceCard({ service, onDeleteSuccess, onEdit }: ServiceCardProps) {
   const deleteMutation = useDeleteService();
+
+  const handleDelete = async () => {
+    if (!confirm("Tem certeza que deseja excluir este serviço?")) return;
+
+    await deleteMutation.mutateAsync(service.id, {
+      onSuccess: () => {
+        onDeleteSuccess?.();
+      },
+    });
+  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -30,37 +42,35 @@ export function ServiceCard({ service, onEdit }: Props) {
             {service.duration} min
           </p>
           <p className="text-sm font-medium text-foreground">
-            {formatPrice(service.priceCents)}
+            {formatPrice(service.price)}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted"
-          >
-            Editar
-          </button>
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEdit}
+            >
+              Editar
+            </Button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => deleteMutation.mutate(service.id)}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
             disabled={deleteMutation.isPending}
-            className="rounded-lg border border-destructive/20 px-3 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/5 disabled:opacity-60"
           >
             {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {deleteMutation.isError ? (
-        <p className="text-sm text-red-600">
-          {deleteMutation.error instanceof Error
-            ? deleteMutation.error.message
-            : "Não foi possível excluir o serviço."}
-        </p>
-      ) : null}
+      {/* O erro de delete agora é tratado pelo Toast global que configuramos, 
+          então não precisamos mais desse bloco de erro manual aqui embaixo! 
+      */}
 
       <ServiceImageUpload service={service} />
     </div>

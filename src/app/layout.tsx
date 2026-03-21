@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "@/app/globals.css";
+import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from "@/providers/query-provider";
+
+import "@/app/globals.css"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,13 +22,33 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <QueryProvider>{children}</QueryProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        
+        <QueryProvider>
+          {children}
+        </QueryProvider>
+        
+        <Toaster 
+          position="top-right" 
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+            success: {
+              style: { background: '#10B981' }, 
+            },
+            error: {
+              style: { background: '#EF4444' }, 
+            },
+          }} 
+        />
       </body>
     </html>
   );

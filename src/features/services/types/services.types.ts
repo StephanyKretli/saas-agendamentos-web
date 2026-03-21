@@ -1,23 +1,17 @@
-export type Service = {
+// src/features/services/types/services.types.ts
+
+export interface Service {
   id: string;
   name: string;
   duration: number;
-  priceCents: number;
-  imageUrl?: string | null;
-};
+  price: number;
+  // ... outros campos
+}
 
-export type CreateServicePayload = {
-  name: string;
-  duration: number;
-  priceCents: number;
-};
-
-export type ServicesListResponse =
-  | Service[]
-  | {
-      items: Service[];
-      page?: number;
-      limit?: number;
-      total?: number;
-      totalPages?: number;
-    };
+export interface ServicesListResponse {
+  items: Service[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
