@@ -1,21 +1,5 @@
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  createdAt: string;
-};
+import { redirect } from "next/navigation";
 
-export default async function UsersPage() {
-  const res = await fetch('http://127.0.0.1:3001/users', { cache: 'no-store' });
-  const users: User[] = await res.json();
-
-  return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">Users</h1>
-      <pre className="mt-4 rounded bg-black/5 p-4 text-sm">
-        {JSON.stringify(users, null, 2)}
-      </pre>
-    </main>
-  );
+export default function Home() {
+  redirect("/login");
 }

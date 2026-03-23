@@ -31,7 +31,7 @@ export function ServiceForm({
 
   const [name, setName] = React.useState(initialValues?.name ?? "");
   const [duration, setDuration] = React.useState(initialValues?.duration ?? 30);
-  const [price, setPrice] = React.useState(initialValues?.price ?? 0);
+  const [price, setPrice] = React.useState(initialValues?.priceCents ?? 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,17 +39,17 @@ export function ServiceForm({
     const payload = {
       name: name.trim(),
       duration,
-      price,
+      priceCents: Math.round(price * 100), 
     };
 
-    // Executa a mutação
-    await createService.mutateAsync(payload, {
-      onSuccess: () => {
-        // Quando o backend responde com sucesso, avisamos a página pai
-        // para fechar o modal e atualizar a lista
-        onSuccess?.();
-      },
-    });
+    try {
+      await createService.mutateAsync(payload);
+      
+      onSuccess?.(); 
+    } catch (error) {
+
+      console.error("Erro ao salvar o serviço:", error);
+    }
   }
 
   const isPending = createService.isPending;

@@ -1,11 +1,9 @@
-// src/features/services/types/services.types.ts
-
 export interface Service {
   id: string;
   name: string;
   duration: number;
-  price: number;
-  // ... outros campos
+  priceCents: number; 
+  imageUrl?: string | null;
 }
 
 export interface ServicesListResponse {

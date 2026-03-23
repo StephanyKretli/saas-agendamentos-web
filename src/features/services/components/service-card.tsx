@@ -42,7 +42,7 @@ export function ServiceCard({ service, onDeleteSuccess, onEdit }: ServiceCardPro
             {service.duration} min
           </p>
           <p className="text-sm font-medium text-foreground">
-            {formatPrice(service.price)}
+            {formatPrice(service.priceCents)}
           </p>
         </div>
 

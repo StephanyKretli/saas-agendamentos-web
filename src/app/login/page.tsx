@@ -21,10 +21,18 @@ export default function LoginPage() {
         password,
       });
 
-      saveAccessToken(response.accessToken);
-      router.push("/dashboard");
-    } catch {
+      const token = response.accessToken || (response as any).access_token;
 
+      if (!token) {
+        console.error("Token não encontrado na resposta:", response);
+        return;
+      }
+
+      saveAccessToken(token);
+      router.push("/dashboard");
+    } catch (error) {
+      
+      console.error("Falha na tentativa de login:", error);
     }
   }
 

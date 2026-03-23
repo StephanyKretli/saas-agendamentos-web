@@ -1,14 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createService } from "../services/services.api";
-
+import { createService } from "../services/services.api"; 
 export function useCreateService() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createService,
     onSuccess: () => {
+
       queryClient.invalidateQueries({ queryKey: ["services"] });
     },
   });

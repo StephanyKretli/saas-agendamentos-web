@@ -9,7 +9,11 @@ import { Plus } from "lucide-react";
 
 export default function ServicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const { data: services, isLoading, refetch } = useServices();
+  const { data, isLoading, refetch } = useServices();
+
+  console.log("RAIO-X DOS SERVIÇOS:", data);
+
+  const servicesList = Array.isArray(data) ? data : (data?.items ?? []);
 
   return (
     <div className="space-y-6">
@@ -35,7 +39,7 @@ export default function ServicesPage() {
         </div>
       ) : (
         <ServiceList 
-          services={services?.items || []} // Acesse a propriedade .items aqui
+          services={servicesList} 
           onDeleteSuccess={() => refetch()} 
         />
       )}
