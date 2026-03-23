@@ -18,3 +18,12 @@ export async function getClientHistory(
     headers: getAuthHeaders(),
   }) as Promise<ClientHistoryResponse>;
 }
+
+export async function createClient(payload: {
+  name: string;
+  phone: string;
+  email?: string;
+  notes?: string;
+}) {
+  return api.post("/clients", payload);
+}

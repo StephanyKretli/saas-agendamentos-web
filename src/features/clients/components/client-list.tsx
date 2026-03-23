@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 interface ClientListProps {
   clients: Client[];
   onViewHistory?: (clientId: string) => void;
+  onDeleteSuccess?: () => void;
 }
 
 export function ClientList({ clients, onViewHistory }: ClientListProps) {
