@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useClients } from "@/features/clients/hooks/use-clients";
-// 👇 IMPORTANTE: Ajuste o caminho do seu hook de serviços, se necessário
 import { useServices } from "@/features/services/hooks/use-services"; 
+import { createAppointment } from "../services/appointments.api";
 
 interface AppointmentFormProps {
-  initialDate?: string; // Para já vir preenchido se o usuário clicou num dia específico
+  initialDate?: string; 
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -25,7 +25,6 @@ export function AppointmentForm({ initialDate, onSuccess, onCancel }: Appointmen
   const { data: clientsData } = useClients();
   const { data: servicesData } = useServices();
 
-  // Nossas travas de segurança padrão Sênior 🛡️
   const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.items ?? []);
   const services = Array.isArray(servicesData) ? servicesData : (servicesData?.items ?? []);
 
@@ -35,25 +34,23 @@ export function AppointmentForm({ initialDate, onSuccess, onCancel }: Appointmen
     setIsLoading(true);
 
     try {
-      // 🚧 AQUI VAI A CHAMADA PARA A SUA API (POST /appointments)
       const payload = {
         clientId,
         serviceId,
-        date, // Ex: "2026-03-23"
-        time, // Ex: "14:30"
+        // Vai ficar exatamente assim: "2026-04-02T13:00:00"
+        date: `${date}T${time}:00`, 
         notes,
       };
       
       console.log("Enviando para a API:", payload);
       
-      // Simulando o tempo de requisição
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createAppointment(payload);
       
-      // Se deu certo, avisa o componente pai para fechar o modal e recarregar a lista
       onSuccess?.();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error("Erro ao salvar agendamento:", error);
-      alert("Ocorreu um erro ao tentar salvar o agendamento.");
+      alert(error.message || "Ocorreu um erro ao tentar salvar o agendamento.");
     } finally {
       setIsLoading(false);
     }

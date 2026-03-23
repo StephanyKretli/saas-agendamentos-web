@@ -127,11 +127,13 @@ export default function AgendaPage() {
             <h2 className="mb-6 text-xl font-semibold">Novo Agendamento</h2>
             
             <AppointmentForm 
-              initialDate={selectedDate} // Já preenche com a data que o usuário estava olhando!
+              initialDate={selectedDate}
               onCancel={() => setIsNewAppointmentOpen(false)}
               onSuccess={() => {
                 setIsNewAppointmentOpen(false);
-                // Aqui depois vamos colocar a função para recarregar a timeline do dia!
+                // Força o React a recarregar a data atual, disparando o hook useDayTimeline novamente!
+                setSelectedDate((prev) => prev + " "); 
+                setTimeout(() => setSelectedDate(selectedDate), 50);
               }}
             />
           </div>
