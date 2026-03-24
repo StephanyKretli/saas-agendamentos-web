@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeAccessToken } from "@/lib/auth-storage";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const items = [
   { href: "/dashboard", label: "Dashboard" },
@@ -23,6 +25,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data } = useSettings();
+  const { theme, setTheme } = useTheme();
 
   function handleLogout() {
     removeAccessToken();
@@ -85,13 +88,32 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      <div className="mt-4 border-t border-border pt-4">
+      <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+        {/* NOVO: Botão de Tema */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun className="h-4 w-4 text-amber-500" />
+              <span>Modo Claro</span>
+            </>
+          ) : (
+            <>
+              <Moon className="h-4 w-4 text-slate-700" />
+              <span>Modo Escuro</span>
+            </>
+          )}
+        </button>
+
+        {/* Botão de Sair (que já existia) */}
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-destructive transition hover:bg-destructive/10"
         >
-          Sair
+          Sair do painel
         </button>
       </div>
     </aside>

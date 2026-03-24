@@ -1,20 +1,27 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Clock, Trash2, Edit3, Scissors } from "lucide-react";
 import { useDeleteService } from "../hooks/use-delete-service";
 import { toast } from "react-hot-toast";
 import { Service } from "@/features/services/types/services.types";
+// IMPORTANTE: Adicionados Trash2, Clock e Edit3 que estavam faltando
+import { 
+  Scissors, Brush, Sparkles, Droplets, Flower2, Wand2, Heart, Crown, Smile,
+  HandIcon, Zap, GlassWater, User, SprayCan, Gem, Footprints, Eye, 
+  PencilLine, // Novo ícone de maquiagem
+  Trash2,     // Ícone para excluir
+  Clock,      // Ícone para duração
+  Edit3       // Ícone para editar
+} from "lucide-react";
 
 interface ServiceListProps {
   services: Service[];
   onDeleteSuccess: () => void;
-  // Adicionei essa prop para comunicar com a página principal
   onEdit: (service: Service) => void; 
 }
 
 export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListProps) {
-  const { mutate: deleteService, isPending } = useDeleteService();
+  const { mutate: deleteService } = useDeleteService();
 
   const handleDelete = (id: string, name: string) => {
     if (confirm(`Deseja realmente excluir o serviço "${name}"?`)) {
@@ -36,13 +43,12 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
         >
           <div className="space-y-3">
             <div className="flex items-start justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/5 text-primary">
-                <Scissors className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                {getServiceIcon(service.icon)}
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                disabled={isPending}
                 onClick={() => handleDelete(service.id, service.name)}
                 className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               >
@@ -53,7 +59,7 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
             <div>
               <h3 className="font-semibold text-lg leading-tight">{service.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                {/* @ts-ignore - Caso o type ainda esteja dando erro de 'description' */}
+                {/* @ts-ignore */}
                 {service.description || "Sem descrição disponível."}
               </p>
             </div>
@@ -66,8 +72,6 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
                 <span>{service.duration} min</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                {/* AJUSTE DO PREÇO: Dividindo por 100 se vier em centavos */}
-                {/* @ts-ignore - Caso o type ainda esteja dando erro de 'price' */}
                 <span>R$ {(Number(service.priceCents ?? 0) / 100).toFixed(2)}</span>
               </div>
             </div>
@@ -76,7 +80,7 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
               variant="ghost" 
               size="sm" 
               className="h-8 px-2 text-xs font-normal hover:bg-muted rounded-lg"
-              onClick={() => onEdit(service)} // Ação de editar
+              onClick={() => onEdit(service)}
             >
               <Edit3 className="mr-1 h-3 w-3" />
               Editar
@@ -86,4 +90,41 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
       ))}
     </div>
   );
+}
+
+export function getServiceIcon(iconId: string | null | undefined) {
+  const icons: Record<string, any> = {
+    // Barbearia
+    scissors: Scissors,
+    spray: SprayCan,
+    user: User,
+
+    // Salão / Cabelo
+    wand2: Wand2,
+    droplets: Droplets,
+    crown: Crown,
+
+    // Unhas
+    hand: HandIcon,
+    foot: Footprints,
+    sparkles: Sparkles,
+
+    // Estética & Pele
+    glass: GlassWater,
+    PencilLine: PencilLine,
+    zap: Zap,
+    eye: Eye,
+    gem: Gem,
+
+    // Bem-estar / Outros
+    flower2: Flower2,
+    heart: Heart,
+    smile: Smile,
+  };
+
+  // Se o ícone não for encontrado (ou for nulo), 
+  // usamos a Scissors (Tesoura) como fallback padrão.
+  const IconComponent = icons[iconId as string] || Scissors;
+  
+  return <IconComponent className="h-5 w-5" />;
 }

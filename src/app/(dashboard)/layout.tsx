@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/auth-storage";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
-import { DashboardHeader } from "@/components/layout/dashboard-header";
 
 export default function DashboardLayout({
   children,
@@ -34,13 +33,16 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background md:flex">
-      <DashboardSidebar />
-
-      <div className="flex-1">
-        <DashboardHeader />
-        <main className="p-6">{children}</main>
+    <div className="min-h-screen bg-muted/30 md:flex md:p-4 md:gap-4 lg:gap-6">
+      
+      <div className="md:w-64 lg:w-72 md:shrink-0">
+        <DashboardSidebar />
       </div>
+
+      <main className="flex-1 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        {children}
+      </main>
+
     </div>
   );
 }

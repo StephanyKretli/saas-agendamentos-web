@@ -1,11 +1,3 @@
-export interface Service {
-  id: string;
-  name: string;
-  duration: number;
-  priceCents: number | string;       
-  description?: string | null;  
-}
-
 export interface ServicesListResponse {
   items: Service[];
   total: number;
@@ -13,3 +5,12 @@ export interface ServicesListResponse {
   limit: number;
   totalPages: number;
 }
+
+export type Service = {
+  id: string;
+  name: string;
+  duration: number;
+  priceCents: number;
+  imageUrl?: string | null;
+  icon?: string | null; 
+};
