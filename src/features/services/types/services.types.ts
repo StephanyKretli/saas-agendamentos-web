@@ -2,8 +2,8 @@ export interface Service {
   id: string;
   name: string;
   duration: number;
-  priceCents: number; 
-  imageUrl?: string | null;
+  priceCents: number | string;       
+  description?: string | null;  
 }
 
 export interface ServicesListResponse {

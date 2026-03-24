@@ -60,7 +60,7 @@ export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientLi
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="h-3.5 w-3.5" />
-                    <span className="truncate max-w-[200px] sm:max-w-none">
+                    <span className="truncate max-w-50 sm:max-w-none">
                       {client.email || "Sem e-mail"}
                     </span>
                   </div>

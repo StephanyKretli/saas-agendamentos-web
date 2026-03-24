@@ -1,32 +1,27 @@
-"use client";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateService, UpdateServiceInput } from "../api/update-service";
-import { queryKeys } from "@/lib/query-keys";
-import { toast } from "react-hot-toast"; //
+import { api } from "@/lib/api"; 
+import { getAuthHeaders } from "@/lib/auth-headers"; // <-- Faltava isso!
+
+interface UpdateServicePayload {
+  id: string;
+  name?: string;
+  duration?: number;
+  priceCents?: number;
+}
 
 export function useUpdateService() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateServiceInput) => updateService(data),
-    onSuccess: async () => {
-      // Atualiza a lista de serviços no painel
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.services,
-      });
-
-      // Invalida a disponibilidade pública, pois mudanças no serviço (ex: duração)
-      // alteram os horários disponíveis para os clientes
-      await queryClient.invalidateQueries({
-        queryKey: ["public-booking-availability"],
-      });
-
-      toast.success("Serviço atualizado com sucesso!"); //
+    mutationFn: async ({ id, ...data }: UpdateServicePayload) => {
+      // O Axios precisa que os dados (data) fiquem no segundo parâmetro, e os headers no terceiro.
+      const response = await api.patch(`/services/${id}`, data, {
+        headers: getAuthHeaders()
+      }); 
+      return response.data;
     },
-    onError: (error: any) => {
-      // Exibe o erro tratado pelo seu interceptor (ex: "Serviço não encontrado")
-      toast.error(error.message || "Erro ao atualizar o serviço");
-    }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+    },
   });
 }

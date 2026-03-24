@@ -1,22 +1,17 @@
 "use client";
 
-import * as React from "react";
-import { useCreateService } from "../hooks/use-create-service";
+import React, { useEffect, useState } from "react";
 import { Service } from "../types/services.types";
+import { useCreateService } from "../hooks/use-create-service";
+import { useUpdateService } from "../hooks/use-update-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "react-hot-toast";
 
-type ServiceFormValues = {
-  name: string;
-  duration: number;
-  price: number;
-};
-
-// Ajustamos a interface para bater com o que a página envia
 interface ServiceFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
-  initialValues?: Service; // Usamos o tipo Service do seu projeto
+  initialValues?: Service | null;
   submitLabel?: string;
 }
 
@@ -26,40 +21,70 @@ export function ServiceForm({
   initialValues,
   submitLabel = "Salvar",
 }: ServiceFormProps) {
-  // Integramos a mutação diretamente no formulário
   const createService = useCreateService();
+  const updateService = useUpdateService();
 
-  const [name, setName] = React.useState(initialValues?.name ?? "");
-  const [duration, setDuration] = React.useState(initialValues?.duration ?? 30);
-  const [price, setPrice] = React.useState(initialValues?.priceCents ?? 0);
+  const [name, setName] = useState("");
+  const [duration, setDuration] = useState<number | string>(30);
+  const [price, setPrice] = useState<number | string>(0);
+
+  useEffect(() => {
+    if (initialValues) {
+      setName(initialValues.name || "");
+      setDuration(initialValues.duration || 30);
+      
+      // Captura o preço venha ele como priceCents ou price
+      const dbPrice = (initialValues as any).priceCents ?? (initialValues as any).price ?? 0;
+      setPrice(Number(dbPrice) / 100);
+    } else {
+      setName("");
+      setDuration(30);
+      setPrice(0);
+    }
+  }, [initialValues]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    // 🕵️‍♂️ BLINDAGEM MÁXIMA: Pegamos o ID diretamente da prop na hora exata do clique
+    // Tenta pegar 'id' ou '_id' (caso o banco seja MongoDB e esteja disfarçado)
+    const targetId = initialValues?.id || (initialValues as any)?._id;
+
     const payload = {
       name: name.trim(),
-      duration,
-      priceCents: Math.round(price * 100), 
+      duration: Number(duration),
+      priceCents: Math.round(Number(price) * 100), 
     };
 
     try {
-      await createService.mutateAsync(payload);
-      
-      onSuccess?.(); 
-    } catch (error) {
+      if (targetId) {
+        // === ROTA DE ATUALIZAR ===
+        await updateService.mutateAsync({
+          id: targetId,
+          ...payload,
+        });
+        toast.success("Serviço atualizado com sucesso!");
+      } else {
+        // === ROTA DE CRIAR ===
+        await createService.mutateAsync(payload);
+        toast.success("Serviço criado com sucesso!");
+      }
 
-      console.error("Erro ao salvar o serviço:", error);
+      onSuccess?.();
+    } catch (error: any) {
+      console.error("Erro ao salvar:", error);
+      toast.error(error.message || "Erro ao salvar serviço");
     }
   }
 
-  const isPending = createService.isPending;
+  const isPending = createService.isPending || updateService.isPending;
+  // Muda o texto do botão automaticamente para você saber que ele reconheceu a edição
+  const isEditing = Boolean(initialValues?.id || (initialValues as any)?._id);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Nome do serviço
-        </label>
+        <label className="text-sm font-medium text-foreground">Nome do serviço</label>
         <Input
           placeholder="Ex.: Corte masculino"
           value={name}
@@ -67,61 +92,40 @@ export function ServiceForm({
           required
           disabled={isPending}
         />
-        <p className="text-xs text-muted-foreground">
-          Digite o nome que será exibido para o cliente no agendamento.
-        </p>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Duração
-        </label>
+        <label className="text-sm font-medium text-foreground">Duração (minutos)</label>
         <Input
           type="number"
           placeholder="Ex.: 30"
           value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
+          onChange={(e) => setDuration(e.target.value)}
           required
           disabled={isPending}
         />
-        <p className="text-xs text-muted-foreground">
-          Informe a duração em minutos. Exemplo: 30, 45, 60.
-        </p>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">
-          Preço
-        </label>
+        <label className="text-sm font-medium text-foreground">Preço (R$)</label>
         <Input
           type="number"
           step="0.01"
           placeholder="Ex.: 50.00"
           value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
+          onChange={(e) => setPrice(e.target.value)}
           required
           disabled={isPending}
         />
-        <p className="text-xs text-muted-foreground">
-          Informe o valor em reais. Exemplo: 50 para R$ 50,00.
-        </p>
       </div>
 
-      <div className="flex items-center gap-2 pt-2">
-        <Button 
-          type="submit" 
-          disabled={isPending}
-        >
-          {isPending ? "Salvando..." : submitLabel}
+      <div className="flex items-center gap-2 pt-4">
+        <Button type="submit" disabled={isPending} className="min-w-[120px]">
+          {isPending ? "Salvando..." : isEditing ? "Atualizar Serviço" : "Cadastrar Serviço"}
         </Button>
 
         {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isPending}
-          >
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
             Cancelar
           </Button>
         )}
