@@ -20,11 +20,7 @@ export function BlockedDatesForm() {
     }
 
     try {
-      await mutateAsync({
-        date,
-        reason: reason.trim() || undefined,
-      })
-
+      await mutateAsync({ date, reason: reason.trim() || undefined })
       setDate("")
       setReason("")
     } catch {
@@ -33,55 +29,37 @@ export function BlockedDatesForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
-    >
-      <h2 className="text-lg font-semibold text-zinc-900">
-        Novo bloqueio
-      </h2>
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-foreground">Novo bloqueio de dia inteiro</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Bloqueie um dia inteiro para evitar novos agendamentos.</p>
 
-      <p className="mt-1 text-sm text-zinc-500">
-        Bloqueie um dia inteiro para evitar novos agendamentos.
-      </p>
-
-      <div className="mt-4">
-        <label className="text-sm font-medium text-zinc-800">
-          Data
-        </label>
-
+      <div className="mt-4 space-y-2">
+        <label className="text-sm font-medium text-foreground">Data</label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
-      <div className="mt-4">
-        <label className="text-sm font-medium text-zinc-800">
-          Motivo (opcional)
-        </label>
-
+      <div className="mt-4 space-y-2">
+        <label className="text-sm font-medium text-foreground">Motivo (opcional)</label>
         <input
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Ex.: férias, consulta, compromisso"
-          className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
+          placeholder="Ex.: férias, feriado, fecho para obras"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
-      {error && (
-        <div className="mt-4 text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-4 text-sm text-destructive">{error}</div>}
 
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-white"
+        className="mt-5 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 sm:w-auto"
       >
         {isPending ? "Salvando..." : "Criar bloqueio"}
       </button>

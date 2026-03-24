@@ -5,7 +5,7 @@ import type { BlockedSlot, CreateBlockedSlotInput } from "../types/blocked-slot"
 export async function createBlockedSlot(
   data: CreateBlockedSlotInput,
 ): Promise<BlockedSlot> {
-  return api.post("/blocked-slots", {
+  return api.post("/blocked-slots", data, {
     headers: getAuthHeaders(),
-  }) as Promise <BlockedSlot>;
+  }) as Promise<BlockedSlot>;
 }

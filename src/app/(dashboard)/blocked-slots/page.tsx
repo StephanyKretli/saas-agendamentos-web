@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useBlockedDates } from "@/features/blocked-dates/hooks/use-blocked-dates";
 import { useBlockedSlots } from "@/features/blocked-slots/hooks/use-blocked-slots";
 
@@ -8,6 +9,8 @@ import { BlockedDatesList } from "@/features/blocked-dates/components/blocked-da
 
 import { BlockedSlotForm } from "@/features/blocked-slots/components/blocked-slot-form";
 import { BlockedSlotList } from "@/features/blocked-slots/components/blocked-slot-list";
+
+import { Calendar, Clock } from "lucide-react";
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
@@ -21,119 +24,105 @@ function StatCard({ label, value }: { label: string; value: number }) {
 }
 
 export default function BlockedSlotsPage() {
-  const {
-    data: blockedDates,
-    isLoading: loadingDates,
-    isError: errorDates,
-    error: datesError,
-  } = useBlockedDates();
+  // Estado para controlar qual aba está ativa
+  const [activeTab, setActiveTab] = useState<"dates" | "slots">("dates");
 
-  const {
-    data: blockedSlots,
-    isLoading: loadingSlots,
-    isError: errorSlots,
-    error: slotsError,
-  } = useBlockedSlots();
+  const { data: blockedDates, isLoading: loadingDates } = useBlockedDates();
+  const { data: blockedSlots, isLoading: loadingSlots } = useBlockedSlots();
 
-  const dates = blockedDates ?? [];
-  const slots = blockedSlots ?? [];
+  // Filtramos apenas os futuros para exibir nos cards de estatísticas também
+  const activeDates = (blockedDates ?? []).filter((item) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(item.date).getTime() >= today.getTime();
+  });
+
+  const activeSlots = (blockedSlots ?? []).filter((item) => {
+    return new Date(item.end).getTime() >= new Date().getTime();
+  });
 
   return (
     <div className="space-y-8">
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Bloqueios de agenda
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Bloqueios de agenda</h1>
         <p className="text-sm text-muted-foreground">
-          Controle datas e horários em que você não estará disponível.
+          Gerencie as suas ausências. Eventos passados são ocultados automaticamente.
         </p>
       </div>
 
       {/* STATS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard label="Dias bloqueados" value={dates.length} />
-        <StatCard label="Horários bloqueados" value={slots.length} />
-        <StatCard label="Total de bloqueios" value={dates.length + slots.length} />
+        <StatCard label="Dias Bloqueados (Futuros)" value={activeDates.length} />
+        <StatCard label="Horários Bloqueados (Futuros)" value={activeSlots.length} />
+        <StatCard label="Total Ativo" value={activeDates.length + activeSlots.length} />
       </div>
 
-      {/* BLOQUEIO DE DIAS */}
-      <section className="space-y-5">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">
-            Bloquear dias inteiros
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use para férias, feriados ou dias em que você não atenderá.
-          </p>
+      {/* TABS DE NAVEGAÇÃO */}
+      <div className="flex rounded-xl bg-muted/50 p-1 md:w-fit">
+        <button
+          onClick={() => setActiveTab("dates")}
+          className={`flex min-w-[200px] items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+            activeTab === "dates"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Calendar className="h-4 w-4" />
+          Dias Inteiros
+        </button>
+        <button
+          onClick={() => setActiveTab("slots")}
+          className={`flex min-w-[200px] items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+            activeTab === "slots"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          Horários Específicos
+        </button>
+      </div>
 
-          <div className="mt-5">
-            <BlockedDatesForm />
-          </div>
-        </div>
-
-        {loadingDates ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-20 animate-pulse rounded-2xl border border-border bg-muted"
-              />
-            ))}
-          </div>
-        ) : errorDates ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
-            {datesError instanceof Error
-              ? datesError.message
-              : "Erro ao carregar bloqueios de datas."}
-          </div>
-        ) : !dates.length ? (
-          <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground shadow-sm">
-            Nenhum dia bloqueado.
-          </div>
-        ) : (
+      {/* CONTEÚDO DA ABA: DIAS */}
+      {activeTab === "dates" && (
+        <div className="grid items-start gap-6 md:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
+          <BlockedDatesForm />
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">Dias cadastrados</h3>
+            {loadingDates ? (
+              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted" />
+            ) : !activeDates.length ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
+                Não possui dias futuros bloqueados.
+              </div>
+            ) : (
               <BlockedDatesList />
             )}
-      </section>
-
-      {/* BLOQUEIO DE HORÁRIOS */}
-      <section className="space-y-5">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">
-            Bloquear horários específicos
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use para pausas, reuniões ou indisponibilidades pontuais.
-          </p>
-
-          <div className="mt-5">
-            <BlockedSlotForm />
           </div>
         </div>
+      )}
 
-        {loadingSlots ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-20 animate-pulse rounded-2xl border border-border bg-muted"
-              />
-            ))}
-          </div>
-        ) : errorSlots ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
-            {slotsError instanceof Error
-              ? slotsError.message
-              : "Erro ao carregar bloqueios de horários."}
-          </div>
-        ) : !slots.length ? (
-          <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground shadow-sm">
-            Nenhum horário bloqueado.
-          </div>
-        ) : (
+      {/* CONTEÚDO DA ABA: HORÁRIOS */}
+      {activeTab === "slots" && (
+        <div className="grid items-start gap-6 md:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
+          <BlockedSlotForm />
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">Horários cadastrados</h3>
+            {loadingSlots ? (
+              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted" />
+            ) : !activeSlots.length ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
+                Não possui horários futuros bloqueados.
+              </div>
+            ) : (
               <BlockedSlotList />
             )}
-      </section>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
