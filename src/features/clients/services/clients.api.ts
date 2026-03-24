@@ -27,3 +27,8 @@ export async function createClient(payload: {
 }) {
   return api.post("/clients", payload);
 }
+
+export async function deleteClient(id: string) {
+  const response = await api.delete(`/clients/${id}`); 
+  return response.data;
+}
