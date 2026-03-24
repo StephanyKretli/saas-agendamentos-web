@@ -38,3 +38,13 @@ export async function deleteBusinessHour(id: string): Promise<void> {
     headers: getAuthHeaders(),
   }) as Promise<void>;
 }
+
+export async function applyBusinessHoursTemplate(payload: {
+  sourceWeekday: number;
+  targetWeekdays: number[];
+  replace?: boolean;
+}): Promise<void> {
+  return api.post("/business-hours/apply-template", payload, {
+    headers: getAuthHeaders(),
+  }) as Promise<void>;
+}

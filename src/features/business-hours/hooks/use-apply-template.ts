@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-  applyBusinessHoursTemplate,
-  ApplyBusinessHoursTemplateInput,
-} from "../api/apply-template"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { applyBusinessHoursTemplate } from "../services/business-hours.api"; // Ajuste o caminho se necessário
+import { toast } from "react-hot-toast";
 
 export function useApplyBusinessHoursTemplate() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ApplyBusinessHoursTemplateInput) =>
-      applyBusinessHoursTemplate(data),
+    mutationFn: applyBusinessHoursTemplate,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["business-hours"],
-      })
+      queryClient.invalidateQueries({ queryKey: ["business-hours"] });
+      queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] });
+      toast.success("Horários copiados com sucesso!");
     },
-  })
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao copiar horários");
+    }
+  });
 }
