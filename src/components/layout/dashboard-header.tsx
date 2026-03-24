@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSettingsQuery } from "@/features/settings/hooks/use-settings";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 
 const pageMeta: Record<
   string,
@@ -43,7 +43,7 @@ function getInitial(name?: string | null) {
 
 export function DashboardHeader() {
   const pathname = usePathname();
-  const { data } = useSettingsQuery();
+  const { data } = useSettings();
 
   const meta = pageMeta[pathname] ?? {
     title: "Painel",

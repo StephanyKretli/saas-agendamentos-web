@@ -1,313 +1,161 @@
 "use client";
 
-import * as React from "react";
-import { useSettingsQuery, useUpdateSettingsMutation } from "@/features/settings/hooks/use-settings";
+import { useEffect, useRef, useState } from "react";
+import { useSettings } from "@/features/settings/hooks/use-settings";
+import { useUpdateSettings } from "@/features/settings/hooks/use-update-settings";
 import { useUploadAvatar } from "@/features/settings/hooks/use-upload-avatar";
-
-type FormState = {
-  name: string;
-  username: string;
-  timezone: string;
-  bufferMinutes: string;
-  minBookingNoticeMinutes: string;
-  maxBookingDays: string;
-};
-
-function getInitial(name?: string | null) {
-  return name?.trim()?.charAt(0)?.toUpperCase() || "?";
-}
+import { Camera, Loader2, Save } from "lucide-react";
 
 export default function SettingsPage() {
-  const { data, isLoading, isError, error } = useSettingsQuery();
-  const updateMutation = useUpdateSettingsMutation();
-  const uploadAvatarMutation = useUploadAvatar();
+  const { data: settings, isLoading: loadingSettings } = useSettings();
+  const { mutate: updateSettings, isPending: isUpdating } = useUpdateSettings();
+  const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = React.useState<FormState>({
-    name: "",
-    username: "",
-    timezone: "America/Sao_Paulo",
-    bufferMinutes: "0",
-    minBookingNoticeMinutes: "0",
-    maxBookingDays: "30",
-  });
+  // Estados dos formulários
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [timezone, setTimezone] = useState("America/Sao_Paulo");
+  const [bufferMinutes, setBufferMinutes] = useState(0);
+  const [minBookingNotice, setMinBookingNotice] = useState(0);
+  const [maxBookingDays, setMaxBookingDays] = useState(30);
 
-  const [successMessage, setSuccessMessage] = React.useState("");
-  const [avatarSuccessMessage, setAvatarSuccessMessage] = React.useState("");
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-
-  React.useEffect(() => {
-    if (!data) return;
-
-    setForm({
-      name: data.name ?? "",
-      username: data.username ?? "",
-      timezone: data.timezone ?? "America/Sao_Paulo",
-      bufferMinutes: String(data.bufferMinutes ?? 0),
-      minBookingNoticeMinutes: String(data.minBookingNoticeMinutes ?? 0),
-      maxBookingDays: String(data.maxBookingDays ?? 30),
-    });
-  }, [data]);
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) {
-    const { name, value } = e.target;
-    setForm((current) => ({ ...current, [name]: value }));
-    setSuccessMessage("");
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSuccessMessage("");
-
-    await updateMutation.mutateAsync({
-      name: form.name.trim(),
-      username: form.username.trim(),
-      timezone: form.timezone,
-      bufferMinutes: Number(form.bufferMinutes || 0),
-      minBookingNoticeMinutes: Number(form.minBookingNoticeMinutes || 0),
-      maxBookingDays: Number(form.maxBookingDays || 0),
-    });
-
-    setSuccessMessage("Configurações salvas com sucesso.");
-  }
-
-  async function handleAvatarUpload() {
-    if (!selectedFile) return;
-
-    setAvatarSuccessMessage("");
-    await uploadAvatarMutation.mutateAsync(selectedFile);
-    setAvatarSuccessMessage("Foto de perfil atualizada com sucesso.");
-    setSelectedFile(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  // Sincronizar dados quando a API responde
+  useEffect(() => {
+    if (settings) {
+      setName(settings.name || "");
+      setUsername(settings.username || "");
+      setTimezone(settings.timezone || "America/Sao_Paulo");
+      setBufferMinutes(settings.bufferMinutes || 0);
+      setMinBookingNotice(settings.minBookingNoticeMinutes || 0);
+      setMaxBookingDays(settings.maxBookingDays || 30);
     }
-  }
+  }, [settings]);
 
-  if (isLoading) {
-    return <div>Carregando configurações...</div>;
-  }
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettings({ name, username });
+  };
 
-  if (isError) {
-    return (
-      <div>
-        Erro ao carregar configurações.
-        {" "}
-        {error instanceof Error ? error.message : ""}
-      </div>
-    );
-  }
+  const handleSavePreferences = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettings({
+      timezone,
+      bufferMinutes: Number(bufferMinutes),
+      minBookingNoticeMinutes: Number(minBookingNotice),
+      maxBookingDays: Number(maxBookingDays),
+    });
+  };
 
-  const avatarPreview = selectedFile
-    ? URL.createObjectURL(selectedFile)
-    : data?.avatarUrl ?? null;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadAvatar(file);
+    }
+  };
+
+  if (loadingSettings) {
+    return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
+  }
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
       <div>
-        <h1 className="text-2xl font-semibold">Configurações</h1>
-        <p className="text-sm text-muted-foreground">
-          Ajuste seus dados e personalize seu perfil profissional.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
+        <p className="text-sm text-muted-foreground">Gerencie o seu perfil e as regras da sua agenda.</p>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center">
-          <div className="flex items-center gap-4">
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="Foto de perfil"
-                className="h-20 w-20 rounded-full object-cover border border-border"
-              />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-muted text-xl font-semibold text-foreground">
-                {getInitial(data?.name)}
-              </div>
-            )}
+      <div className="grid gap-6 md:grid-cols-2 items-start">
+        {/* SECÇÃO DE PERFIL */}
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-foreground">Perfil Público</h2>
+          <p className="text-sm text-muted-foreground mb-6">Como os clientes verão você.</p>
 
+          <div className="flex items-center gap-5 mb-6">
+            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-border bg-muted">
+              {settings?.avatarUrl ? (
+                <img src={settings.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-muted-foreground">Sem foto</div>
+              )}
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            
             <div>
-              <h2 className="text-base font-semibold text-foreground">
-                Foto de perfil
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Envie uma imagem JPG, PNG ou WEBP de até 2MB.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 md:ml-auto">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setSelectedFile(file);
-                setAvatarSuccessMessage("");
-              }}
-              className="text-sm"
-            />
-
-            <button
-              type="button"
-              onClick={() => void handleAvatarUpload()}
-              disabled={!selectedFile || uploadAvatarMutation.isPending}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {uploadAvatarMutation.isPending
-                ? "Enviando foto..."
-                : "Salvar foto"}
-            </button>
-          </div>
-        </div>
-
-        {uploadAvatarMutation.isError ? (
-          <p className="mt-4 text-sm text-red-600">
-            {uploadAvatarMutation.error instanceof Error
-              ? uploadAvatarMutation.error.message
-              : "Erro ao enviar imagem."}
-          </p>
-        ) : null}
-
-        {avatarSuccessMessage ? (
-          <p className="mt-4 text-sm text-green-600">
-            {avatarSuccessMessage}
-          </p>
-        ) : null}
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">
-              Dados da conta
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ajuste seu nome, username e regras de agendamento.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <label htmlFor="name" className="text-sm font-medium">
-                Nome
-              </label>
-              <input
-                id="name"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="username" className="text-sm font-medium">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                value={form.username}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="timezone" className="text-sm font-medium">
-                Timezone
-              </label>
-              <select
-                id="timezone"
-                name="timezone"
-                value={form.timezone}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/webp" className="hidden" />
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
               >
-                <option value="America/Sao_Paulo">São Paulo</option>
-                <option value="America/Manaus">Manaus</option>
-                <option value="America/Recife">Recife</option>
-                <option value="America/Fortaleza">Fortaleza</option>
-                <option value="America/Rio_Branco">Rio Branco</option>
+                <Camera className="h-4 w-4" /> Alterar foto
+              </button>
+              <p className="mt-2 text-xs text-muted-foreground">JPG, PNG ou WEBP. Máx 2MB.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nome Completo</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" required />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nome de Utilizador (URL)</label>
+              <div className="flex items-center">
+                <span className="rounded-l-xl border border-r-0 border-input bg-muted px-3 py-2 text-sm text-muted-foreground">saas.com/</span>
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full rounded-r-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" required />
+              </div>
+            </div>
+            <button type="submit" disabled={isUpdating} className="w-full mt-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 flex justify-center items-center gap-2">
+              <Save className="h-4 w-4" /> {isUpdating ? "Salvando..." : "Salvar Perfil"}
+            </button>
+          </form>
+        </section>
+
+        {/* SECÇÃO DE REGRAS DE AGENDAMENTO */}
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-foreground">Regras da Agenda</h2>
+          <p className="text-sm text-muted-foreground mb-6">Defina os limites para marcações.</p>
+
+          <form onSubmit={handleSavePreferences} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Fuso Horário</label>
+              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <option value="America/Sao_Paulo">America/Sao_Paulo (Brasília)</option>
+                <option value="Europe/Lisbon">Europe/Lisbon (Portugal)</option>
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="bufferMinutes" className="text-sm font-medium">
-                Buffer entre agendamentos (min)
-              </label>
-              <input
-                id="bufferMinutes"
-                name="bufferMinutes"
-                type="number"
-                min={0}
-                value={form.bufferMinutes}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Intervalo entre serviços (minutos)</label>
+              <input type="number" value={bufferMinutes} onChange={(e) => setBufferMinutes(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <p className="text-xs text-muted-foreground">Tempo de pausa automática entre um cliente e outro.</p>
             </div>
 
-            <div className="space-y-1">
-              <label
-                htmlFor="minBookingNoticeMinutes"
-                className="text-sm font-medium"
-              >
-                Antecedência mínima (min)
-              </label>
-              <input
-                id="minBookingNoticeMinutes"
-                name="minBookingNoticeMinutes"
-                type="number"
-                min={0}
-                value={form.minBookingNoticeMinutes}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Antecedência mínima (minutos)</label>
+              <input type="number" value={minBookingNotice} onChange={(e) => setMinBookingNotice(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <p className="text-xs text-muted-foreground">Quanto tempo antes o cliente pode fazer a marcação?</p>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="maxBookingDays" className="text-sm font-medium">
-                Máximo de dias no futuro
-              </label>
-              <input
-                id="maxBookingDays"
-                name="maxBookingDays"
-                type="number"
-                min={0}
-                value={form.maxBookingDays}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Abertura da agenda (dias)</label>
+              <input type="number" value={maxBookingDays} onChange={(e) => setMaxBookingDays(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <p className="text-xs text-muted-foreground">Até quantos dias no futuro o cliente pode agendar?</p>
             </div>
-          </div>
 
-          {updateMutation.isError ? (
-            <p className="text-sm text-red-600">
-              {updateMutation.error instanceof Error
-                ? updateMutation.error.message
-                : "Erro ao salvar configurações."}
-            </p>
-          ) : null}
-
-          {successMessage ? (
-            <p className="text-sm text-green-600">{successMessage}</p>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={updateMutation.isPending}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {updateMutation.isPending
-              ? "Salvando configurações..."
-              : "Salvar configurações"}
-          </button>
-        </form>
-      </section>
+            <button type="submit" disabled={isUpdating} className="w-full mt-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 flex justify-center items-center gap-2">
+              <Save className="h-4 w-4" /> {isUpdating ? "Salvando..." : "Salvar Regras"}
+            </button>
+          </form>
+        </section>
+      </div>
     </div>
   );
 }

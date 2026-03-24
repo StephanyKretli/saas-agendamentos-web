@@ -1,19 +1,19 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadAvatar } from "../api/settings.api";
+import { updateSettings } from "../api/settings.api";
 import { toast } from "react-hot-toast";
 
-export function useUploadAvatar() {
+export function useUpdateSettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: uploadAvatar,
+    mutationFn: updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      toast.success("Fotografia atualizada!");
+      toast.success("Configurações guardadas com sucesso!");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Erro ao enviar fotografia.");
+      toast.error(error.message || "Erro ao guardar configurações.");
     },
   });
 }

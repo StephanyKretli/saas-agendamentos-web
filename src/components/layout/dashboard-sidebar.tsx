@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeAccessToken } from "@/lib/auth-storage";
-import { useSettingsQuery } from "@/features/settings/hooks/use-settings";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 
 const items = [
   { href: "/dashboard", label: "Dashboard" },
@@ -22,7 +22,7 @@ function getInitial(name?: string | null) {
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data } = useSettingsQuery();
+  const { data } = useSettings();
 
   function handleLogout() {
     removeAccessToken();
