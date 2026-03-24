@@ -14,9 +14,11 @@ import {
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
@@ -72,7 +74,6 @@ function matchesFilter(item: TimelineItem, filter: AgendaFilter) {
 }
 
 export default function AgendaPage() {
-
   const [selectedDate, setSelectedDate] = React.useState(formatDateInput(new Date()));
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = React.useState(false);
   const [filter, setFilter] = React.useState<AgendaFilter>("all");
@@ -82,7 +83,6 @@ export default function AgendaPage() {
   const { data, isLoading, isError } = useDayTimeline(selectedDate);
   const items: TimelineItem[] = data?.items ?? [];
 
-  
   const calendarDate = new Date(`${selectedDate}T12:00:00`);
 
   const summary = React.useMemo(() => {
@@ -106,7 +106,6 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-6">
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
@@ -114,7 +113,7 @@ export default function AgendaPage() {
             Visualize horários livres, ocupados e bloqueados do dia.
           </p>
         </div>
-        <Button onClick={() => setIsNewAppointmentOpen(true)}>
+        <Button onClick={() => setIsNewAppointmentOpen(true)} className="rounded-xl">
           <Plus className="mr-2 h-4 w-4" />
           Novo agendamento
         </Button>
@@ -125,31 +124,22 @@ export default function AgendaPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-2xl bg-background p-6 shadow-xl border border-border">
             <h2 className="mb-6 text-xl font-semibold">Novo Agendamento</h2>
-            
             <AppointmentForm 
               initialDate={selectedDate}
               onCancel={() => setIsNewAppointmentOpen(false)}
-              onSuccess={() => {
-                setIsNewAppointmentOpen(false);
-                // Força o React a recarregar a data atual, disparando o hook useDayTimeline novamente!
-                setSelectedDate((prev) => prev + " "); 
-                setTimeout(() => setSelectedDate(selectedDate), 50);
-              }}
+              onSuccess={() => setIsNewAppointmentOpen(false)}
             />
           </div>
         </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[auto_1fr] items-start">
-        
         <div className="rounded-2xl border border-border bg-card p-3 shadow-sm lg:sticky lg:top-6 w-fit mx-auto lg:mx-0">
           <Calendar
             mode="single"
             selected={calendarDate}
             onSelect={(newDate: Date | undefined) => { 
-              if (newDate) {
-                setSelectedDate(formatDateInput(newDate));
-              }
+              if (newDate) setSelectedDate(formatDateInput(newDate));
             }}
             locale={ptBR}
             className="rounded-md"
@@ -157,43 +147,48 @@ export default function AgendaPage() {
         </div>
 
         <div className="space-y-6 min-w-0">
-          
-          <DaySummary {...summary} />
+          {/* O resumo agora só aparece quando não está carregando para evitar saltos de layout */}
+          {!isLoading && <DaySummary {...summary} />}
 
           <div className="flex flex-wrap gap-2">
-            {filterOptions.map((option) => {
-              const isActive = filter === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setFilter(option)}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {FILTER_LABELS[option]}
-                </button>
-              );
-            })}
+            {filterOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setFilter(option)}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                  filter === option
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-background text-foreground hover:bg-muted"
+                }`}
+              >
+                {FILTER_LABELS[option]}
+              </button>
+            ))}
           </div>
 
           {isLoading ? (
-            <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground animate-pulse">
-              Carregando agenda...
-            </div>
+            <TimelineSkeleton /> //
           ) : isError ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
-              Erro ao carregar agenda.
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+              <p className="font-medium">Erro ao carregar agenda.</p>
+              <p className="text-xs mt-1">Verifique sua conexão ou tente novamente mais tarde.</p>
             </div>
           ) : !filteredItems.length ? (
-            <div className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
-              {filter === "all"
-                ? "Nenhum item para esta data."
-                : `Nenhum item encontrado para o filtro "${FILTER_LABELS[filter]}".`}
-            </div>
+            <EmptyState
+              icon={CalendarIcon}
+              title={filter === "all" ? "Agenda vazia" : "Nenhum resultado"}
+              description={
+                filter === "all"
+                  ? "Você não tem nenhum compromisso ou horário bloqueado para este dia."
+                  : `Não encontramos itens com o filtro "${FILTER_LABELS[filter]}".`
+              }
+              actionLabel={filter !== "all" ? "Limpar filtros" : "Novo agendamento"}
+              onAction={() => {
+                if (filter !== "all") setFilter("all");
+                else setIsNewAppointmentOpen(true);
+              }}
+            />
           ) : (
             <div className="space-y-3 pb-10">
               {filteredItems.map((item: TimelineItem, index: number) => {
