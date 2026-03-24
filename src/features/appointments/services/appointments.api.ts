@@ -22,12 +22,16 @@ export async function cancelAppointment(id: string) {
   });
 }
 
+export async function createAppointment(data: CreateAppointmentPayload) {
+  return api.post('/appointments', data);
+}
+
+export async function rescheduleAppointment(id: string, date: string) {
+  return api.patch(`/appointments/${id}/reschedule`, { date });
+}
+
 export interface CreateAppointmentPayload {
   clientId: string;
   serviceId: string;
   notes?: string;
-}
-
-export async function createAppointment(data: CreateAppointmentPayload) {
-  return api.post('/appointments', data);
 }

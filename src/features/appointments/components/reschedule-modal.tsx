@@ -92,15 +92,18 @@ export function RescheduleModal({
         return;
     }
 
-    const dateTime = `${selectedDate}T${selectedTime}:00`;
+    const dateTime = `${date}T${selectedTime}:00`;
 
-    await rescheduleMutation.mutateAsync({
-      appointmentId: appointment.appointmentId,
-      date: dateTime,
-    });
-
-    onClose();
+    try {
+      await rescheduleMutation.mutateAsync({
+        appointmentId: appointment.appointmentId,
+        date: dateTime, 
+      });
+      onClose();
+    } catch (error) {
+      console.error("Erro no reagendamento:", error);
     }
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-xl">

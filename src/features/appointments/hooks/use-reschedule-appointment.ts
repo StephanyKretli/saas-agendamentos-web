@@ -15,23 +15,22 @@ export function useRescheduleAppointment(currentDate: string) {
 
   return useMutation({
     mutationFn: async ({ appointmentId, date }: RescheduleInput) => {
-      return api.patch(`/appointments/${appointmentId}/reschedule`, {}, {
-        headers: getAuthHeaders()
-      });
+      return api.patch(
+        `/appointments/${appointmentId}/reschedule`, 
+        { date }, // O corpo deve ser um objeto com a chave 'date'
+        { headers: getAuthHeaders() }
+      );
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: async (data, variables) => {
+      // Invalida o dia atual
       await queryClient.invalidateQueries({
         queryKey: queryKeys.dayTimeline(currentDate),
       });
 
-      const newDateOnly = variables.date.slice(0, 10);
-
+      // Invalida o novo dia (pegando apenas YYYY-MM-DD da string ISO)
+      const newDateOnly = variables.date.split('T')[0];
       await queryClient.invalidateQueries({
         queryKey: queryKeys.dayTimeline(newDateOnly),
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["public-booking-availability"],
       });
     },
   });
