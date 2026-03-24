@@ -46,8 +46,6 @@ export async function createPublicAppointment(params: {
 }): Promise<CreatePublicAppointmentResponse> {
   return api.post(
     `/public/book/${params.username}/appointments`,
-    {
-      body: JSON.stringify(params.payload),
-    },
-  );
+    params.payload
+  ) as Promise<CreatePublicAppointmentResponse>;
 }
