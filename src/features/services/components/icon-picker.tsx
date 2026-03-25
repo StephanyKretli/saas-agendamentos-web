@@ -124,7 +124,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   // SE NÃO houver nicho selecionado, mostramos a lista de nichos (mesmo em edição)
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1"> 
         <label className="text-sm font-semibold text-foreground">
           Ícone do Serviço
         </label>
