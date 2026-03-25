@@ -131,7 +131,7 @@ export function ServiceForm({
       </div>
 
       <div className="flex items-center gap-2 pt-4">
-        <Button type="submit" disabled={isPending} className="min-w-[120px]">
+        <Button type="submit" disabled={isPending} className="min-w-30">
           {isPending ? "Salvando..." : isEditing ? "Atualizar Serviço" : "Cadastrar Serviço"}
         </Button>
 

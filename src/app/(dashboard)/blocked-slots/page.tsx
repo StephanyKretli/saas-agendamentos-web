@@ -62,7 +62,7 @@ export default function BlockedSlotsPage() {
       <div className="flex rounded-xl bg-muted/50 p-1 md:w-fit">
         <button
           onClick={() => setActiveTab("dates")}
-          className={`flex min-w-[200px] items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex min-w-50 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
             activeTab === "dates"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
@@ -73,7 +73,7 @@ export default function BlockedSlotsPage() {
         </button>
         <button
           onClick={() => setActiveTab("slots")}
-          className={`flex min-w-[200px] items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex min-w-50 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
             activeTab === "slots"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
