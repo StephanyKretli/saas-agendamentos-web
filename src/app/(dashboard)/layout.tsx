@@ -33,13 +33,13 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 md:flex md:p-4 md:gap-4 lg:gap-6">
+    <div className="min-h-screen bg-muted/30 flex flex-col p-4 gap-4 md:flex-row md:p-4 lg:p-6 lg:gap-6">
       
-      <div className="md:w-64 lg:w-72 md:shrink-0">
+      <div className="md:w-64 lg:w-72 md:shrink-0 md:sticky md:top-4 lg:top-6 md:h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
         <DashboardSidebar />
       </div>
 
-      <main className="flex-1 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <main className="flex-1 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6 md:p-8 overflow-hidden">
         {children}
       </main>
 

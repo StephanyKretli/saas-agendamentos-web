@@ -16,11 +16,16 @@ type SummaryCardProps = {
 
 function SummaryCard({ label, value }: SummaryCardProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+      <p 
+        className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate" 
+        title={label}
+      >
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
@@ -34,7 +39,8 @@ export function DaySummary({
   blocked,
 }: DaySummaryProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+    // Mudamos para grid-cols-2 no mobile, grid-cols-3 no tablet e grid-cols-6 no desktop grande
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
       <SummaryCard label="Agendamentos" value={totalBusy} />
       <SummaryCard label="Agendados" value={scheduled} />
       <SummaryCard label="Concluídos" value={completed} />
