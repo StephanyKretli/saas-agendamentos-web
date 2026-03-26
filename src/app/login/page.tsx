@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { saveAccessToken } from "@/lib/auth-storage";
+import { toast } from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,14 +25,14 @@ export default function LoginPage() {
       const token = response.accessToken || (response as any).access_token;
 
       if (!token) {
-        console.error("Token não encontrado na resposta:", response);
+        toast.error("Erro ao autenticar. Tente novamente.");
         return;
       }
 
       saveAccessToken(token);
       router.push("/dashboard");
     } catch (error) {
-      
+      toast.error("Credenciais inválidas.");
       console.error("Falha na tentativa de login:", error);
     }
   }
@@ -51,6 +52,7 @@ export default function LoginPage() {
             <label className="text-sm font-medium text-foreground">E-mail</label>
             <input
               type="email"
+              required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
@@ -59,15 +61,34 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-              placeholder="********"
-            />
-          </div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-foreground">Senha</label>
+              
+              {/* Botão com type="button" explícito para não dar conflito com o submit do form */}
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (!email || !email.includes('@')) {
+                    toast("Introduza um e-mail válido para recuperar a senha.");
+                    return;
+                  }
+                  toast(`Instruções de recuperação enviadas para ${email}`);
+                }}
+                className="text-xs text-primary hover:underline transition-opacity active:opacity-70"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+  
+  <input
+    type="password"
+    required
+    value={password}
+    onChange={(event) => setPassword(event.target.value)}
+    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
+    placeholder="********"
+  />
+</div>
 
           <button
             type="submit"

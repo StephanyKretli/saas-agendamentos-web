@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, User, Mail, Phone, CheckCircle2, Copy, Camera, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Globe, User, Phone, CheckCircle2, Copy, Camera, Trash2, KeyRound } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function SettingsPage() {
   const { data: profile, isLoading } = useSettings();
@@ -22,11 +22,14 @@ export default function SettingsPage() {
     phone: "",
     bio: "",
     avatarUrl: "",
+    currentPassword: "",
+    newPassword: "",
   });
 
   useEffect(() => {
     if (profile) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: profile.name || "",
         username: profile.username || "",
         // @ts-ignore
@@ -37,7 +40,7 @@ export default function SettingsPage() {
         bio: profile.bio || "",
         // @ts-ignore
         avatarUrl: profile.avatarUrl || "",
-      });
+      }));
     }
   }, [profile]);
 
@@ -51,8 +54,6 @@ export default function SettingsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Aqui você integraria com seu serviço de upload (S3, Cloudinary, etc)
-      // Por agora, vamos apenas simular um preview local
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, avatarUrl: reader.result as string }));
@@ -68,8 +69,11 @@ export default function SettingsPage() {
 
   if (isLoading) return <div className="p-8">Carregando...</div>;
 
+  // Classe utilitária para os inputs ficarem bonitos
+  const inputClassName = "h-11 rounded-2xl border-border bg-muted/40 px-4 transition-all focus-visible:ring-primary/20 focus-visible:border-primary border-2";
+
   return (
-    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-10 px-4 md:px-0">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Configurações</h1>
         <p className="text-muted-foreground">Gerencie sua identidade e vitrine pública.</p>
@@ -78,14 +82,14 @@ export default function SettingsPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* SECÇÃO: FOTO DE PERFIL */}
-        <Card className="rounded-3xl border-border bg-card shadow-sm overflow-hidden">
-          <CardHeader>
+        <Card className="rounded-3xl border-border bg-card shadow-sm overflow-hidden border-2">
+          <CardHeader className="bg-muted/20 border-b">
             <CardTitle className="text-lg flex items-center gap-2">
               <Camera className="h-5 w-5 text-primary" />
               Sua Foto
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative group">
                 <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-muted overflow-hidden bg-muted flex items-center justify-center">
@@ -111,9 +115,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex flex-col gap-2 text-center sm:text-left">
-                <p className="text-sm font-medium">Foto de Perfil</p>
+                <p className="text-sm font-semibold">Foto de Perfil</p>
                 <p className="text-xs text-muted-foreground max-w-[240px]">
-                  Recomendamos uma imagem quadrada de pelo menos 400x400px. JPG ou PNG.
+                  Recomendamos uma imagem quadrada de pelo menos 400x400px.
                 </p>
                 {formData.avatarUrl && (
                   <Button 
@@ -133,27 +137,27 @@ export default function SettingsPage() {
         </Card>
 
         {/* CARD: LINK DE AGENDAMENTO */}
-        <Card className="rounded-3xl border-border bg-card shadow-sm">
-          <CardHeader>
+        <Card className="rounded-3xl border-border bg-card shadow-sm border-2">
+          <CardHeader className="bg-muted/20 border-b">
             <CardTitle className="text-lg flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
               Link de Agendamento
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-2.5 text-sm text-muted-foreground opacity-50">
+                <span className="absolute left-4 top-3 text-sm text-muted-foreground opacity-60">
                   app.seuapp.com/
                 </span>
                 <Input 
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})}
-                  className="pl-28.75 rounded-xl font-medium" 
+                  className={`${inputClassName} pl-32`}
                   placeholder="seu-negocio"
                 />
               </div>
-              <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-xl gap-2 h-10">
+              <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-2xl gap-2 h-11 px-6 border-2">
                 <Copy className="h-4 w-4" />
                 Copiar Link
               </Button>
@@ -161,40 +165,73 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* CARD: PERFIL PROFISSIONAL */}
-        <Card className="rounded-3xl border-border bg-card shadow-sm">
-          <CardHeader>
+        {/* CARD: INFORMAÇÕES GERAIS */}
+        <Card className="rounded-3xl border-border bg-card shadow-sm border-2">
+          <CardHeader className="bg-muted/20 border-b">
             <CardTitle className="text-lg flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
               Informações Gerais
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-6 sm:grid-cols-2">
+          <CardContent className="grid gap-6 sm:grid-cols-2 pt-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Nome da Empresa</label>
+              <label className="text-sm font-bold text-foreground/80 ml-1">Nome da Empresa</label>
               <Input 
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="Ex: Studio Beauty"
-                className="rounded-xl"
+                className={inputClassName}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold">WhatsApp de Contato</label>
+              <label className="text-sm font-bold text-foreground/80 ml-1">WhatsApp de Contato</label>
               <Input 
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 placeholder="(11) 99999-9999"
-                className="rounded-xl"
+                className={inputClassName}
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <label className="text-sm font-semibold">Bio / Descrição</label>
+              <label className="text-sm font-bold text-foreground/80 ml-1">Bio / Descrição</label>
               <Textarea 
                 value={formData.bio}
                 onChange={(e) => setFormData({...formData, bio: e.target.value})}
                 placeholder="Conte para seus clientes o que você faz..."
-                className="min-h-25 rounded-xl resize-none" 
+                className="min-h-[120px] rounded-2xl border-border bg-muted/40 p-4 transition-all focus-visible:ring-primary/20 focus-visible:border-primary border-2 resize-none" 
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CARD: SEGURANÇA */}
+        <Card className="rounded-3xl border-border bg-card shadow-sm border-2">
+          <CardHeader className="bg-muted/20 border-b">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Segurança
+            </CardTitle>
+            <CardDescription>Atualize sua senha de acesso.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-2 pt-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 ml-1">Senha Atual</label>
+              <Input 
+                type="password"
+                value={formData.currentPassword}
+                onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
+                placeholder="••••••••"
+                className={inputClassName}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 ml-1">Nova Senha</label>
+              <Input 
+                type="password"
+                value={formData.newPassword}
+                onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                placeholder="Mínimo 6 caracteres"
+                className={inputClassName}
               />
             </div>
           </CardContent>
@@ -204,10 +241,10 @@ export default function SettingsPage() {
           <Button 
             type="submit" 
             disabled={updateMutation.isPending}
-            className="h-12 rounded-xl px-8 text-base shadow-md transition-all hover:scale-105"
+            className="h-12 rounded-2xl px-10 text-base font-bold shadow-lg transition-all hover:scale-105 active:scale-95"
           >
             {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-            {!updateMutation.isPending && <CheckCircle2 className="ml-2 h-4 w-4" />}
+            {!updateMutation.isPending && <CheckCircle2 className="ml-2 h-5 w-5" />}
           </Button>
         </div>
       </form>
