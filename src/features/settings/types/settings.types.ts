@@ -10,6 +10,7 @@ export type UserSettings = {
   minBookingNoticeMinutes: number | null;
   maxBookingDays: number | null;
   avatarUrl: string | null;
+  role: "ADMIN" | "PROFESSIONAL";
 };
 
 export type UpdateSettingsPayload = {
