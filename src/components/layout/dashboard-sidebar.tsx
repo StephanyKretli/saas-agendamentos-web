@@ -83,17 +83,20 @@ export function DashboardSidebar() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-muted/40 px-3 py-3">
+        {/* FRASE BONITA DE VOLTA */}
+        <div className="mt-4 rounded-2xl bg-muted/40 px-3 py-3 transition-all">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Navegação
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Organize o seu dia e a sua equipe.
           </p>
         </div>
       </div>
 
       {/* 2. ÁREA DE LINKS (SCROLLÁVEL) */}
-      {/* Adicionamos overflow-y-auto e scrollbar-hide para não transbordar */}
       <div 
-        className={`flex-1 overflow-y-auto pr-1 mt-4 scrollbar-thin scrollbar-thumb-border ${
+        className={`flex-1 overflow-y-auto pr-1 mt-4 scrollbar-thin scrollbar-thumb-border transition-all ${
           isOpen ? "flex animate-in slide-in-from-top-4 duration-300" : "hidden md:flex flex-col"
         }`}
       >
@@ -119,7 +122,10 @@ export function DashboardSidebar() {
       </div>
 
       {/* 3. RODAPÉ (FIXO NO FINAL) */}
-      <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4 shrink-0">
+      {/* Escondemos no mobile quando o menu está fechado para não flutuar solto */}
+      <div className={`mt-auto flex flex-col gap-2 border-t border-border pt-4 shrink-0 ${
+          isOpen ? "flex" : "hidden md:flex"
+      }`}>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
