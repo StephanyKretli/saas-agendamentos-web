@@ -1,6 +1,10 @@
 export type UserSettings = {
-  name: string | null;
-  username: string | null;
+  id: string;
+  name: string;
+  username: string;
+  email?: string; 
+  phone?: string; 
+  bio?: string;  
   timezone: string | null;
   bufferMinutes: number | null;
   minBookingNoticeMinutes: number | null;

@@ -1,161 +1,216 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useUpdateSettings } from "@/features/settings/hooks/use-update-settings";
-import { useUploadAvatar } from "@/features/settings/hooks/use-upload-avatar";
-import { Camera, Loader2, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Globe, User, Mail, Phone, CheckCircle2, Copy, Camera, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { data: settings, isLoading: loadingSettings } = useSettings();
-  const { mutate: updateSettings, isPending: isUpdating } = useUpdateSettings();
-  const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
-  
+  const { data: profile, isLoading } = useSettings();
+  const updateMutation = useUpdateSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estados dos formulários
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [timezone, setTimezone] = useState("America/Sao_Paulo");
-  const [bufferMinutes, setBufferMinutes] = useState(0);
-  const [minBookingNotice, setMinBookingNotice] = useState(0);
-  const [maxBookingDays, setMaxBookingDays] = useState(30);
+  const [formData, setFormData] = useState({
+    name: "",
+    username: "",
+    email: "",
+    phone: "",
+    bio: "",
+    avatarUrl: "",
+  });
 
-  // Sincronizar dados quando a API responde
   useEffect(() => {
-    if (settings) {
-      setName(settings.name || "");
-      setUsername(settings.username || "");
-      setTimezone(settings.timezone || "America/Sao_Paulo");
-      setBufferMinutes(settings.bufferMinutes || 0);
-      setMinBookingNotice(settings.minBookingNoticeMinutes || 0);
-      setMaxBookingDays(settings.maxBookingDays || 30);
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        username: profile.username || "",
+        // @ts-ignore
+        email: profile.email || "",
+        // @ts-ignore
+        phone: profile.phone || "",
+        // @ts-ignore
+        bio: profile.bio || "",
+        // @ts-ignore
+        avatarUrl: profile.avatarUrl || "",
+      });
     }
-  }, [settings]);
+  }, [profile]);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleCopyLink = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    updateSettings({ name, username });
-  };
-
-  const handleSavePreferences = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateSettings({
-      timezone,
-      bufferMinutes: Number(bufferMinutes),
-      minBookingNoticeMinutes: Number(minBookingNotice),
-      maxBookingDays: Number(maxBookingDays),
-    });
+    const link = `${window.location.origin}/book/${formData.username}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Link de agendamento copiado!");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      uploadAvatar(file);
+      // Aqui você integraria com seu serviço de upload (S3, Cloudinary, etc)
+      // Por agora, vamos apenas simular um preview local
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatarUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  if (loadingSettings) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
-  }
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    updateMutation.mutate(formData);
+  };
+
+  if (isLoading) return <div className="p-8">Carregando...</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
+    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Gerencie o seu perfil e as regras da sua agenda.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Configurações</h1>
+        <p className="text-muted-foreground">Gerencie sua identidade e vitrine pública.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 items-start">
-        {/* SECÇÃO DE PERFIL */}
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">Perfil Público</h2>
-          <p className="text-sm text-muted-foreground mb-6">Como os clientes verão você.</p>
-
-          <div className="flex items-center gap-5 mb-6">
-            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-border bg-muted">
-              {settings?.avatarUrl ? (
-                <img src={settings.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-muted-foreground">Sem foto</div>
-              )}
-              {isUploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* SECÇÃO: FOTO DE PERFIL */}
+        <Card className="rounded-3xl border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Camera className="h-5 w-5 text-primary" />
+              Sua Foto
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="relative group">
+                <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-muted overflow-hidden bg-muted flex items-center justify-center">
+                  {formData.avatarUrl ? (
+                    <img src={formData.avatarUrl} alt="Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-12 w-12 text-muted-foreground/40" />
+                  )}
                 </div>
-              )}
-            </div>
-            
-            <div>
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/webp" className="hidden" />
-              <button 
-                type="button" 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
-              >
-                <Camera className="h-4 w-4" /> Alterar foto
-              </button>
-              <p className="mt-2 text-xs text-muted-foreground">JPG, PNG ou WEBP. Máx 2MB.</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Nome Completo</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Nome de Utilizador (URL)</label>
-              <div className="flex items-center">
-                <span className="rounded-l-xl border border-r-0 border-input bg-muted px-3 py-2 text-sm text-muted-foreground">saas.com/</span>
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full rounded-r-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" required />
+                <button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:scale-110 transition-transform"
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                  accept="image/*" 
+                />
+              </div>
+              <div className="flex flex-col gap-2 text-center sm:text-left">
+                <p className="text-sm font-medium">Foto de Perfil</p>
+                <p className="text-xs text-muted-foreground max-w-[240px]">
+                  Recomendamos uma imagem quadrada de pelo menos 400x400px. JPG ou PNG.
+                </p>
+                {formData.avatarUrl && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 w-fit mx-auto sm:mx-0"
+                    onClick={() => setFormData(prev => ({ ...prev, avatarUrl: "" }))}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Remover foto
+                  </Button>
+                )}
               </div>
             </div>
-            <button type="submit" disabled={isUpdating} className="w-full mt-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 flex justify-center items-center gap-2">
-              <Save className="h-4 w-4" /> {isUpdating ? "Salvando..." : "Salvar Perfil"}
-            </button>
-          </form>
-        </section>
+          </CardContent>
+        </Card>
 
-        {/* SECÇÃO DE REGRAS DE AGENDAMENTO */}
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">Regras da Agenda</h2>
-          <p className="text-sm text-muted-foreground mb-6">Defina os limites para marcações.</p>
-
-          <form onSubmit={handleSavePreferences} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Fuso Horário</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
-                <option value="America/Sao_Paulo">America/Sao_Paulo (Brasília)</option>
-                <option value="Europe/Lisbon">Europe/Lisbon (Portugal)</option>
-              </select>
+        {/* CARD: LINK DE AGENDAMENTO */}
+        <Card className="rounded-3xl border-border bg-card shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Link de Agendamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-2.5 text-sm text-muted-foreground opacity-50">
+                  app.seuapp.com/
+                </span>
+                <Input 
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})}
+                  className="pl-28.75 rounded-xl font-medium" 
+                  placeholder="seu-negocio"
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-xl gap-2 h-10">
+                <Copy className="h-4 w-4" />
+                Copiar Link
+              </Button>
             </div>
+          </CardContent>
+        </Card>
 
+        {/* CARD: PERFIL PROFISSIONAL */}
+        <Card className="rounded-3xl border-border bg-card shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Informações Gerais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Intervalo entre serviços (minutos)</label>
-              <input type="number" value={bufferMinutes} onChange={(e) => setBufferMinutes(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <p className="text-xs text-muted-foreground">Tempo de pausa automática entre um cliente e outro.</p>
+              <label className="text-sm font-semibold">Nome da Empresa</label>
+              <Input 
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder="Ex: Studio Beauty"
+                className="rounded-xl"
+              />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Antecedência mínima (minutos)</label>
-              <input type="number" value={minBookingNotice} onChange={(e) => setMinBookingNotice(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <p className="text-xs text-muted-foreground">Quanto tempo antes o cliente pode fazer a marcação?</p>
+              <label className="text-sm font-semibold">WhatsApp de Contato</label>
+              <Input 
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                placeholder="(11) 99999-9999"
+                className="rounded-xl"
+              />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Abertura da agenda (dias)</label>
-              <input type="number" value={maxBookingDays} onChange={(e) => setMaxBookingDays(Number(e.target.value))} className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <p className="text-xs text-muted-foreground">Até quantos dias no futuro o cliente pode agendar?</p>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-semibold">Bio / Descrição</label>
+              <Textarea 
+                value={formData.bio}
+                onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                placeholder="Conte para seus clientes o que você faz..."
+                className="min-h-25 rounded-xl resize-none" 
+              />
             </div>
+          </CardContent>
+        </Card>
 
-            <button type="submit" disabled={isUpdating} className="w-full mt-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 flex justify-center items-center gap-2">
-              <Save className="h-4 w-4" /> {isUpdating ? "Salvando..." : "Salvar Regras"}
-            </button>
-          </form>
-        </section>
-      </div>
+        <div className="flex justify-end pt-4">
+          <Button 
+            type="submit" 
+            disabled={updateMutation.isPending}
+            className="h-12 rounded-xl px-8 text-base shadow-md transition-all hover:scale-105"
+          >
+            {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+            {!updateMutation.isPending && <CheckCircle2 className="ml-2 h-4 w-4" />}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
