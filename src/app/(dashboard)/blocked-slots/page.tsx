@@ -14,23 +14,24 @@ import { Calendar, Clock } from "lucide-react";
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+      <p 
+        className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate"
+        title={label}
+      >
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold text-foreground">{value}</p>
     </div>
   );
 }
 
 export default function BlockedSlotsPage() {
-  // Estado para controlar qual aba está ativa
   const [activeTab, setActiveTab] = useState<"dates" | "slots">("dates");
 
   const { data: blockedDates, isLoading: loadingDates } = useBlockedDates();
   const { data: blockedSlots, isLoading: loadingSlots } = useBlockedSlots();
 
-  // Filtramos apenas os futuros para exibir nos cards de estatísticas também
   const activeDates = (blockedDates ?? []).filter((item) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -42,59 +43,66 @@ export default function BlockedSlotsPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+      
       {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Bloqueios de agenda</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie as suas ausências. Eventos passados são ocultados automaticamente.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Bloqueios de agenda</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gerencie as suas ausências. Eventos passados são ocultados automaticamente.
+          </p>
+        </div>
       </div>
 
       {/* STATS */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard label="Dias Bloqueados (Futuros)" value={activeDates.length} />
-        <StatCard label="Horários Bloqueados (Futuros)" value={activeSlots.length} />
-        <StatCard label="Total Ativo" value={activeDates.length + activeSlots.length} />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+        <StatCard label="Dias Bloqueados" value={activeDates.length} />
+        <StatCard label="Horários Bloqueados" value={activeSlots.length} />
+        <div className="col-span-2 sm:col-span-1 xl:col-span-1">
+          <StatCard label="Total Ativo" value={activeDates.length + activeSlots.length} />
+        </div>
       </div>
 
-      {/* TABS DE NAVEGAÇÃO */}
-      <div className="flex rounded-xl bg-muted/50 p-1 md:w-fit">
+      {/* TABS DE NAVEGAÇÃO - CORRIGIDO PARA MOBILE */}
+      <div className="flex w-full sm:w-fit rounded-xl bg-muted/50 p-1">
         <button
           onClick={() => setActiveTab("dates")}
-          className={`flex min-w-50 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex flex-1 sm:flex-none sm:min-w-[160px] items-center justify-center gap-1.5 sm:gap-2 rounded-lg py-2.5 px-2 text-xs sm:text-sm font-medium transition-all ${
             activeTab === "dates"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Calendar className="h-4 w-4" />
-          Dias Inteiros
+          <Calendar className="h-4 w-4 shrink-0" />
+          <span className="truncate">Dias Inteiros</span>
         </button>
         <button
           onClick={() => setActiveTab("slots")}
-          className={`flex min-w-50 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex flex-1 sm:flex-none sm:min-w-[160px] items-center justify-center gap-1.5 sm:gap-2 rounded-lg py-2.5 px-2 text-xs sm:text-sm font-medium transition-all ${
             activeTab === "slots"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Clock className="h-4 w-4" />
-          Horários Específicos
+          <Clock className="h-4 w-4 shrink-0" />
+          <span className="truncate">Horários Específicos</span>
         </button>
       </div>
 
       {/* CONTEÚDO DA ABA: DIAS */}
       {activeTab === "dates" && (
-        <div className="grid items-start gap-6 md:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
-          <BlockedDatesForm />
+        <div className="grid items-start gap-6 lg:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
+          <div className="rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+            <BlockedDatesForm />
+          </div>
           
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Dias cadastrados</h3>
             {loadingDates ? (
-              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted" />
+              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted/50" />
             ) : !activeDates.length ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
                 Não possui dias futuros bloqueados.
               </div>
             ) : (
@@ -106,15 +114,17 @@ export default function BlockedSlotsPage() {
 
       {/* CONTEÚDO DA ABA: HORÁRIOS */}
       {activeTab === "slots" && (
-        <div className="grid items-start gap-6 md:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
-          <BlockedSlotForm />
+        <div className="grid items-start gap-6 lg:grid-cols-[350px_1fr] animate-in fade-in zoom-in-95 duration-300">
+          <div className="rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+            <BlockedSlotForm />
+          </div>
           
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Horários cadastrados</h3>
             {loadingSlots ? (
-              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted" />
+              <div className="h-20 animate-pulse rounded-2xl border border-border bg-muted/50" />
             ) : !activeSlots.length ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground shadow-sm">
                 Não possui horários futuros bloqueados.
               </div>
             ) : (

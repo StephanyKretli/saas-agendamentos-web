@@ -18,12 +18,10 @@ export function BlockedDatesList() {
   const { mutate, isPending } = useDeleteBlockedDate();
 
   const sortedData = useMemo(() => {
-    // 1. Pegamos a data de hoje e zeramos as horas (para comparar dias inteiros)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     return [...data]
-      // 2. A MÁGICA AQUI: Só passa quem for maior ou igual a hoje
       .filter((item) => new Date(item.date).getTime() >= today.getTime())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [data]);
@@ -33,14 +31,14 @@ export function BlockedDatesList() {
       {sortedData.map((item) => (
         <div
           key={item.id}
-          className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+          className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between transition-all hover:border-primary/20"
         >
           <div>
             <p className="text-sm font-semibold text-foreground">
               {formatBlockedDate(item.date)}
             </p>
             {item.reason && (
-              <p className="mt-1 text-sm text-muted-foreground">Motivo: {item.reason}</p>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">Motivo: {item.reason}</p>
             )}
           </div>
 
@@ -48,7 +46,7 @@ export function BlockedDatesList() {
             type="button"
             onClick={() => mutate(item.id)}
             disabled={isPending}
-            className="inline-flex items-center justify-center rounded-xl border border-destructive/20 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
+            className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-destructive/20 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-60 shrink-0"
           >
             {isPending ? "Excluindo..." : "Excluir"}
           </button>
