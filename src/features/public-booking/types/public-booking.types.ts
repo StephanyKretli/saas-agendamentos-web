@@ -26,6 +26,7 @@ export type PublicAvailabilityResponse = {
 export type CreatePublicAppointmentPayload = {
   serviceId: string;
   date: string;
+  professionalId: string;
   clientName: string;
   clientPhone: string;
   clientEmail?: string;

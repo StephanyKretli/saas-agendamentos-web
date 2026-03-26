@@ -22,10 +22,13 @@ export async function getBookingAvailability(params: {
   username: string;
   serviceId: string;
   date: string;
+  professionalId: string; // 👇 NOVO PARÂMETRO ADICIONADO AQUI
 }): Promise<PublicAvailabilityResponse> {
+  // 👇 INCLUÍDO NO SEARCH PARAMS PARA FORMAR A URL CORRETA
   const searchParams = new URLSearchParams({
     serviceId: params.serviceId,
     date: params.date,
+    professionalId: params.professionalId, 
   });
 
   return api.get(
@@ -38,7 +41,7 @@ export async function getBookingAvailability(params: {
       },
     }
   ) as Promise<PublicAvailabilityResponse>;
-  }
+}
 
 export async function createPublicAppointment(params: {
   username: string;
