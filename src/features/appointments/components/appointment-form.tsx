@@ -10,11 +10,12 @@ import { createAppointment } from "../services/appointments.api";
 
 interface AppointmentFormProps {
   initialDate?: string; 
+  professionalId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function AppointmentForm({ initialDate, onSuccess, onCancel }: AppointmentFormProps) {
+export function AppointmentForm({ initialDate, professionalId, onSuccess, onCancel }: AppointmentFormProps) {
   const [clientId, setClientId] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState(initialDate || "");
@@ -38,6 +39,7 @@ export function AppointmentForm({ initialDate, onSuccess, onCancel }: Appointmen
         serviceId,
         date: `${date}T${time}:00`, 
         notes,
+        professionalId,
       };
       
       await createAppointment(payload);

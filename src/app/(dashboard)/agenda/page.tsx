@@ -14,9 +14,13 @@ import {
   useDayTimeline,
 } from "@/features/appointments/hooks/use-day-timeline";
 
+// 👇 Novos imports para buscar a equipe e o dono (Admin)
+import { useTeam } from "@/features/team/hooks/use-team";
+import { useSettings } from "@/features/settings/hooks/use-settings";
+
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X, User } from "lucide-react";
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
@@ -71,23 +75,53 @@ function matchesFilter(item: TimelineItem, filter: AgendaFilter) {
 export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = React.useState(formatDateInput(new Date()));
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = React.useState(false);
-  const [isMobileCalendarOpen, setIsMobileCalendarOpen] = React.useState(false); // Novo estado
+  const [isMobileCalendarOpen, setIsMobileCalendarOpen] = React.useState(false); 
   const [filter, setFilter] = React.useState<AgendaFilter>("all");
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
   const [selectedAppointment, setSelectedAppointment] = React.useState<SelectedAppointment | null>(null);
 
-  const { data, isLoading, isError } = useDayTimeline(selectedDate);
+  // 👇 Novos Estados e Hooks da Equipe
+  const { data: team } = useTeam();
+  const { data: profile } = useSettings();
+  const [selectedProfessionalId, setSelectedProfessionalId] = React.useState<string | undefined>(undefined);
+
+  // Define o Admin como padrão assim que os dados carregarem (se não houver ninguém selecionado)
+  React.useEffect(() => {
+    if (profile?.id && !selectedProfessionalId) {
+      setSelectedProfessionalId(profile.id);
+    }
+  }, [profile?.id]);
+
+  // Montamos a lista final (Admin + Equipe)
+  const professionals = React.useMemo(() => {
+    if (!profile) return [];
+    
+    const admin = { 
+      id: profile.id, 
+      name: profile.name || "Você (Admin)", 
+      avatarUrl: profile.avatarUrl 
+    };
+    
+    // 👇 O SEGREDO AQUI: Filtramos para garantir que o Admin não venha duplicado da API
+    const members = Array.isArray(team) 
+      ? team
+          .filter(m => m.id !== profile.id) // Remove se o ID for igual ao do Admin
+          .map(m => ({ id: m.id, name: m.name, avatarUrl: null })) 
+      : [];
+      
+    return [admin, ...members];
+  }, [profile, team]);
+
+  // 👇 Agora o Hook passa o profissional selecionado!
+  const { data, isLoading, isError } = useDayTimeline(selectedDate, selectedProfessionalId);
   const items: TimelineItem[] = data?.items ?? [];
 
-  // Parseamos a string selecionada para operar matematicamente com Date
   const calendarDate = new Date(`${selectedDate}T12:00:00`);
 
-  // Funções para navegação rápida de dias
   const goToPreviousDay = () => setSelectedDate(formatDateInput(subDays(calendarDate, 1)));
   const goToNextDay = () => setSelectedDate(formatDateInput(addDays(calendarDate, 1)));
   const goToToday = () => setSelectedDate(formatDateInput(new Date()));
 
-  // Data bonita para o topo ("Segunda, 24 de Nov")
   const displayDate = format(calendarDate, "EEEE, d 'de' MMM", { locale: ptBR });
   const displayDateCapitalized = displayDate.charAt(0).toUpperCase() + displayDate.slice(1);
 
@@ -113,15 +147,42 @@ export default function AgendaPage() {
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
       
-      {/* CABEÇALHO */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">A sua Agenda</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gerencie horários, clientes e marcações diárias.
-          </p>
+      {/* CABEÇALHO COM SELETOR DE PROFISSIONAL */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">A sua Agenda</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Gerencie horários, clientes e marcações diárias.
+            </p>
+          </div>
+
+          {/* 👇 SELETOR DE EQUIPE (Aparece se houver mais de 1 pessoa) */}
+          {professionals.length > 1 && (
+             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden snap-x">
+               {professionals.map((prof) => (
+                 <button
+                   key={prof.id}
+                   onClick={() => setSelectedProfessionalId(prof.id)}
+                   className={`snap-start whitespace-nowrap flex items-center gap-2 rounded-2xl border px-3 py-1.5 text-sm font-semibold transition-all ${
+                     selectedProfessionalId === prof.id
+                       ? "border-primary bg-primary/10 text-primary shadow-sm"
+                       : "border-border bg-card text-muted-foreground hover:bg-muted"
+                   }`}
+                 >
+                   {prof.avatarUrl ? (
+                      <img src={prof.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
+                   ) : (
+                      <User className="h-4 w-4" />
+                   )}
+                   {prof.name}
+                 </button>
+               ))}
+             </div>
+          )}
         </div>
-        <Button onClick={() => setIsNewAppointmentOpen(true)} className="rounded-xl w-full sm:w-auto">
+        
+        <Button onClick={() => setIsNewAppointmentOpen(true)} className="rounded-xl w-full sm:w-auto shrink-0 h-12">
           <Plus className="mr-2 h-4 w-4" />
           Novo Agendamento
         </Button>
@@ -137,8 +198,10 @@ export default function AgendaPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {/* Adicionado o professionalId aqui para o form saber quem é o dono */}
             <AppointmentForm 
               initialDate={selectedDate}
+              professionalId={selectedProfessionalId}
               onCancel={() => setIsNewAppointmentOpen(false)}
               onSuccess={() => setIsNewAppointmentOpen(false)}
             />
@@ -146,6 +209,7 @@ export default function AgendaPage() {
         </div>
       )}
 
+      {/* RESTO DA PÁGINA (Calendário e Listagem) ... (MANTÉM IGUAL AO QUE JÁ TINHA) ... */}
       {/* BARRA DE NAVEGAÇÃO DE DATA (MOBILE FIRST) */}
       <div className="flex items-center justify-between rounded-2xl sm:rounded-3xl border border-border bg-card p-2 shadow-sm lg:hidden">
         <button onClick={goToPreviousDay} className="p-3 text-muted-foreground hover:bg-muted rounded-xl transition-colors">
@@ -228,7 +292,7 @@ export default function AgendaPage() {
           {/* RESUMO DO DIA */}
           {!isLoading && <DaySummary {...summary} />}
 
-          {/* FILTROS (Com scroll horizontal oculto no mobile) */}
+          {/* FILTROS DE STATUS (Com scroll horizontal oculto no mobile) */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden snap-x">
             {filterOptions.map((option) => (
               <button
@@ -321,7 +385,6 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {/* MODAL DE REAGENDAMENTO */}
       <RescheduleModal
         open={rescheduleOpen}
         onClose={() => {

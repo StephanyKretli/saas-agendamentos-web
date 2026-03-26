@@ -41,12 +41,22 @@ type DayTimelineResponse = {
   items: TimelineItem[];
 };
 
-export function useDayTimeline(date: string) {
+// 👇 1. Recebemos o professionalId como segundo parâmetro (opcional)
+export function useDayTimeline(date: string, professionalId?: string) {
   return useQuery({
-    queryKey: ["appointments-day-timeline", date],
+    // 👇 2. Adicionamos na queryKey. Se o ID mudar, o React Query refaz a busca!
+    queryKey: ["appointments-day-timeline", date, professionalId],
     queryFn: async () => {
+      // Monta os parâmetros da URL de forma segura
+      const params = new URLSearchParams({ date });
+      
+      // 👇 3. Se houver um profissional selecionado, adiciona à URL
+      if (professionalId) {
+        params.append("professionalId", professionalId);
+      }
+
       return api.get(
-        `/appointments/day-timeline?date=${date}`,
+        `/appointments/day-timeline?${params.toString()}`,
         {
           headers: getAuthHeaders(),
         }
