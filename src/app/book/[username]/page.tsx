@@ -17,7 +17,7 @@ import type {
   PublicService,
 } from "@/features/public-booking/types/public-booking.types";
 import type { PublicBookingFormValues } from "@/features/public-booking/schemas/public-booking.schema";
-// 👇 Importar o hook de Equipa para listar os profissionais
+// 👇 Importar o hook de equipe para listar os profissionais
 import { useTeam } from "@/features/team/hooks/use-team";
 
 function formatPrice(priceCents: number) {
@@ -134,7 +134,7 @@ export default function BookingPage() {
   const username = String(params.username ?? "");
 
   const { data, isLoading, isError, error } = useBookingProfile(username);
-  const { data: team } = useTeam(); // 👇 Hook da equipa adicionado
+  const { data: team } = useTeam(); // 👇 Hook da equipe adicionado
 
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
@@ -194,7 +194,7 @@ export default function BookingPage() {
   if (isError) return <main className="..."><p>Erro ao carregar</p></main>;
   if (!data) return null;
 
-  // Montando a lista de profissionais (Admin + Equipa)
+  // Montando a lista de profissionais (Admin + equipe)
   const professionals = [
     { id: data.user.id, name: data.user.name, role: "ADMIN", avatarUrl: data.user.avatarUrl },
     ...(Array.isArray(team) ? team : [])

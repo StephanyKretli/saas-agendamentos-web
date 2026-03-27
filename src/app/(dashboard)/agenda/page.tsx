@@ -14,16 +14,24 @@ import {
   useDayTimeline,
 } from "@/features/appointments/hooks/use-day-timeline";
 
-// 👇 Novos imports para buscar a equipe e o dono (Admin)
 import { useTeam } from "@/features/team/hooks/use-team";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X, User } from "lucide-react";
+// 👇 Adicionado ChevronDown para o ícone do Dropdown
+import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X, User, ChevronDown } from "lucide-react"; 
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
+
+// 👇 Importação do DropdownMenu que já existe no seu projeto
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
@@ -80,19 +88,16 @@ export default function AgendaPage() {
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
   const [selectedAppointment, setSelectedAppointment] = React.useState<SelectedAppointment | null>(null);
 
-  // 👇 Novos Estados e Hooks da Equipe
   const { data: team } = useTeam();
   const { data: profile } = useSettings();
   const [selectedProfessionalId, setSelectedProfessionalId] = React.useState<string | undefined>(undefined);
 
-  // Define o Admin como padrão assim que os dados carregarem (se não houver ninguém selecionado)
   React.useEffect(() => {
     if (profile?.id && !selectedProfessionalId) {
       setSelectedProfessionalId(profile.id);
     }
-  }, [profile?.id]);
+  }, [profile?.id, selectedProfessionalId]);
 
-  // Montamos a lista final (Admin + Equipe)
   const professionals = React.useMemo(() => {
     if (!profile) return [];
     
@@ -102,17 +107,25 @@ export default function AgendaPage() {
       avatarUrl: profile.avatarUrl 
     };
     
-    // 👇 O SEGREDO AQUI: Filtramos para garantir que o Admin não venha duplicado da API
     const members = Array.isArray(team) 
       ? team
-          .filter(m => m.id !== profile.id) // Remove se o ID for igual ao do Admin
-          .map(m => ({ id: m.id, name: m.name, avatarUrl: null })) 
+          .filter(m => String(m.id) !== String(profile.id))
+          .map(m => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl || null })) 
       : [];
       
-    return [admin, ...members];
+    const uniqueMap = new Map();
+    [admin, ...members].forEach(p => {
+      if (p.id) uniqueMap.set(String(p.id), p);
+    });
+
+    return Array.from(uniqueMap.values());
   }, [profile, team]);
 
-  // 👇 Agora o Hook passa o profissional selecionado!
+  // 👇 Identifica qual é o profissional atualmente selecionado para mostrar no botão principal
+  const activeProfessional = React.useMemo(() => {
+    return professionals.find(p => String(p.id) === String(selectedProfessionalId)) || professionals[0];
+  }, [professionals, selectedProfessionalId]);
+
   const { data, isLoading, isError } = useDayTimeline(selectedDate, selectedProfessionalId);
   const items: TimelineItem[] = data?.items ?? [];
 
@@ -147,9 +160,8 @@ export default function AgendaPage() {
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
       
-      {/* CABEÇALHO COM SELETOR DE PROFISSIONAL */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-4">
+        <div className="space-y-4 w-full sm:w-auto">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">A sua Agenda</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -157,38 +169,64 @@ export default function AgendaPage() {
             </p>
           </div>
 
-          {/* 👇 SELETOR DE EQUIPE (Aparece se houver mais de 1 pessoa) */}
+          {/* 👇 NOVO SELETOR DROPDOWN ELEGANTE */}
           {professionals.length > 1 && (
-             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden snap-x">
-               {professionals.map((prof) => (
-                 <button
-                   key={prof.id}
-                   onClick={() => setSelectedProfessionalId(prof.id)}
-                   className={`snap-start whitespace-nowrap flex items-center gap-2 rounded-2xl border px-3 py-1.5 text-sm font-semibold transition-all ${
-                     selectedProfessionalId === prof.id
-                       ? "border-primary bg-primary/10 text-primary shadow-sm"
-                       : "border-border bg-card text-muted-foreground hover:bg-muted"
-                   }`}
+             <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button 
+                   variant="outline" 
+                   className="h-12 rounded-2xl flex items-center gap-3 px-4 w-full sm:w-auto justify-between sm:justify-start hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
                  >
-                   {prof.avatarUrl ? (
-                      <img src={prof.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
-                   ) : (
-                      <User className="h-4 w-4" />
-                   )}
-                   {prof.name}
-                 </button>
-               ))}
-             </div>
+                   <div className="flex items-center gap-2">
+                     {activeProfessional?.avatarUrl ? (
+                       <img src={activeProfessional.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
+                     ) : (
+                       <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                         <User className="h-3.5 w-3.5" />
+                       </div>
+                     )}
+                     <span className="font-semibold">{activeProfessional?.name || "A carregar..."}</span>
+                   </div>
+                   <ChevronDown className="h-4 w-4 text-muted-foreground opacity-50" />
+                 </Button>
+               </DropdownMenuTrigger>
+               
+               <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] sm:w-64 rounded-2xl p-2 shadow-xl border-border/50">
+                 {professionals.map((prof: any) => {
+                   const isSelected = selectedProfessionalId && String(selectedProfessionalId) === String(prof.id);
+                   
+                   return (
+                     <DropdownMenuItem
+                       key={`dropdown-${prof.id}`}
+                       onClick={() => setSelectedProfessionalId(prof.id)}
+                       className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all mb-1 last:mb-0 ${
+                         isSelected 
+                           ? "bg-primary/10 text-primary font-bold focus:bg-primary/15 focus:text-primary" 
+                           : "hover:bg-muted focus:bg-muted"
+                       }`}
+                     >
+                       {prof.avatarUrl ? (
+                         <img src={prof.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover shadow-sm" />
+                       ) : (
+                         <div className={`h-8 w-8 rounded-full flex items-center justify-center shadow-sm ${isSelected ? 'bg-primary/20' : 'bg-muted-foreground/10'}`}>
+                           <User className="h-4 w-4" />
+                         </div>
+                       )}
+                       <span className="flex-1 truncate">{prof.name}</span>
+                     </DropdownMenuItem>
+                   );
+                 })}
+               </DropdownMenuContent>
+             </DropdownMenu>
           )}
         </div>
         
-        <Button onClick={() => setIsNewAppointmentOpen(true)} className="rounded-xl w-full sm:w-auto shrink-0 h-12">
+        <Button onClick={() => setIsNewAppointmentOpen(true)} className="rounded-xl w-full sm:w-auto shrink-0 h-12 shadow-sm">
           <Plus className="mr-2 h-4 w-4" />
           Novo Agendamento
         </Button>
       </div>
 
-      {/* MODAL DE NOVO AGENDAMENTO */}
       {isNewAppointmentOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card p-6 shadow-xl border border-border animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
@@ -198,7 +236,6 @@ export default function AgendaPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {/* Adicionado o professionalId aqui para o form saber quem é o dono */}
             <AppointmentForm 
               initialDate={selectedDate}
               professionalId={selectedProfessionalId}
@@ -209,8 +246,6 @@ export default function AgendaPage() {
         </div>
       )}
 
-      {/* RESTO DA PÁGINA (Calendário e Listagem) ... (MANTÉM IGUAL AO QUE JÁ TINHA) ... */}
-      {/* BARRA DE NAVEGAÇÃO DE DATA (MOBILE FIRST) */}
       <div className="flex items-center justify-between rounded-2xl sm:rounded-3xl border border-border bg-card p-2 shadow-sm lg:hidden">
         <button onClick={goToPreviousDay} className="p-3 text-muted-foreground hover:bg-muted rounded-xl transition-colors">
           <ChevronLeft className="h-5 w-5" />
@@ -231,7 +266,6 @@ export default function AgendaPage() {
         </button>
       </div>
 
-      {/* MODAL DO CALENDÁRIO MOBILE */}
       {isMobileCalendarOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm lg:hidden animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-xl border border-border">
@@ -262,10 +296,8 @@ export default function AgendaPage() {
         </div>
       )}
 
-      {/* LAYOUT PRINCIPAL: Calendário Desktop (Esquerda) + Lista (Direita) */}
       <div className="grid gap-6 lg:gap-8 lg:grid-cols-[auto_1fr] items-start">
         
-        {/* CALENDÁRIO DESKTOP (Escondido no Mobile) */}
         <div className="hidden lg:block rounded-3xl border border-border bg-card p-4 shadow-sm sticky top-6">
           <div className="mb-4 flex items-center justify-between px-2">
             <h2 className="font-semibold text-foreground">Navegação</h2>
@@ -286,14 +318,11 @@ export default function AgendaPage() {
           />
         </div>
 
-        {/* LISTA DE AGENDAMENTOS E FILTROS */}
         <div className="space-y-6 min-w-0">
           
-          {/* RESUMO DO DIA */}
           {!isLoading && <DaySummary {...summary} />}
 
-          {/* FILTROS DE STATUS (Com scroll horizontal oculto no mobile) */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden snap-x">
+          <div className="flex gap-2 overflow-x-auto pb-2 px-1 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden snap-x">
             {filterOptions.map((option) => (
               <button
                 key={option}
@@ -310,7 +339,6 @@ export default function AgendaPage() {
             ))}
           </div>
 
-          {/* ESTADOS E LISTAGEM */}
           <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
             {isLoading ? (
               <TimelineSkeleton /> 

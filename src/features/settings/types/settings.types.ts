@@ -11,6 +11,8 @@ export type UserSettings = {
   maxBookingDays: number | null;
   avatarUrl: string | null;
   role: "ADMIN" | "PROFESSIONAL";
+  plan: 'STARTER' | 'PRO' | 'BUSINESS';
+  maxMembers: number;
 };
 
 export type UpdateSettingsPayload = {

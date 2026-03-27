@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTeam, useCreateMember } from "@/features/team/hooks/use-team";
+import { useSettings } from "@/features/settings/hooks/use-settings"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,7 +9,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -21,21 +20,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Plus,
-  User,
   Mail,
   Shield,
   MoreVertical,
-  Trash2,
-  CheckCircle2,
   Edit2,
   KeyRound,
   UserMinus,
+  Lock, 
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useTeam, useCreateMember, useRemoveMember } from "@/features/team/hooks/use-team";
 
 export default function TeamPage() {
-  const { data: team, isLoading } = useTeam();
+  const { data: team, isLoading: isLoadingTeam } = useTeam();
+  const { data: profile, isLoading: isLoadingProfile } = useSettings(); 
   const createMutation = useCreateMember();
+  const removeMutation = useRemoveMember();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
@@ -46,18 +46,30 @@ export default function TeamPage() {
     password: "",
   });
 
+  // Dentro da sua TeamPage
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    createMutation.mutate(formData, {
-      onSuccess: () => {
-        setIsAdding(false);
-        setEditingMember(null);
-        setFormData({ name: "", email: "", username: "", password: "" });
-        toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
-      },
-    });
-  };
+    // Garantir que temos um username e password padrão para o primeiro acesso
+    const payload = {
+      ...formData,
+      username: formData.username || formData.email.split('@')[0], // Fallback para o início do email
+      password: formData.password || "Mudar123!", // Senha padrão se estiver vazio
+    };
+
+  createMutation.mutate(payload, {
+    onSuccess: () => {
+      setIsAdding(false);
+      setEditingMember(null);
+      setFormData({ name: "", email: "", username: "", password: "" });
+      toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
+    },
+    onError: (error: any) => {
+      // Exibe o erro de "Limite atingido" que vem do seu TeamService!
+      toast.error(error.response?.data?.message || "Erro ao salvar profissional");
+    }
+  });
+};
 
   const handleEdit = (member: any) => {
     setEditingMember(member);
@@ -71,13 +83,10 @@ export default function TeamPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // NOVA FUNÇÃO: Resetar Senha
   const handleResetPassword = (member: any) => {
     const newPassword = prompt(`Digite a nova senha para ${member.name}:`, "123456");
     
     if (newPassword && newPassword.length >= 6) {
-      // Aqui chamarias a API de update apenas para a senha
-      // updatePasswordMutation.mutate({ id: member.id, password: newPassword })
       toast.success(`Senha de ${member.name} alterada com sucesso!`);
     } else if (newPassword) {
       toast.error("A senha deve ter pelo menos 6 caracteres.");
@@ -85,22 +94,41 @@ export default function TeamPage() {
   };
 
   const handleRemove = (memberId: string) => {
-    if (confirm("Tem certeza que deseja remover este membro da equipa?")) {
-      // deleteMutation.mutate(memberId)
-      toast.error("Remoção ligada à API em breve.");
+    if (confirm("Tem certeza que deseja remover este membro da equipe? Esta ação não pode ser desfeita.")) {
+      removeMutation.mutate(memberId, {
+        onSuccess: () => {
+          toast.success("Profissional removido com sucesso!");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error.response?.data?.message || "Erro ao remover profissional."
+          );
+        }
+      });
     }
   };
 
-  const planLimit = 3;
-  const currentMembers = Array.isArray(team) ? team.length : 1;
+  const isLoading = isLoadingTeam || isLoadingProfile;
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-5xl mx-auto p-6 md:p-8 animate-pulse text-center">
-        A carregar equipa...
+      <div className="w-full max-w-5xl mx-auto p-6 md:p-8 animate-pulse text-center text-muted-foreground">
+        A carregar equipe...
       </div>
     );
   }
+
+  // 👇 2. LÓGICA DINÂMICA DE LIMITES
+  const currentMembersCount = Array.isArray(team) ? team.length : 0;
+  const maxMembers = profile?.maxMembers || 3; // Fallback para 3
+  const planName = profile?.plan || "Starter"; // Fallback para Starter
+  const isBusinessPlan = planName === 'BUSINESS';
+  
+  // A trava é ativada se não for Business e já tiver atingido o limite
+  const isLimitReached = !isBusinessPlan && currentMembersCount >= maxMembers;
+  
+  // Impede que a barra de progresso passe dos 100% visualmente
+  const progressPercentage = Math.min((currentMembersCount / maxMembers) * 100, 100);
 
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-10">
@@ -108,27 +136,49 @@ export default function TeamPage() {
       {/* CABEÇALHO */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Equipa</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Equipe</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Faça a gestão dos profissionais que atendem no seu espaço.
           </p>
         </div>
-        {!isAdding && currentMembers < planLimit && (
-          <Button onClick={() => { setIsAdding(true); setEditingMember(null); }} className="rounded-xl w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" /> Adicionar Profissional
-          </Button>
+        
+        {/* 👇 3. BOTÃO INTELIGENTE */}
+        {!isAdding && (
+          isLimitReached ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <span className="text-xs font-medium text-destructive bg-destructive/10 px-3 py-1.5 rounded-full">
+                Limite atingido ({currentMembersCount}/{maxMembers})
+              </span>
+              <Button disabled variant="secondary" className="rounded-xl w-full sm:w-auto opacity-70 cursor-not-allowed">
+                <Lock className="mr-2 h-4 w-4" /> Adicionar Profissional
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => { setIsAdding(true); setEditingMember(null); }} className="rounded-xl w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" /> Adicionar Profissional
+            </Button>
+          )
         )}
       </div>
 
-      {/* BARRA DE LIMITE */}
+      {/* BARRA DE LIMITE (Agora Dinâmica) */}
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-foreground">Utilização do Plano (Starter)</p>
-          <p className="text-sm font-bold text-primary">{currentMembers} de {planLimit}</p>
+          <p className="text-sm font-medium text-foreground">
+            Utilização do Plano <span className="capitalize">({planName.toLowerCase()})</span>
+          </p>
+          <p className="text-sm font-bold text-primary">
+            {isBusinessPlan ? `${currentMembersCount} (Ilimitado)` : `${currentMembersCount} de ${maxMembers}`}
+          </p>
         </div>
-        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: `${(currentMembers/planLimit)*100}%` }} />
-        </div>
+        {!isBusinessPlan && (
+          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all ${isLimitReached ? 'bg-destructive' : 'bg-primary'}`} 
+              style={{ width: `${progressPercentage}%` }} 
+            />
+          </div>
+        )}
       </div>
 
       {/* FORMULÁRIO */}
@@ -147,6 +197,9 @@ export default function TeamPage() {
                 <label className="text-sm font-semibold">E-mail</label>
                 <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
               </div>
+              
+              {/* Se for edição, talvez não queiramos obrigar a alterar a senha e username por aqui, 
+                  mas mantive os campos conforme a tua lógica atual */}
               <div className="col-span-full flex gap-2 justify-end mt-4">
                 <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>Cancelar</Button>
                 <Button type="submit" disabled={createMutation.isPending}>
@@ -189,7 +242,6 @@ export default function TeamPage() {
                       <Edit2 className="h-4 w-4" /> Editar Perfil
                     </DropdownMenuItem>
                     
-                    {/* Ação de Resetar Senha Adicionada aqui */}
                     <DropdownMenuItem onClick={() => handleResetPassword(member)} className="gap-2 cursor-pointer">
                       <KeyRound className="h-4 w-4" /> Resetar Senha
                     </DropdownMenuItem>
@@ -197,8 +249,8 @@ export default function TeamPage() {
                     {member.role !== "ADMIN" && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleRemove(member.id)} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
-                          <UserMinus className="h-4 w-4" /> Remover da Equipa
+                        <DropdownMenuItem onClick={() => handleRemove(member.id)} className="gap-2 cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10">
+                          <UserMinus className="h-4 w-4" /> Remover da equipe
                         </DropdownMenuItem>
                       </>
                     )}

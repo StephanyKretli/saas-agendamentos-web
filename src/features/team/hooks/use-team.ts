@@ -35,3 +35,17 @@ export function useCreateMember() {
     },
   });
 }
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const response = await api.delete(`/team/${memberId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team'] }); 
+    },
+  });
+}

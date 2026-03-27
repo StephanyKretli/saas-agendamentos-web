@@ -31,7 +31,6 @@ function SummaryCard({ label, value }: SummaryCardProps) {
 }
 
 export function DaySummary({
-  totalBusy,
   scheduled,
   completed,
   canceled,
@@ -39,9 +38,7 @@ export function DaySummary({
   blocked,
 }: DaySummaryProps) {
   return (
-    // Mudamos para grid-cols-2 no mobile, grid-cols-3 no tablet e grid-cols-6 no desktop grande
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
-      <SummaryCard label="Agendamentos" value={totalBusy} />
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5 sm:gap-3">
       <SummaryCard label="Agendados" value={scheduled} />
       <SummaryCard label="Concluídos" value={completed} />
       <SummaryCard label="Cancelados" value={canceled} />
