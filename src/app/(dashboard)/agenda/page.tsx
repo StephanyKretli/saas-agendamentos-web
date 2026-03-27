@@ -19,13 +19,11 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-// 👇 Adicionado ChevronDown para o ícone do Dropdown
 import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X, User, ChevronDown } from "lucide-react"; 
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
 
-// 👇 Importação do DropdownMenu que já existe no seu projeto
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,40 +86,48 @@ export default function AgendaPage() {
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
   const [selectedAppointment, setSelectedAppointment] = React.useState<SelectedAppointment | null>(null);
 
-  const { data: team } = useTeam();
+  // 👇 Usamos APENAS os hooks que já existiam no seu projeto!
   const { data: profile } = useSettings();
+  const { data: team } = useTeam();
+
   const [selectedProfessionalId, setSelectedProfessionalId] = React.useState<string | undefined>(undefined);
 
+  // Define VOCÊ (profile) como a profissional selecionada por padrão ao abrir a tela
   React.useEffect(() => {
     if (profile?.id && !selectedProfessionalId) {
       setSelectedProfessionalId(profile.id);
     }
   }, [profile?.id, selectedProfessionalId]);
 
+  // Cria a lista combinada (Você + Equipe)
   const professionals = React.useMemo(() => {
-    if (!profile) return [];
-    
-    const admin = { 
-      id: profile.id, 
-      name: profile.name || "Você (Admin)", 
-      avatarUrl: profile.avatarUrl 
-    };
-    
-    const members = Array.isArray(team) 
-      ? team
-          .filter(m => String(m.id) !== String(profile.id))
-          .map(m => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl || null })) 
-      : [];
-      
     const uniqueMap = new Map();
-    [admin, ...members].forEach(p => {
-      if (p.id) uniqueMap.set(String(p.id), p);
-    });
+    
+    // 1. Adiciona você primeiro usando o 'profile'
+    if (profile) {
+      uniqueMap.set(String(profile.id), {
+        id: profile.id,
+        name: profile.name || "Você (Admin)",
+        avatarUrl: profile.avatarUrl || null
+      });
+    }
+    
+    // 2. Adiciona os membros da equipe
+    if (Array.isArray(team)) {
+      team.forEach(m => {
+        if (m.id && String(m.id) !== String(profile?.id)) {
+          uniqueMap.set(String(m.id), { 
+            id: m.id, 
+            name: m.name, 
+            avatarUrl: m.avatarUrl || null 
+          });
+        }
+      });
+    }
 
     return Array.from(uniqueMap.values());
   }, [profile, team]);
 
-  // 👇 Identifica qual é o profissional atualmente selecionado para mostrar no botão principal
   const activeProfessional = React.useMemo(() => {
     return professionals.find(p => String(p.id) === String(selectedProfessionalId)) || professionals[0];
   }, [professionals, selectedProfessionalId]);
@@ -169,7 +175,6 @@ export default function AgendaPage() {
             </p>
           </div>
 
-          {/* 👇 NOVO SELETOR DROPDOWN ELEGANTE */}
           {professionals.length > 1 && (
              <DropdownMenu>
                <DropdownMenuTrigger asChild>
