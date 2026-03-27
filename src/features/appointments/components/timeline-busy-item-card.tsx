@@ -9,6 +9,8 @@ type BusyTimelineItem = {
   end: string;
   status: string;
   notes?: string | null;
+  professionalId?: string; 
+  userId?: string;
   service: {
     id: string;
     name: string;
@@ -126,7 +128,11 @@ export function TimelineBusyItemCard({
           <button
             type="button"
             disabled={isPending}
-            onClick={() => onReschedule(item)}
+            onClick={() => onReschedule({
+              ...item,
+              professionalId: item.professionalId,
+              userId: item.userId 
+            })}
             className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
           >
             Reagendar

@@ -22,6 +22,8 @@ export type TimelineItem =
       appointmentId: string;
       status: string;
       notes: string | null;
+      professionalId?: string; 
+      userId?: string;
       service: {
         id: string;
         name: string;

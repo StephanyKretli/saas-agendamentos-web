@@ -14,6 +14,8 @@ type RescheduleModalProps = {
     start: string;
     end: string;
     status: string;
+    professionalId?: string; 
+    userId?: string;         
     service: {
       id: string;
       name: string;
@@ -61,7 +63,11 @@ export function RescheduleModal({
         setLoadingSlots(true);
         setSlotsError(null);
 
-        const url = `/availability?serviceId=${appointment.service.id}&date=${date}&step=30`;
+        // Captura o ID de forma segura
+        const profId = appointment.professionalId || appointment.userId || "";
+
+        // 🌟 Monta a URL garantindo que o profId é válido
+        const url = `/availability?serviceId=${appointment.service.id}&date=${date}${profId ? `&professionalId=${profId}` : ''}&step=30`;
 
         const data = await api.get(url, {
           headers: getAuthHeaders(),
@@ -74,7 +80,7 @@ export function RescheduleModal({
         setSlotsError(
           error instanceof Error
             ? error.message
-            : "Erro ao carregar horários disponíveis.",
+            : "Erro ao carregar horários disponíveis."
         );
       } finally {
         setLoadingSlots(false);
@@ -82,7 +88,7 @@ export function RescheduleModal({
     }
 
     void loadAvailability();
-  }, [open, appointment?.service?.id, date]);
+  }, [open, appointment?.service?.id, date, appointment?.professionalId, appointment?.userId]);
 
   if (!open || !appointment) return null;
   console.log("Appointment recebido no modal:", appointment);

@@ -15,17 +15,20 @@ export function useBookingAvailability({
   serviceId,
   date,
   professionalId, 
-  
 }: UseBookingAvailabilityParams) {
+  
+  // 🌟 MÁGICA: Se não houver UUID do profissional, usa o username da URL!
+  const effectiveProfId = professionalId || username;
+
   return useQuery({
-    queryKey: ["public-booking-availability", username, serviceId, date, professionalId],
+    queryKey: ["public-booking-availability", username, serviceId, date, effectiveProfId],
     queryFn: () =>
       getBookingAvailability({
         username,
         serviceId: serviceId!,
         date: date!,
-        professionalId: professionalId!, 
+        professionalId: effectiveProfId!, 
       }),
-    enabled: !!username && !!serviceId && !!date && !!professionalId,
+    enabled: !!username && !!serviceId && !!date && !!effectiveProfId,
   });
 }
