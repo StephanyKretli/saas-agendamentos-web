@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { getAuthHeaders } from "@/lib/auth-headers";
 import { useBusinessHours } from "@/features/business-hours/hooks/use-business-hours";
 import { useCreateBusinessHour } from "@/features/business-hours/hooks/use-create-business-hour";
 import { useUpdateBusinessHour } from "@/features/business-hours/hooks/use-update-business-hour";
 import { useDeleteBusinessHour } from "@/features/business-hours/hooks/use-delete-business-hour";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { BusinessHour } from "@/features/business-hours/types/business-hours.types";
 
 const WEEKDAYS = [
@@ -39,7 +42,6 @@ function TimeSlotRow({
 
   const handleBlur = () => {
     if (start !== slot.start || end !== slot.end) {
-      // Passamos o slot.weekday aqui!
       onUpdate(slot.id, slot.weekday, start, end);
     }
   };
@@ -74,10 +76,25 @@ function TimeSlotRow({
 
 // --- PÁGINA PRINCIPAL ---
 export default function BusinessHoursPage() {
-  const { data: hours = [] } = useBusinessHours();
-  const createMutation = useCreateBusinessHour();
-  const updateMutation = useUpdateBusinessHour();
-  const deleteMutation = useDeleteBusinessHour();
+  // 🌟 1. ESTADO: Controla de quem estamos a ver a agenda (vazio = Admin)
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("");
+
+  // 🌟 2. BUSCAR A EQUIPA: Pega os membros para preencher o dropdown
+  const { data: team = [] } = useQuery({
+    queryKey: ["team-list"],
+    queryFn: async () => {
+      const res = await api.get("/team", { headers: getAuthHeaders() });
+      return (res as unknown) as { id: string; name: string }[];
+    }
+  });
+
+  // 🌟 3. Passar o ID selecionado para os hooks
+  const targetId = selectedProfessionalId || undefined;
+  const { data: hours = [] } = useBusinessHours(targetId);
+  
+  const createMutation = useCreateBusinessHour(targetId);
+  const updateMutation = useUpdateBusinessHour(targetId);
+  const deleteMutation = useDeleteBusinessHour(targetId);
 
   const hoursByDay = WEEKDAYS.map(day => ({
     ...day,
@@ -94,7 +111,6 @@ export default function BusinessHoursPage() {
       return;
     }
 
-    // Lógica Inteligente: Cria o próximo turno 1 hora após o término do último
     const lastSlot = slots[slots.length - 1];
     const lastEndHour = parseInt(lastSlot.end.split(":")[0], 10);
     
@@ -118,11 +134,30 @@ export default function BusinessHoursPage() {
         </p>
       </div>
 
+      {/* 🌟 4. NOVO: DROPDOWN PARA SELECIONAR O PROFISSIONAL */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border">
+        <div className="flex items-center gap-2 text-primary">
+          <Users className="h-5 w-5" />
+          <span className="font-medium">Gerir horários de:</span>
+        </div>
+        <select 
+          value={selectedProfessionalId}
+          onChange={(e) => setSelectedProfessionalId(e.target.value)}
+          className="flex-1 max-w-xs rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+        >
+          <option value="">A Minha Agenda (Admin)</option>
+          {team.map((member) => (
+            <option key={member.id} value={member.id}>
+              {member.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="rounded-2xl border border-border bg-card divide-y divide-border shadow-sm">
         {hoursByDay.map((day) => (
           <div key={day.value} className="p-5 flex flex-col md:flex-row md:items-start gap-6">
             
-            {/* Dia da Semana & Switch */}
             <div className="w-48 flex items-center gap-3 pt-1">
               <Switch 
                 checked={day.slots.length > 0} 
@@ -139,7 +174,6 @@ export default function BusinessHoursPage() {
               </span>
             </div>
 
-            {/* Gestão de Horários */}
             <div className="flex-1 space-y-3">
               {day.slots.length === 0 ? (
                 <div className="pt-1">
@@ -149,7 +183,6 @@ export default function BusinessHoursPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Linhas de Turno Editáveis */}
                   {day.slots.map((slot) => (
                     <TimeSlotRow 
                       key={slot.id} 
@@ -159,7 +192,6 @@ export default function BusinessHoursPage() {
                     />
                   ))}
                   
-                  {/* Botão de Adicionar */}
                   <button 
                     onClick={() => handleAddInterval(day.value, day.slots)}
                     className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors py-1"

@@ -6,45 +6,46 @@ import type {
   UpdateBusinessHourPayload,
 } from "../types/business-hours.types";
 
-export async function getBusinessHours(): Promise<BusinessHour[]> {
-  // GET: (url, config)
-  return api.get("/business-hours", {
+function getQuery(professionalId?: string) {
+  return professionalId ? `?professionalId=${professionalId}` : "";
+}
+
+export async function getBusinessHours(professionalId?: string): Promise<BusinessHour[]> {
+  return api.get(`/business-hours${getQuery(professionalId)}`, {
     headers: getAuthHeaders(),
   }) as Promise<BusinessHour[]>;
 }
 
 export async function createBusinessHour(
-  payload: CreateBusinessHourPayload
+  payload: CreateBusinessHourPayload,
+  professionalId?: string
 ): Promise<BusinessHour> {
-  // POST: (url, dados, config)
-  return api.post("/business-hours", payload, {
+  return api.post(`/business-hours${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
   }) as Promise<BusinessHour>;
 }
 
 export async function updateBusinessHour(
   id: string,
-  payload: UpdateBusinessHourPayload
+  payload: UpdateBusinessHourPayload,
+  professionalId?: string
 ): Promise<BusinessHour> {
-  // PATCH: (url, dados, config)
-  return api.patch(`/business-hours/${id}`, payload, {
+  return api.patch(`/business-hours/${id}${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
   }) as Promise<BusinessHour>;
 }
 
-export async function deleteBusinessHour(id: string): Promise<void> {
-  // DELETE: (url, config)
-  return api.delete(`/business-hours/${id}`, {
+export async function deleteBusinessHour(id: string, professionalId?: string): Promise<void> {
+  return api.delete(`/business-hours/${id}${getQuery(professionalId)}`, {
     headers: getAuthHeaders(),
   }) as Promise<void>;
 }
 
-export async function applyBusinessHoursTemplate(payload: {
-  sourceWeekday: number;
-  targetWeekdays: number[];
-  replace?: boolean;
-}): Promise<void> {
-  return api.post("/business-hours/apply-template", payload, {
+export async function applyBusinessHoursTemplate(
+  payload: { sourceWeekday: number; targetWeekdays: number[]; replace?: boolean; },
+  professionalId?: string
+): Promise<void> {
+  return api.post(`/business-hours/apply-template${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
   }) as Promise<void>;
 }

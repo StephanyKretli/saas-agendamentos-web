@@ -3,9 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getBusinessHours } from "../services/business-hours.api";
 
-export function useBusinessHours() {
+export function useBusinessHours(professionalId?: string) {
   return useQuery({
-    queryKey: ["business-hours"],
-    queryFn: getBusinessHours,
+    queryKey: ["business-hours", professionalId],
+    queryFn: () => getBusinessHours(professionalId),
   });
 }
