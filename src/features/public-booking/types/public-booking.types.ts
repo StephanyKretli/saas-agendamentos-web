@@ -1,11 +1,16 @@
-export type PublicService = {
+export interface PublicService {
   id: string;
   name: string;
   duration: number;
   priceCents: number;
-  imageUrl: string | null;
-  icon?: string | null; 
-};
+  icon?: string;
+  userId?: string;
+  professionals?: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  }[];
+}
 
 export type PublicBookingProfileResponse = {
   user: {

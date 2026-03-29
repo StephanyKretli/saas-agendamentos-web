@@ -17,8 +17,6 @@ import type {
   PublicService,
 } from "@/features/public-booking/types/public-booking.types";
 import type { PublicBookingFormValues } from "@/features/public-booking/schemas/public-booking.schema";
-// 👇 Importar o hook de equipe para listar os profissionais
-import { useTeam } from "@/features/team/hooks/use-team";
 
 function formatPrice(priceCents: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -53,7 +51,7 @@ function StepBadge({
       disabled={!active && !done}
       data-active={active}
       className={[
-        "min-w-[200px] shrink-0 text-left rounded-2xl border px-4 py-3 transition-all snap-start md:min-w-0",
+        "min-w-50 shrink-0 text-left rounded-2xl border px-4 py-3 transition-all snap-start md:min-w-0",
         active
           ? "border-primary bg-primary/5 ring-1 ring-primary/20"
           : done
@@ -134,11 +132,12 @@ export default function BookingPage() {
   const username = String(params.username ?? "");
 
   const { data, isLoading, isError, error } = useBookingProfile(username);
-  const { data: team } = useTeam(); // 👇 Hook da equipe adicionado
+  
+  // ❌ REMOVIDO o useTeam(). A página pública não precisa de login para buscar dados!
 
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
-  const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null); // 👇 Novo estado
+  const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null);
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
   const [createdAppointment, setCreatedAppointment] = React.useState<CreatePublicAppointmentResponse | null>(null);
@@ -155,7 +154,6 @@ export default function BookingPage() {
     }
   }, [currentStep]);
 
-  // 👇 O Hook de disponibilidade agora recebe o professionalId
   const availabilityQuery = useBookingAvailability({
     username,
     serviceId: selectedService?.id ?? null,
@@ -177,7 +175,7 @@ export default function BookingPage() {
       payload: {
         serviceId: selectedService.id,
         date: `${selectedDate}T${selectedTime}:00`,
-        professionalId: selectedProfessional.id, // 👇 Enviando ao criar
+        professionalId: selectedProfessional.id,
         clientName: values.clientName,
         clientPhone: values.clientPhone,
         clientEmail: values.clientEmail || undefined,
@@ -187,18 +185,16 @@ export default function BookingPage() {
 
     setLastClientName(values.clientName);
     setCreatedAppointment(response);
-    setCurrentStep(6); // Ajustado para o passo final
+    setCurrentStep(6);
   }
 
-  if (isLoading) return <main className="..."><p>Carregando...</p></main>;
-  if (isError) return <main className="..."><p>Erro ao carregar</p></main>;
+  if (isLoading) return <main className="p-8"><p>Carregando...</p></main>;
+  if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  // Montando a lista de profissionais (Admin + equipe)
-  const professionals = [
-    { id: data.user.id, name: data.user.name, role: "ADMIN", avatarUrl: data.user.avatarUrl },
-    ...(Array.isArray(team) ? team : [])
-  ];
+  // 🌟 A MÁGICA DE FILTRAGEM
+  // Usamos os profissionais que vieram anexados ao serviço selecionado!
+  const availableProfessionals = selectedService?.professionals || [];
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
@@ -228,7 +224,16 @@ export default function BookingPage() {
                     <div className="mb-4">
                       <h2 className="text-xl font-semibold text-foreground">Escolha um serviço</h2>
                     </div>
-                    <ServiceList services={data.services} selectedServiceId={selectedService?.id ?? null} onSelectService={(service) => { setSelectedService(service); setCurrentStep(2); }} />
+                    {/* 👇 Limpa a seleção do profissional ao trocar de serviço */}
+                    <ServiceList 
+                      services={data.services} 
+                      selectedServiceId={selectedService?.id ?? null} 
+                      onSelectService={(service) => { 
+                        setSelectedService(service); 
+                        setSelectedProfessional(null); // Reseta o profissional
+                        setCurrentStep(2); 
+                      }} 
+                    />
                   </section>
                 )}
 
@@ -245,24 +250,30 @@ export default function BookingPage() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {professionals.map((prof) => (
-                        <button
-                          key={prof.id}
-                          onClick={() => { setSelectedProfessional(prof); setCurrentStep(3); }}
-                          className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${selectedProfessional?.id === prof.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:bg-muted/50"}`}
-                        >
-                          <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
-                            {prof.avatarUrl ? <img src={prof.avatarUrl} alt={prof.name} className="h-full w-full object-cover"/> : prof.name.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-foreground">{prof.name}</p>
-                            <p className="text-xs text-muted-foreground">{prof.role === 'ADMIN' ? 'Especialista' : 'Profissional'}</p>
-                          </div>
-                          {selectedProfessional?.id === prof.id && <Check className="absolute right-4 h-5 w-5 text-primary" />}
-                        </button>
-                      ))}
-                    </div>
+                    {availableProfessionals.length === 0 ? (
+                      <div className="p-4 text-center border rounded-2xl bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Nenhum profissional disponível para este serviço.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {availableProfessionals.map((prof) => (
+                          <button
+                            key={prof.id}
+                            onClick={() => { setSelectedProfessional(prof); setCurrentStep(3); }}
+                            className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${selectedProfessional?.id === prof.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:bg-muted/50"}`}
+                          >
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+                              {prof.avatarUrl ? <img src={prof.avatarUrl} alt={prof.name} className="h-full w-full object-cover"/> : prof.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm text-foreground">{prof.name}</p>
+                              {/* Removido o prof.role pois a relação N:N só devolve id, name e avatarUrl */}
+                            </div>
+                            {selectedProfessional?.id === prof.id && <Check className="absolute right-4 h-5 w-5 text-primary" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </section>
                 )}
 
