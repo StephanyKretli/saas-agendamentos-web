@@ -49,6 +49,9 @@ export type CreatePublicAppointmentResponse = {
     phone: string;
     email?: string | null;
   };
+  paymentStatus?: string;
+  depositCents?: number | null;
+  pixPayload?: string | null;
   service: {
     id: string;
     name: string;

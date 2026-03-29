@@ -203,7 +203,15 @@ export default function BookingPage() {
 
         {currentStep === 6 && createdAppointment ? (
           <div className="mx-auto max-w-2xl animate-in fade-in zoom-in-95 duration-300">
-            <BookingSuccess clientName={lastClientName} serviceName={selectedService?.name!} date={selectedDate!} time={selectedTime!} />
+            <BookingSuccess 
+              clientName={lastClientName} 
+              serviceName={selectedService?.name!} 
+              date={selectedDate!} 
+              time={selectedTime!}
+              paymentStatus={createdAppointment.paymentStatus}
+              depositCents={createdAppointment.depositCents}
+              pixPayload={createdAppointment.pixPayload}
+            />
           </div>
         ) : (
           <>
