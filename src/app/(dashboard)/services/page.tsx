@@ -61,7 +61,7 @@ export default function ServicesPage() {
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-background p-6 shadow-2xl border border-border">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl border border-border flex flex-col">
             <div className="flex items-center justify-between mb-6">
               {/* O título DEVE MUDAR para 'Editar Serviço' se funcionar */}
               <h2 className="text-xl font-semibold">

@@ -13,4 +13,9 @@ export type Service = {
   priceCents: number;
   imageUrl?: string | null;
   icon?: string | null; 
+  professionals?: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  }[];
 };
