@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { saveAccessToken } from "@/lib/auth-storage";
 import { toast } from 'react-hot-toast';
+import { Eye, EyeOff } from "lucide-react"; // 👈 1. Importando os ícones
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = React.useState("demo@demo.com");
   const [password, setPassword] = React.useState("123456");
+  const [showPassword, setShowPassword] = React.useState(false); // 👈 2. Estado para controlar a visibilidade
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,11 +62,11 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* 👇 3. Bloco da senha atualizado com o botão de visualizar */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">Senha</label>
               
-              {/* Botão com type="button" explícito para não dar conflito com o submit do form */}
               <button 
                 type="button" 
                 onClick={() => {
@@ -80,15 +82,25 @@ export default function LoginPage() {
               </button>
             </div>
   
-  <input
-    type="password"
-    required
-    value={password}
-    onChange={(event) => setPassword(event.target.value)}
-    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
-    placeholder="********"
-  />
-</div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring"
+                placeholder="********"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1} // Impede que o tab foque neste botão antes do botão de submit
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
           <button
             type="submit"

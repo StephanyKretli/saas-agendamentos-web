@@ -38,24 +38,22 @@ export type CreatePublicAppointmentPayload = {
   notes?: string;
 };
 
+// 🌟 Tipagem atualizada para casar perfeitamente com o retorno do NestJS
 export type CreatePublicAppointmentResponse = {
   id: string;
   status: string;
-  startsAt: string;
-  endsAt: string;
+  date: string; // O Prisma geralmente devolve date em vez de startsAt/endsAt
   client: {
     id: string;
     name: string;
     phone: string;
     email?: string | null;
   };
-  paymentStatus?: string;
-  depositCents?: number | null;
-  pixPayload?: string | null;
-  service: {
-    id: string;
-    name: string;
-    duration: number;
-    priceCents: number;
-  };
+  requirePix?: boolean;
+  pixData?: {
+    transactionId: string;
+    qrCodePayload: string;
+    ticketUrl?: string;
+  } | null;
+  publicCancelPath?: string;
 };

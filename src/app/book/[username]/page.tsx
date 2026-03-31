@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, User as UserIcon, Check } from "lucide-react";
+import { ChevronLeft, Check } from "lucide-react";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
@@ -131,9 +131,7 @@ export default function BookingPage() {
   const params = useParams();
   const username = String(params.username ?? "");
 
-  const { data, isLoading, isError, error } = useBookingProfile(username);
-  
-  // ❌ REMOVIDO o useTeam(). A página pública não precisa de login para buscar dados!
+  const { data, isLoading, isError } = useBookingProfile(username);
 
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
@@ -192,8 +190,6 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  // 🌟 A MÁGICA DE FILTRAGEM
-  // Usamos os profissionais que vieram anexados ao serviço selecionado!
   const availableProfessionals = selectedService?.professionals || [];
 
   return (
@@ -208,9 +204,12 @@ export default function BookingPage() {
               serviceName={selectedService?.name!} 
               date={selectedDate!} 
               time={selectedTime!}
-              paymentStatus={createdAppointment.paymentStatus}
-              depositCents={createdAppointment.depositCents}
-              pixPayload={createdAppointment.pixPayload}
+              // 🌟 1. Se o backend exigir PIX, enviamos PENDING para o componente ficar amarelo
+              paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
+              // 🌟 2. Calculamos o valor de 20% que o cliente tem de pagar agora
+              depositCents={selectedService ? Math.round(selectedService.priceCents * 0.2) : 0}
+              // 🌟 3. Pegamos a string gigante do Copia e Cola enviada pelo Mercado Pago
+              pixPayload={createdAppointment.pixData?.qrCodePayload}
             />
           </div>
         ) : (
@@ -232,13 +231,12 @@ export default function BookingPage() {
                     <div className="mb-4">
                       <h2 className="text-xl font-semibold text-foreground">Escolha um serviço</h2>
                     </div>
-                    {/* 👇 Limpa a seleção do profissional ao trocar de serviço */}
                     <ServiceList 
                       services={data.services} 
                       selectedServiceId={selectedService?.id ?? null} 
                       onSelectService={(service) => { 
                         setSelectedService(service); 
-                        setSelectedProfessional(null); // Reseta o profissional
+                        setSelectedProfessional(null); 
                         setCurrentStep(2); 
                       }} 
                     />
@@ -275,7 +273,6 @@ export default function BookingPage() {
                             </div>
                             <div>
                               <p className="font-semibold text-sm text-foreground">{prof.name}</p>
-                              {/* Removido o prof.role pois a relação N:N só devolve id, name e avatarUrl */}
                             </div>
                             {selectedProfessional?.id === prof.id && <Check className="absolute right-4 h-5 w-5 text-primary" />}
                           </button>
