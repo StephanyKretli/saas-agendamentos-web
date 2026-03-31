@@ -13,6 +13,16 @@ export type UserSettings = {
   role: "ADMIN" | "PROFESSIONAL";
   plan: 'STARTER' | 'PRO' | 'BUSINESS';
   maxMembers: number;
+  
+  // 👇 Novos campos adicionados para sincronizar com o Backend
+  ownerId: string | null;
+  requirePixDeposit?: boolean;
+  pixDepositPercentage?: number | null;
+  mercadoPagoAccessToken?: string | null;
+  centralizePayments?: boolean;
+  owner?: {
+    centralizePayments: boolean;
+  } | null;
 };
 
 export type UpdateSettingsPayload = {
@@ -22,4 +32,8 @@ export type UpdateSettingsPayload = {
   bufferMinutes?: number;
   minBookingNoticeMinutes?: number;
   maxBookingDays?: number;
+  requirePixDeposit?: boolean;
+  pixDepositPercentage?: number;
+  mercadoPagoAccessToken?: string;
+  centralizePayments?: boolean;
 };

@@ -7,6 +7,16 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+api.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => {
     if (response.data && response.data.data !== undefined) {
@@ -15,10 +25,9 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    // 🛑 O NOSSO PORTEIRO VIP (AGORA MAIS INTELIGENTE)
+    // 🛑 O NOSSO PORTEIRO VIP
     if (error.response && error.response.status === 402) {
       if (typeof window !== 'undefined') {
-        // 👇 Só redireciona se já NÃO estivermos na página de planos!
         if (window.location.pathname !== '/billing') {
           window.location.href = '/billing';
         }

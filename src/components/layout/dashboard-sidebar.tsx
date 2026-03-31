@@ -41,11 +41,13 @@ export function DashboardSidebar() {
 
   const menuItems = React.useMemo(() => {
     const items = [...baseItems];
-    if (data?.role === "ADMIN") {
+    
+    if (data && (data.role === "ADMIN" || !data.ownerId)) {
       items.splice(items.length - 1, 0, { href: "/team", label: "Equipe" });
     }
+    
     return items;
-  }, [data?.role]);
+  }, [data]); 
 
   return (
     <aside className="flex h-full flex-col rounded-3xl border border-border bg-card p-4 shadow-sm overflow-hidden">
