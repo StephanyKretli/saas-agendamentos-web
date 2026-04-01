@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { saveAccessToken } from "@/lib/auth-storage";
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff } from "lucide-react"; // 👈 1. Importando os ícones
+import { Eye, EyeOff } from "lucide-react"; 
+import { GlowingBackground } from "@/components/ui/glowing-background";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function LoginPage() {
   }
 
   return (
+    <GlowingBackground>
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-2">
@@ -67,19 +70,14 @@ export default function LoginPage() {
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">Senha</label>
               
-              <button 
-                type="button" 
-                onClick={() => {
-                  if (!email || !email.includes('@')) {
-                    toast("Introduza um e-mail válido para recuperar a senha.");
-                    return;
-                  }
-                  toast(`Instruções de recuperação enviadas para ${email}`);
-                }}
-                className="text-xs text-primary hover:underline transition-opacity active:opacity-70"
-              >
-                Esqueci minha senha
-              </button>
+              <div className="flex justify-end">
+                <Link 
+                  href="/forgot-password" 
+                  className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Esqueceu-se da senha?
+                </Link>
+              </div>
             </div>
   
             <div className="relative">
@@ -112,5 +110,6 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+    </GlowingBackground>
   );
 }

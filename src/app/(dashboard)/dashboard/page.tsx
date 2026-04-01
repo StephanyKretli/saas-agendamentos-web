@@ -13,18 +13,19 @@ import {
   Clock, 
   User, 
   Scissors,
-  ArrowRight
+  ArrowRight,
+  LayoutDashboard
 } from "lucide-react";
 import type { TodayAppointment } from "@/features/dashboard/types/dashboard.types";
+import { motion, Variants } from "framer-motion"; // 🌟 Importamos a magia
 
-// Função para formatar a hora (ex: "09:00")
+// Lógica de formatação (Mantida intacta)
 function formatTime(dateString: string) {
   if (!dateString) return "--:--";
   if (dateString.length <= 5) return dateString; 
   return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(dateString));
 }
 
-// Função para deixar o mês no formato brasileiro premium
 function formatMonthYear(monthStr?: string) {
   if (!monthStr) return "este mês";
   if (/^\d{4}-\d{2}$/.test(monthStr)) {
@@ -36,7 +37,6 @@ function formatMonthYear(monthStr?: string) {
   return monthStr;
 }
 
-// Saudação baseada na hora do dia
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Bom dia";
@@ -44,12 +44,32 @@ function getGreeting() {
   return "Boa noite";
 }
 
-// Dicionário de cores para os status
 const statusMap: Record<string, { label: string; color: string }> = {
   PENDING: { label: "Pendente", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  SCHEDULED: { label: "Agendado", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" }, // <-- Trocámos CONFIRMED por SCHEDULED
+  SCHEDULED: { label: "Agendado", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" }, 
   COMPLETED: { label: "Concluído", color: "bg-green-500/10 text-green-600 border-green-500/20" },
   CANCELED: { label: "Cancelado", color: "bg-destructive/10 text-destructive border-destructive/20" },
+};
+
+// 🌟 Variáveis de animação para os cartões e lista
+const statsContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const statItemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
+const agendaContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.3 } }
+};
+
+const agendaItemVariants: Variants = {
+  hidden: { opacity: 0, x: -15 },
+  visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };
 
 export default function DashboardPage() {
@@ -66,7 +86,7 @@ export default function DashboardPage() {
 
   if (errorMetrics || (!loadingMetrics && !metrics)) {
     return (
-      <div className="rounded-3xl border border-destructive/20 bg-destructive/10 p-8 text-center text-destructive">
+      <div className="rounded-3xl border border-destructive/20 bg-destructive/10 p-8 text-center text-destructive max-w-6xl mx-auto">
         <XCircle className="mx-auto mb-3 h-8 w-8 opacity-80" />
         <p className="text-lg font-semibold">Erro ao carregar o dashboard.</p>
         <p className="mt-1 text-sm opacity-80">Não foi possível conectar com o servidor. Tente atualizar a página.</p>
@@ -75,94 +95,122 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 sm:space-y-8 pb-10 max-w-6xl mx-auto">
       
-      {/* CABEÇALHO */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{greeting} 👋</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Aqui está o resumo do seu desempenho em <strong className="text-foreground">{formatMonthYear(metrics?.month)}</strong>.
-        </p>
-      </div>
+      {/* 🌟 CABEÇALHO PADRONIZADO */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+      >
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+            <LayoutDashboard className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">{greeting} 👋</h1>
+            <p className="mt-1 text-sm text-muted-foreground font-medium">
+              Resumo do seu desempenho em <strong className="text-foreground">{formatMonthYear(metrics?.month)}</strong>.
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* CARDS PRINCIPAIS (Reduzidos no Mobile com classes sm:) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* 🌟 CARDS DE MÉTRICAS EM CASCATA */}
+      <motion.div 
+        variants={statsContainerVariants} initial="hidden" animate="visible"
+        className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+      >
         {loadingMetrics ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[90px] sm:h-[120px] rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+            <div key={i} className="h-[100px] sm:h-[130px] rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="h-3 sm:h-4 w-16 sm:w-24 animate-pulse rounded bg-muted-foreground/20" />
-                <div className="h-7 w-7 sm:h-8 sm:w-8 animate-pulse rounded-md sm:rounded-lg bg-muted-foreground/10" />
+                <div className="h-7 w-7 sm:h-10 sm:w-10 animate-pulse rounded-xl bg-muted-foreground/10" />
               </div>
-              <div className="mt-3 sm:mt-4 h-6 sm:h-8 w-20 sm:w-32 animate-pulse rounded bg-muted-foreground/20" />
+              <div className="mt-4 sm:mt-5 h-6 sm:h-8 w-20 sm:w-32 animate-pulse rounded bg-muted-foreground/20" />
             </div>
           ))
         ) : (
           <>
-            <div className="rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Receita Esperada</p>
-                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-primary/10 text-primary">
+            {/* CARD: RECEITA ESPERADA */}
+            <motion.div variants={statItemVariants} whileHover={{ y: -4, scale: 1.02 }} className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-colors hover:border-primary/40">
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between relative z-10">
+                <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Esperada</p>
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner border border-primary/20">
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2 sm:mt-4 text-xl sm:text-3xl font-bold text-foreground">{metrics?.expectedRevenueFormatted}</p>
-            </div>
+              <p className="mt-3 sm:mt-4 text-2xl sm:text-3xl font-black text-foreground relative z-10 tracking-tight">{metrics?.expectedRevenueFormatted}</p>
+            </motion.div>
 
-            <div className="rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:border-green-500/30 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Receita Realizada</p>
-                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-green-500/10 text-green-500">
+            {/* CARD: RECEITA REALIZADA */}
+            <motion.div variants={statItemVariants} whileHover={{ y: -4, scale: 1.02 }} className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-colors hover:border-green-500/40">
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-green-500/5 blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between relative z-10">
+                <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Realizada</p>
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-500 shadow-inner border border-green-500/20">
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2 sm:mt-4 text-xl sm:text-3xl font-bold text-foreground">{metrics?.realizedRevenueFormatted}</p>
-            </div>
+              <p className="mt-3 sm:mt-4 text-2xl sm:text-3xl font-black text-foreground relative z-10 tracking-tight">{metrics?.realizedRevenueFormatted}</p>
+            </motion.div>
 
-            <div className="rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:border-destructive/30 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Cancelamentos</p>
-                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-destructive/10 text-destructive">
+            {/* CARD: CANCELAMENTOS */}
+            <motion.div variants={statItemVariants} whileHover={{ y: -4, scale: 1.02 }} className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-colors hover:border-destructive/40">
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-destructive/5 blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between relative z-10">
+                <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Cancelada</p>
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive shadow-inner border border-destructive/20">
                   <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row sm:items-baseline gap-0 sm:gap-2">
-                <p className="text-xl sm:text-3xl font-bold text-foreground">{metrics?.cancelRate}%</p>
-                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">da agenda</p>
+              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-baseline gap-0 sm:gap-2 relative z-10">
+                <p className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">{metrics?.cancelRate}%</p>
+                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">da agenda</p>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:border-amber-500/30 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Destaque</p>
-                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-amber-500/10 text-amber-500">
+            {/* CARD: DESTAQUE */}
+            <motion.div variants={statItemVariants} whileHover={{ y: -4, scale: 1.02 }} className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-colors hover:border-amber-500/40">
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between relative z-10">
+                <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Destaque</p>
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 shadow-inner border border-amber-500/20">
                   <Award className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2 sm:mt-4 truncate text-lg sm:text-xl font-bold text-foreground" title={metrics?.mostBookedService?.name || "Nenhum"}>
-                {metrics?.mostBookedService?.name || "Nenhum"}
-              </p>
-              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
-                {metrics?.mostBookedService?.count ? `${metrics.mostBookedService.count} marcações` : "Sem dados"}
-              </p>
-            </div>
+              <div className="relative z-10">
+                <p className="mt-3 sm:mt-4 truncate text-lg sm:text-xl font-black text-foreground tracking-tight" title={metrics?.mostBookedService?.name || "Nenhum"}>
+                  {metrics?.mostBookedService?.name || "Nenhum"}
+                </p>
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-semibold text-muted-foreground">
+                  {metrics?.mostBookedService?.count ? `${metrics.mostBookedService.count} marcações` : "Sem dados"}
+                </p>
+              </div>
+            </motion.div>
           </>
         )}
-      </div>
+      </motion.div>
 
-      {/* SECÇÃO: AGENDA DE HOJE */}
-      <div className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="border-b border-border bg-muted/20 px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
+      {/* 🌟 SECÇÃO: AGENDA DE HOJE */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
+        className="mt-8 sm:mt-10 rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
+      >
+        <div className="border-b border-border bg-muted/20 px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">
-              A sua agenda de hoje <span className="text-muted-foreground font-normal text-xs sm:text-sm ml-1 sm:ml-2">({new Intl.DateTimeFormat('pt-BR').format(new Date())})</span>
+            <h2 className="text-base sm:text-lg font-bold text-foreground">
+              A sua agenda de hoje
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Confira os próximos clientes do dia.</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full' }).format(new Date()).replace(/^\w/, (c) => c.toUpperCase())}
+            </p>
           </div>
           
           <Link 
             href="/agenda" 
-            className="hidden sm:flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            className="hidden sm:flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors py-2 px-3 rounded-xl hover:bg-primary/10 active:scale-95"
           >
             Ver agenda completa
             <ArrowRight className="h-4 w-4" />
@@ -177,72 +225,79 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : appointments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-muted/30 py-8 sm:py-12 text-center">
-              <div className="mx-auto mb-3 sm:mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <CalendarIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }}
+              className="rounded-3xl border border-dashed border-border bg-muted/30 py-10 sm:py-16 text-center"
+            >
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
+                <CalendarIcon className="h-8 w-8" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold text-foreground">O seu dia está livre!</h3>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto px-4">
+              <h3 className="text-lg font-black text-foreground">O seu dia está livre!</h3>
+              <p className="mt-2 text-sm text-muted-foreground font-medium max-w-sm mx-auto px-4">
                 Não existem agendamentos marcados para a data de hoje. Aproveite para partilhar o seu link nas redes sociais.
               </p>
-            </div>
+            </motion.div>
           ) : (
-            <div className="grid gap-3 sm:gap-4">
+            <motion.div variants={agendaContainerVariants} initial="hidden" animate="visible" className="grid gap-3 sm:gap-4 relative">
+              <div className="absolute left-[35px] sm:left-[43px] top-4 bottom-4 w-0.5 bg-border/40 rounded-full hidden sm:block" />
+              
               {appointments.map((apt) => {
                 const status = statusMap[apt.status] || { label: apt.status, color: "bg-muted text-muted-foreground border-border" };
                 
                 return (
-                  <div 
+                  <motion.div 
                     key={apt.id} 
-                    className="group flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border bg-background p-3 sm:p-4 transition-all hover:border-primary/40 hover:shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                    variants={agendaItemVariants}
+                    whileHover={{ scale: 1.01, x: 4 }}
+                    className="group flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border bg-background p-3 sm:p-4 transition-all hover:border-primary/40 hover:shadow-md sm:flex-row sm:items-center sm:justify-between relative z-10"
                   >
                     
                     {/* Bloco de Horário */}
                     <div className="flex items-center gap-3 sm:gap-4 sm:w-48">
-                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 flex-col items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 flex-col items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground border border-primary/20 group-hover:border-primary">
                         <Clock className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5" />
                       </div>
                       <div>
-                        <p className="text-lg sm:text-xl font-bold text-foreground leading-tight tracking-tight">{formatTime(apt.startTime)}</p>
-                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">até {formatTime(apt.endTime)}</p>
+                        <p className="text-lg sm:text-xl font-black text-foreground leading-tight tracking-tight">{formatTime(apt.startTime)}</p>
+                        <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase">até {formatTime(apt.endTime)}</p>
                       </div>
                     </div>
 
                     {/* Bloco de Cliente e Serviço */}
-                    <div className="flex-1 space-y-1 sm:space-y-1.5 border-l-2 border-transparent sm:border-muted sm:pl-4 ml-1 sm:ml-0">
+                    <div className="flex-1 space-y-1 sm:space-y-1.5 border-l-2 border-transparent sm:border-border sm:pl-5 ml-1 sm:ml-0 transition-colors group-hover:border-primary/30">
                       <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
-                        <p className="text-sm sm:text-base font-semibold text-foreground">{apt.clientName}</p>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm sm:text-base font-bold text-foreground">{apt.clientName}</p>
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <Scissors className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        <p className="font-medium">{apt.serviceName}</p>
+                        <Scissors className="h-4 w-4" />
+                        <p className="font-semibold">{apt.serviceName}</p>
                       </div>
                     </div>
 
                     {/* Bloco de Status */}
                     <div className="flex justify-start sm:justify-end mt-1 sm:mt-0">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${status.color}`}>
+                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-sm ${status.color}`}>
                         {status.label}
                       </span>
                     </div>
 
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </div>
         
         {/* Link no mobile */}
         {!loadingToday && appointments.length > 0 && (
           <div className="border-t border-border bg-muted/10 p-3 sm:p-4 text-center sm:hidden">
-            <Link href="/agenda" className="text-sm font-medium text-primary">
-              Ver agenda completa →
+            <Link href="/agenda" className="text-sm font-bold text-primary py-2 px-4 rounded-xl hover:bg-primary/10 transition-colors inline-flex items-center gap-2">
+              Ver agenda completa <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         )}
-      </div>
+      </motion.div>
 
     </div>
   );

@@ -37,7 +37,7 @@ export function ServiceForm({
   // 🌟 NOVO: Estado para guardar os IDs dos profissionais selecionados
   const [selectedProfessionals, setSelectedProfessionals] = useState<string[]>([]);
 
-  // 🌟 NOVO: Busca a equipa para mostrar nas checkboxes
+  // 🌟 NOVO: Busca a equipe para mostrar nas checkboxes
   const { data: team = [], isLoading: isLoadingTeam } = useQuery({
     queryKey: ["team-list-for-services"],
     queryFn: async () => {
@@ -166,15 +166,15 @@ export function ServiceForm({
         <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">Quem realiza este serviço?</label>
           <p className="text-[0.8rem] text-muted-foreground">
-            Selecione os membros da equipa que estão aptos a realizar este serviço.
+            Selecione os membros da equipe que estão aptos a realizar este serviço.
           </p>
         </div>
         
         {isLoadingTeam ? (
-          <p className="text-sm text-muted-foreground animate-pulse">Carregando equipa...</p>
+          <p className="text-sm text-muted-foreground animate-pulse">Carregando equipe...</p>
         ) : team.length === 0 ? (
           <p className="text-sm text-muted-foreground italic bg-muted/50 p-3 rounded-lg border border-border">
-            Você ainda não tem membros na equipa. Pode adicioná-los no menu Equipa.
+            Você ainda não tem membros na equipe. Pode adicioná-los no menu Equipe.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/20 p-4 rounded-xl border border-border max-h-40 overflow-y-auto">
