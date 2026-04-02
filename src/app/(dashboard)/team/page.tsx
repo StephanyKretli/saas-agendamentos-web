@@ -166,7 +166,7 @@ export default function TeamPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-foreground tracking-tight">{editingMember ? `Editar ${editingMember.name}` : "Novo Profissional"}</h2>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Insira os dados de acesso da equipa.</p>
+                  <p className="text-sm text-muted-foreground mt-1 font-medium">Insira os dados de acesso da equipe.</p>
                 </div>
                 <button onClick={() => setIsAdding(false)} className="rounded-full p-2 bg-muted/50 hover:bg-muted text-muted-foreground transition-colors"><X className="h-5 w-5" /></button>
               </div>

@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useUpdateSettings } from "@/features/settings/hooks/use-update-settings";
+import { useUpdateFinancial } from "@/features/settings/hooks/use-update-financial";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-hot-toast";
-import { User, CheckCircle2, Copy, Camera, Trash2, ShieldCheck, Wallet, Settings as SettingsIcon } from "lucide-react";
-import { motion, AnimatePresence, Variant, Variants } from "framer-motion"; 
+import { User, CheckCircle2, Copy, Camera, Trash2, ShieldCheck, Wallet, Settings as SettingsIcon, DollarSign, Percent, CreditCard } from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion"; 
 
-// Variáveis de animação para o conteúdo das abas
 const tabContentVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24, duration: 0.4 } }
@@ -20,7 +20,10 @@ export default function SettingsPage() {
   const { data: profile, isLoading } = useSettings();
   const isSalonOwner = !(profile as any)?.ownerId;
   const adminCentralizedPayments = (profile as any)?.owner?.centralizePayments ?? false;
+  
   const updateMutation = useUpdateSettings();
+  const updateFinancialMutation = useUpdateFinancial();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -36,6 +39,9 @@ export default function SettingsPage() {
     pixDepositPercentage: 20,  
     mercadoPagoAccessToken: "", 
     centralizePayments: true,
+    absorbPixFee: true,
+    commissionType: "PERCENTAGE" as "PERCENTAGE" | "FIXED",
+    defaultCommissionRate: 50 as number | "",
   });
 
   useEffect(() => {
@@ -60,6 +66,12 @@ export default function SettingsPage() {
         mercadoPagoAccessToken: profile.mercadoPagoAccessToken || "",
         // @ts-ignore
         centralizePayments: profile.centralizePayments ?? true,
+        // @ts-ignore
+        absorbPixFee: profile.absorbPixFee ?? true,
+        // @ts-ignore
+        commissionType: profile.commissionType ?? "PERCENTAGE",
+        // @ts-ignore
+        defaultCommissionRate: profile.defaultCommissionRate ?? 50,
       }));
     }
   }, [profile]);
@@ -82,10 +94,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    const payload = {
+    const settingsPayload = {
       name: formData.name,
       username: formData.username,
       requirePixDeposit: formData.requirePixDeposit,
@@ -94,16 +106,27 @@ export default function SettingsPage() {
       centralizePayments: formData.centralizePayments,
     };
 
-    updateMutation.mutate(payload);
+    const financialPayload = {
+      absorbPixFee: formData.absorbPixFee,
+      commissionType: formData.commissionType,
+      defaultCommissionRate: formData.defaultCommissionRate === "" ? 0 : Number(formData.defaultCommissionRate),
+    };
+
+    try {
+      await Promise.all([
+        updateMutation.mutateAsync(settingsPayload),
+        updateFinancialMutation.mutateAsync(financialPayload)
+      ]);
+    } catch (error) {
+      console.error("Erro ao salvar configurações", error);
+    }
   };
 
   const handleTabClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
+    e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   };
+
+  const isSaving = updateMutation.isPending || updateFinancialMutation.isPending;
 
   if (isLoading) {
     return (
@@ -118,19 +141,14 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-20 sm:pb-10 max-w-6xl mx-auto">
       
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3 w-full lg:w-auto">
           <div className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
             <SettingsIcon className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-            <p className="mt-1 text-sm text-muted-foreground font-medium">
-              Gerencie a sua identidade e a vitrine pública.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground font-medium">Gerencie a sua identidade e a vitrine pública.</p>
           </div>
         </div>
       </motion.div>
@@ -139,47 +157,25 @@ export default function SettingsPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
           <Tabs defaultValue="perfil" className="space-y-6 sm:space-y-8 w-full">
             
-            {/* NAVEGAÇÃO POR ABAS RESPONSIVA */}
             <div className="w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
               <div className="w-max sm:w-fit rounded-xl bg-muted/50 p-1 border border-border/50 shadow-sm">
                 <TabsList className="bg-transparent p-0 h-auto gap-1 w-full flex">
-                  <TabsTrigger value="perfil" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">
-                    Perfil
-                  </TabsTrigger>
-                  <TabsTrigger value="vitrine" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">
-                    Vitrine
-                  </TabsTrigger>
-                  <TabsTrigger value="seguranca" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">
-                    Segurança
-                  </TabsTrigger>
-                  <TabsTrigger value="pagamentos" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-amber-600 data-[state=active]:text-amber-600">
-                    Pagamentos
-                  </TabsTrigger>
+                  <TabsTrigger value="perfil" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">Perfil</TabsTrigger>
+                  <TabsTrigger value="vitrine" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">Vitrine</TabsTrigger>
+                  <TabsTrigger value="seguranca" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">Segurança</TabsTrigger>
+                  <TabsTrigger value="pagamentos" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-amber-600 data-[state=active]:text-amber-600">Financeiro & PIX</TabsTrigger>
                 </TabsList>
               </div>
             </div>
 
-            {/* ABA: PERFIL (Ocupa a largura total da grid) */}
             <TabsContent value="perfil" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="grid gap-6 lg:grid-cols-[300px_1fr]">
                 <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col items-center text-center gap-4 transition-all hover:shadow-md">
                   <div className="relative group">
                     <div className="h-32 w-32 rounded-full border-4 border-muted overflow-hidden bg-muted flex items-center justify-center transition-all group-hover:border-primary/30">
-                      {formData.avatarUrl ? (
-                        <img src={formData.avatarUrl} alt="Preview" className="h-full w-full object-cover" />
-                      ) : (
-                        <User className="h-14 w-14 text-muted-foreground/40" />
-                      )}
+                      {formData.avatarUrl ? <img src={formData.avatarUrl} alt="Preview" className="h-full w-full object-cover" /> : <User className="h-14 w-14 text-muted-foreground/40" />}
                     </div>
-                    <motion.button 
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                      type="button" 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-lg transition-transform"
-                      title="Alterar foto"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </motion.button>
+                    <motion.button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-lg transition-transform"><Camera className="h-4 w-4" /></motion.button>
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                   </div>
                   <div>
@@ -218,22 +214,14 @@ export default function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* ABA: VITRINE */}
             <TabsContent value="vitrine" className="outline-none">
-              <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
-                {/* 🌟 CORREÇÃO AQUI: max-w-3xl para não esticar ao infinito num monitor largo */}
-                <Card className="rounded-3xl border border-border bg-card shadow-sm p-5 sm:p-6 transition-all hover:shadow-md max-w-3xl">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
+                <Card className="rounded-3xl border border-border bg-card shadow-sm p-5 sm:p-6 max-w-3xl">
+                   <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Link de Agendamento</label>
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
                         <div className="relative flex-1">
                           <span className="absolute left-4 top-2.5 text-xs text-muted-foreground opacity-50 font-medium">app.com/book/</span>
-                          <input 
-                            value={formData.username}
-                            onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})}
-                            className={`w-full pl-24 ${inputStyle} font-semibold`}
-                          />
+                          <input value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})} className={`w-full pl-24 ${inputStyle} font-semibold`} />
                         </div>
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
                           <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-xl gap-2 h-10 w-full sm:w-auto px-6 font-bold shadow-sm">
@@ -243,17 +231,12 @@ export default function SettingsPage() {
                       </div>
                       <p className="text-xs text-muted-foreground ml-1 mt-2">Este é o link público que você deve colocar na bio do seu Instagram.</p>
                     </div>
-                  </div>
                 </Card>
-              </motion.div>
             </TabsContent>
 
-            {/* ABA: SEGURANÇA */}
             <TabsContent value="seguranca" className="outline-none">
-              <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
-                {/* 🌟 CORREÇÃO AQUI: max-w-3xl */}
-                <Card className="rounded-3xl border border-border bg-card shadow-sm p-5 sm:p-6 transition-all hover:shadow-md max-w-3xl">
-                  <div className="grid gap-5 sm:gap-6 sm:grid-cols-2">
+                <Card className="rounded-3xl border border-border bg-card shadow-sm p-5 sm:p-6 max-w-3xl">
+                   <div className="grid gap-5 sm:gap-6 sm:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha Atual</label>
                       <input type="password" value={formData.currentPassword} onChange={(e) => setFormData({...formData, currentPassword: e.target.value})} className={`w-full ${inputStyle}`} placeholder="••••••••" />
@@ -264,108 +247,65 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
             </TabsContent>
 
-            {/* ABA: PAGAMENTOS */}
+            {/* 👇 ABA FINANCEIRA CORRIGIDA COM A LÓGICA EXATA 👇 */}
             <TabsContent value="pagamentos" className="outline-none">
-              <motion.div variants={tabContentVariants} initial="hidden" animate="visible">
-                {!isSalonOwner && adminCentralizedPayments ? (
-                  
-                  /* AVISO FUNCIONÁRIO */
-                  <Card className="rounded-3xl border border-border bg-muted/30 shadow-sm p-8 flex flex-col items-center justify-center text-center max-w-3xl">
+              <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
+                
+                {/* 1. MENSAGEM DE BLOQUEIO PARA A EQUIPA (Se pagamentos forem centralizados no admin) */}
+                {!isSalonOwner && adminCentralizedPayments && (
+                  <Card className="rounded-3xl border border-border bg-muted/30 shadow-sm p-8 flex flex-col items-center justify-center text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-4 shadow-inner">
                       <ShieldCheck className="h-8 w-8" />
                     </div>
-                    <h3 className="text-lg font-black text-foreground">Pagamentos Centralizados</h3>
+                    <h3 className="text-lg font-black text-foreground">Recebimentos e Repasses</h3>
                     <p className="text-sm text-muted-foreground mt-2 max-w-md font-medium">
-                      A administração configurou o sistema para receber todos os pagamentos de forma centralizada. Não é necessário configurar o Mercado Pago.
+                      As regras financeiras e a cobrança de PIX são geridas exclusivamente pela administração do salão.
                     </p>
                   </Card>
+                )}
 
-                ) : (
-
-                  /* FORMULÁRIO PIX / PREMIUM */
-                  <Card className="rounded-3xl border border-amber-500/20 shadow-xl overflow-hidden ring-1 ring-amber-500/10 max-w-3xl">
-                    
-                    {/* CABEÇALHO DESTAQUE */}
+                {/* 2. CONFIGURAÇÃO DO PIX (Aparece para a Admin OU para a Equipa se os pagamentos não forem centralizados) */}
+                {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
+                  <Card className="rounded-3xl border border-amber-500/20 shadow-xl overflow-hidden ring-1 ring-amber-500/10">
                     <div className="bg-amber-500/10 p-5 sm:p-6 border-b border-amber-500/10 flex items-start gap-4">
-                      <div className="bg-amber-500/20 p-3 rounded-2xl text-amber-600 shrink-0 shadow-inner">
-                        <ShieldCheck className="h-6 w-6" />
-                      </div>
+                      <div className="bg-amber-500/20 p-3 rounded-2xl text-amber-600 shrink-0 shadow-inner"><ShieldCheck className="h-6 w-6" /></div>
                       <div>
                         <h2 className="text-lg font-black text-foreground">Proteção Contra Faltas</h2>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">
-                          Configure a cobrança de um sinal via PIX para garantir o comparecimento dos clientes e eliminar os horários vagos na agenda.
-                        </p>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX para garantir o comparecimento dos clientes.</p>
                       </div>
                     </div>
-
                     <div className="p-5 sm:p-6 space-y-6 bg-card">
-                      
-                      {/* INTERRUPTOR PRINCIPAL DO PIX */}
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                          <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                            Cobrar PIX Antecipado (Sinal)
-                          </label>
-                          <p className="text-xs text-muted-foreground mt-1 font-medium">
-                            Exija um pagamento parcial no momento do agendamento online.
-                          </p>
+                          <label className="text-sm font-bold text-foreground">Cobrar PIX Antecipado (Sinal)</label>
+                          <p className="text-xs text-muted-foreground mt-1 font-medium">Exija um pagamento parcial no momento do agendamento online.</p>
                         </div>
                         <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                          <input 
-                            type="checkbox" 
-                            className="peer sr-only" 
-                            checked={formData.requirePixDeposit}
-                            onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-muted after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                          <input type="checkbox" className="peer sr-only" checked={formData.requirePixDeposit} onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})} />
+                          <div className="peer h-6 w-11 rounded-full bg-muted after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                         </label>
                       </div>
 
-                      {/* SANFONA ANIMADA (ACCORDION) */}
                       <AnimatePresence>
                         {formData.requirePixDeposit && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0 }} 
-                            animate={{ opacity: 1, height: "auto" }} 
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
-                          >
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                             <div className="space-y-8 p-6 mt-6 rounded-3xl bg-amber-500/5 border border-amber-500/20">
                               
-                              {/* SLIDER DE PERCENTAGEM */}
                               <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                  <label className="text-sm font-bold text-foreground">
-                                    Percentagem do Sinal
-                                  </label>
-                                  <span className="text-3xl font-black text-amber-600">
-                                    {formData.pixDepositPercentage}%
-                                  </span>
+                                  <label className="text-sm font-bold text-foreground">Percentagem do Sinal</label>
+                                  <span className="text-3xl font-black text-amber-600">{formData.pixDepositPercentage}%</span>
                                 </div>
-                                
-                                <input 
-                                  type="range" 
-                                  min="5"
-                                  max="100"
-                                  step="5"
-                                  value={formData.pixDepositPercentage}
-                                  onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})}
-                                  className="w-full h-2.5 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                                />
-                                
+                                <input type="range" min="5" max="100" step="5" value={formData.pixDepositPercentage} onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})} className="w-full h-2.5 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500" />
                                 <div className="flex justify-between text-xs font-bold text-muted-foreground/60">
-                                  <span>5%</span>
-                                  <span>50%</span>
-                                  <span>100%</span>
+                                  <span>5%</span><span>50%</span><span>100%</span>
                                 </div>
                               </div>
 
                               <hr className="border-border/50" />
 
-                              {/* PASSO A PASSO DO TOKEN */}
                               <div className="space-y-4">
                                 <label className="text-sm font-bold text-foreground">
                                   Mercado Pago Access Token
@@ -389,40 +329,77 @@ export default function SettingsPage() {
                                   className={`w-full ${inputStyle} font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500/60 focus:ring-amber-500/20`}
                                 />
                               </div>
+
                             </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </Card>
+                )}
 
-                      {/* BLOCO DE ROTEAMENTO DE EQUIPA */}
-                      {isSalonOwner && (
-                        <div className="pt-6 mt-6 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex gap-4 items-start">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0 hidden sm:block border border-primary/20">
-                              <Wallet className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                Centralizar Pagamentos da Equipa
-                              </label>
-                              <p className="text-xs text-muted-foreground mt-1 max-w-md font-medium">
-                                <strong className="text-foreground/80 font-bold">Ligado:</strong> Todo o dinheiro entra na sua conta.<br/>
-                                <strong className="text-foreground/80 font-bold block mt-0.5">Desligado:</strong> Cada profissional recebe diretamente na sua própria conta.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-2 sm:mt-0">
-                            <input 
-                              type="checkbox" 
-                              className="peer sr-only" 
-                              checked={formData.centralizePayments}
-                              onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})}
-                            />
-                            <div className="peer h-6 w-11 rounded-full bg-muted after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
-                          </label>
+                {/* 3. REGRAS DE REPASSE E COMISSÕES (Exclusivo para a Dona do Salão) */}
+                {isSalonOwner && (
+                  <Card className="rounded-3xl border border-primary/20 shadow-xl overflow-hidden ring-1 ring-primary/10">
+                    <div className="bg-primary/5 p-5 sm:p-6 border-b border-primary/10 flex items-start gap-4">
+                      <div className="bg-primary/10 p-3 rounded-2xl text-primary shrink-0 shadow-inner"><DollarSign className="h-6 w-6" /></div>
+                      <div>
+                        <h2 className="text-lg font-black text-foreground">Repasses e Comissões</h2>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Defina como o salão lida com as taxas e o pagamento da equipa.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-5 sm:p-6 space-y-8 bg-card">
+                      
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-border">
+                        <div>
+                          <label className="text-sm font-bold text-foreground">Centralizar Pagamentos da Equipa</label>
+                          <p className="text-xs text-muted-foreground mt-1 max-w-md font-medium">Todo o dinheiro entra na sua conta para posterior repasse.</p>
                         </div>
-                      )}
+                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-2 sm:mt-0">
+                          <input type="checkbox" className="peer sr-only" checked={formData.centralizePayments} onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} />
+                          <div className="peer h-6 w-11 rounded-full bg-muted after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">Absorver Taxa do PIX</h3>
+                          <p className="text-xs text-muted-foreground max-w-md">Se desativado, a taxa do Mercado Pago é descontada antes de calcular a comissão do profissional.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input type="checkbox" className="sr-only peer" checked={formData.absorbPixFee} onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} />
+                          <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-border/50">
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tipo de Comissão</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="commissionType" value="PERCENTAGE" checked={formData.commissionType === "PERCENTAGE"} onChange={() => setFormData({...formData, commissionType: "PERCENTAGE"})} className="text-primary focus:ring-primary h-4 w-4" />
+                              <span className="text-sm font-medium">Porcentagem (%)</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="commissionType" value="FIXED" checked={formData.commissionType === "FIXED"} onChange={() => setFormData({...formData, commissionType: "FIXED"})} className="text-primary focus:ring-primary h-4 w-4" />
+                              <span className="text-sm font-medium">Fixo (R$)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 relative">
+                          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            {formData.commissionType === "PERCENTAGE" ? "Taxa Padrão" : "Valor Padrão"}
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              {formData.commissionType === "PERCENTAGE" ? <Percent className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground text-sm font-bold">R$</span>}
+                            </div>
+                            <input type="number" min="0" step={formData.commissionType === "PERCENTAGE" ? "1" : "0.01"} placeholder="Ex: 50" value={formData.defaultCommissionRate} onChange={(e) => setFormData({...formData, defaultCommissionRate: e.target.value ? Number(e.target.value) : ""})} className={`w-full pl-10 ${inputStyle}`} />
+                          </div>
+                        </div>
+                      </div>
 
                     </div>
                   </Card>
@@ -432,16 +409,11 @@ export default function SettingsPage() {
           </Tabs>
         </motion.div>
 
-        {/* BOTÃO SALVAR */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:pt-8 flex justify-end z-40">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-            <Button 
-              type="submit" 
-              disabled={updateMutation.isPending}
-              className="h-12 w-full sm:w-auto rounded-2xl px-12 text-sm font-bold shadow-sm transition-all"
-            >
-              {updateMutation.isPending ? "A salvar..." : "Salvar Alterações"}
-              {!updateMutation.isPending && <CheckCircle2 className="ml-2 h-4 w-4" />}
+            <Button type="submit" disabled={isSaving} className="h-12 w-full sm:w-auto rounded-2xl px-12 text-sm font-bold shadow-sm transition-all">
+              {isSaving ? "A salvar..." : "Salvar Alterações"}
+              {!isSaving && <CheckCircle2 className="ml-2 h-4 w-4" />}
             </Button>
           </motion.div>
         </div>

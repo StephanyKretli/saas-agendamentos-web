@@ -8,6 +8,12 @@ export type DashboardMetrics = {
   realizedRevenueFormatted: string;
   cancelRate: string | number;
   mostBookedService: { name: string; count: number; } | null;
+  teamCommissionsCents?: number;
+  teamCommissionsFormatted?: string;
+  netRevenueCents?: number;
+  netRevenueFormatted?: string;
+  pixFeesCents?: number;
+  pixFeesFormatted?: string;
 };
 
 export type TodayAppointment = {
@@ -18,3 +24,4 @@ export type TodayAppointment = {
   endTime: string;
   status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELED";
 };
+
