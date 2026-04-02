@@ -117,12 +117,13 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* 🌟 NOVA SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES */}
+      {/* 🌟 NOVA SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES BLINDADA */}
       <motion.div 
         variants={statsContainerVariants} initial="hidden" animate="visible"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+        // O Grid adapta-se magicamente: 3 colunas para a Dona, 2 colunas para a equipe!
+        className={`grid grid-cols-1 gap-4 ${metrics?.isOwner ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
       >
-        {/* Faturamento Bruto (O que entrou de verdade) */}
+        {/* Card 1: Faturamento (Admin) / Produção (equipe) */}
         <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
           <div className="flex items-center gap-4">
@@ -130,13 +131,15 @@ export default function DashboardPage() {
               <DollarSign className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Faturamento Bruto</p>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                {metrics?.isOwner ? "Faturamento Bruto" : "Minha Produção"}
+              </p>
               <p className="text-2xl font-black text-foreground">{metrics?.realizedRevenueFormatted || "R$ 0,00"}</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Comissões a Pagar (O que vai para a equipe) */}
+        {/* Card 2: A Pagar (Admin) / A Receber (equipe) */}
         <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl" />
           <div className="flex items-center gap-4">
@@ -144,29 +147,34 @@ export default function DashboardPage() {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">A Pagar (Equipe)</p>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                {metrics?.isOwner ? "A Pagar (Equipe)" : "Minha Comissão"}
+              </p>
               <p className="text-2xl font-black text-foreground">{metrics?.teamCommissionsFormatted || "R$ 0,00"}</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Lucro Líquido (O que sobra pro salão já tirando equipe e PIX) */}
-        <motion.div variants={statItemVariants} className="rounded-3xl border border-primary/30 bg-primary/5 p-6 shadow-sm relative overflow-hidden">          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
-              <PiggyBank className="h-6 w-6" />
+        {/* Card 3: Lucro Líquido e Taxas (APENAS A DONA VÊ) 👑 */}
+        {metrics?.isOwner && (
+          <motion.div variants={statItemVariants} className="rounded-3xl border border-primary/30 bg-primary/5 p-6 shadow-sm relative overflow-hidden">          
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
+                <PiggyBank className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
+                <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
-              <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+            {/* Aviso de taxas PIX */}
+            <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
+              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
+              <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
             </div>
-          </div>
-          {/* Aviso de taxas PIX */}
-          <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
-            <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
-            <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* CARDS DE MÉTRICAS SECUNDÁRIAS (Cancelamentos e Destaque) */}
@@ -240,7 +248,8 @@ export default function DashboardPage() {
             </motion.div>
           ) : (
             <motion.div variants={agendaContainerVariants} initial="hidden" animate="visible" className="grid gap-3 sm:gap-4 relative">
-              <div className="absolute left-9 sm:left-11 top-4 bottom-4 w-0.5 bg-border/40 rounded-full hidden sm:block" />              {appointments.map((apt) => {
+              <div className="absolute left-9 sm:left-11 top-4 bottom-4 w-0.5 bg-border/40 rounded-full hidden sm:block" />              
+              {appointments.map((apt) => {
                 const status = statusMap[apt.status] || { label: apt.status, color: "bg-muted text-muted-foreground border-border" };
                 return (
                   <motion.div key={apt.id} variants={agendaItemVariants} className="group flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border bg-background p-3 sm:p-4 hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between relative z-10">

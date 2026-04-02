@@ -170,7 +170,7 @@ export default function BusinessHoursPage() {
           </div>
         </div>
 
-        {/* 🌟 DROPDOWN DE SELEÇÃO DA EQUIPA */}
+        {/* 🌟 DROPDOWN DE SELEÇÃO DA equipe */}
         <div className="flex w-full sm:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

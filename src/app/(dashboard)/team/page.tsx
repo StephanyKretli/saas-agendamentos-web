@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X
+  Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X, Infinity
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTeam, useCreateMember, useRemoveMember } from "@/features/team/hooks/use-team";
@@ -41,7 +41,7 @@ export default function TeamPage() {
   const [newPassword, setNewPassword] = useState("");
 
   const [formData, setFormData] = useState({
-    name: "", email: "", username: "", password: "",
+    name: "", email: "", username: "", password: "", role: "PROFESSIONAL"
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,7 +56,7 @@ export default function TeamPage() {
       onSuccess: () => {
         setIsAdding(false);
         setEditingMember(null);
-        setFormData({ name: "", email: "", username: "", password: "" });
+        setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" });
         toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
       },
       onError: (error: any) => {
@@ -67,7 +67,7 @@ export default function TeamPage() {
 
   const handleEdit = (member: any) => {
     setEditingMember(member);
-    setFormData({ name: member.name, email: member.email, username: member.username, password: "" });
+    setFormData({ name: member.name, email: member.email, username: member.username, password: "", role: member.role || "PROFESSIONAL" });
     setIsAdding(true);
   };
 
@@ -104,8 +104,10 @@ export default function TeamPage() {
   const currentMembersCount = Array.isArray(team) ? team.length : 0;
   const maxMembers = profile?.maxMembers || 3; 
   const planName = profile?.plan || "Starter"; 
-  const isBusinessPlan = planName === 'BUSINESS';
-  const isLimitReached = !isBusinessPlan && currentMembersCount >= maxMembers;
+  
+  // 🌟 AQUI ESTÁ A CORREÇÃO: Agora o Front-end sabe que o PRO é o Ilimitado
+  const isUnlimitedPlan = planName === 'PRO'; 
+  const isLimitReached = !isUnlimitedPlan && currentMembersCount >= maxMembers;
   const progressPercentage = Math.min((currentMembersCount / maxMembers) * 100, 100);
 
   const inputStyle = "h-12 rounded-xl border border-border bg-card px-4 text-sm shadow-sm transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none";
@@ -134,7 +136,7 @@ export default function TeamPage() {
             </div>
           ) : (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={() => { setIsAdding(true); setEditingMember(null); setFormData({ name: "", email: "", username: "", password: "" }); }} className="rounded-xl shadow-sm w-full sm:w-auto h-12 font-bold">
+              <Button onClick={() => { setIsAdding(true); setEditingMember(null); setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" }); }} className="rounded-xl shadow-sm w-full sm:w-auto h-12 font-bold">
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Profissional
               </Button>
             </motion.div>
@@ -142,15 +144,26 @@ export default function TeamPage() {
         </div>
       </motion.div>
 
+      {/* 🌟 CARD DE PLANO ATUALIZADO */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="rounded-3xl border border-primary/20 bg-primary/5 p-5 sm:p-6 flex flex-col gap-3 shadow-sm relative overflow-hidden">
         <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
         <div className="flex items-center justify-between relative z-10">
           <p className="text-sm font-bold text-foreground">Utilização do Plano <span className="capitalize text-primary">({planName.toLowerCase()})</span></p>
-          <p className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            {isBusinessPlan ? `${currentMembersCount} (Ilimitado)` : `${currentMembersCount} de ${maxMembers}`}
-          </p>
+          
+          {/* TAG VIP ILIMITADA */}
+          {isUnlimitedPlan ? (
+             <p className="text-sm font-black text-amber-500 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20 flex items-center gap-1.5 shadow-sm">
+               <Infinity className="h-4 w-4" /> Ilimitado
+             </p>
+          ) : (
+            <p className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+              {currentMembersCount} de {maxMembers}
+            </p>
+          )}
         </div>
-        {!isBusinessPlan && (
+        
+        {/* Barra de progresso some se for ilimitado */}
+        {!isUnlimitedPlan && (
           <div className="h-2.5 w-full bg-muted/80 rounded-full overflow-hidden border border-border/50 relative z-10">
             <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`h-full relative ${isLimitReached ? 'bg-destructive' : 'bg-primary'}`}>
               <div className="absolute inset-0 bg-white/20 w-full h-full" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }} />
@@ -179,6 +192,22 @@ export default function TeamPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</label>
                   <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full ${inputStyle}`} placeholder="joao@salao.com" />
                 </div>
+                
+                {/* 🌟 SELECT DE CARGO (Se for o plano ilimitado) */}
+                {isUnlimitedPlan && (
+                  <div className="space-y-2 col-span-full">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nível de Acesso</label>
+                    <select 
+                      value={formData.role} 
+                      onChange={e => setFormData({...formData, role: e.target.value})} 
+                      className={`w-full ${inputStyle}`}
+                    >
+                      <option value="PROFESSIONAL">Membro da Equipe (Apenas Agenda e Produção)</option>
+                      <option value="ADMIN">Co-Administrador (Acesso Total)</option>
+                    </select>
+                  </div>
+                )}
+
                 <div className="col-span-full pt-4 mt-2 border-t border-border flex gap-3 justify-end">
                   <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="rounded-xl font-bold">Cancelar</Button>
                   <Button type="submit" disabled={createMutation.isPending} className="rounded-xl px-8 font-bold shadow-sm">{createMutation.isPending ? "A salvar..." : "Gravar Dados"}</Button>
@@ -229,7 +258,7 @@ export default function TeamPage() {
                     <div className="min-w-0">
                       <p className="font-bold text-foreground text-lg truncate tracking-tight">{member.name}</p>
                       <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                        <Shield className="h-3.5 w-3.5" /> {member.role === 'ADMIN' ? 'Administrador' : 'Profissional'}
+                        <Shield className="h-3.5 w-3.5" /> {member.role === 'ADMIN' ? 'Co-Administrador' : 'Profissional'}
                       </p>
                     </div>
                   </div>

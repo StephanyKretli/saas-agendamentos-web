@@ -253,7 +253,7 @@ export default function SettingsPage() {
             <TabsContent value="pagamentos" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
                 
-                {/* 1. MENSAGEM DE BLOQUEIO PARA A EQUIPA (Se pagamentos forem centralizados no admin) */}
+                {/* 1. MENSAGEM DE BLOQUEIO PARA A equipe (Se pagamentos forem centralizados no admin) */}
                 {!isSalonOwner && adminCentralizedPayments && (
                   <Card className="rounded-3xl border border-border bg-muted/30 shadow-sm p-8 flex flex-col items-center justify-center text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-4 shadow-inner">
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {/* 2. CONFIGURAÇÃO DO PIX (Aparece para a Admin OU para a Equipa se os pagamentos não forem centralizados) */}
+                {/* 2. CONFIGURAÇÃO DO PIX (Aparece para a Admin OU para a equipe se os pagamentos não forem centralizados) */}
                 {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
                   <Card className="rounded-3xl border border-amber-500/20 shadow-xl overflow-hidden ring-1 ring-amber-500/10">
                     <div className="bg-amber-500/10 p-5 sm:p-6 border-b border-amber-500/10 flex items-start gap-4">
@@ -345,7 +345,7 @@ export default function SettingsPage() {
                       <div className="bg-primary/10 p-3 rounded-2xl text-primary shrink-0 shadow-inner"><DollarSign className="h-6 w-6" /></div>
                       <div>
                         <h2 className="text-lg font-black text-foreground">Repasses e Comissões</h2>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Defina como o salão lida com as taxas e o pagamento da equipa.</p>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Defina como o salão lida com as taxas e o pagamento da equipe.</p>
                       </div>
                     </div>
                     
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                       
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-border">
                         <div>
-                          <label className="text-sm font-bold text-foreground">Centralizar Pagamentos da Equipa</label>
+                          <label className="text-sm font-bold text-foreground">Centralizar Pagamentos da Equipe</label>
                           <p className="text-xs text-muted-foreground mt-1 max-w-md font-medium">Todo o dinheiro entra na sua conta para posterior repasse.</p>
                         </div>
                         <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-2 sm:mt-0">

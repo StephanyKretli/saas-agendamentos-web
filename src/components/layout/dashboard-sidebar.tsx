@@ -9,16 +9,6 @@ import { Moon, Sun, Menu, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
 
-const baseItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/agenda", label: "Agenda" },
-  { href: "/clients", label: "Clientes" },
-  { href: "/services", label: "Serviços" },
-  { href: "/business-hours", label: "Horários" },
-  { href: "/blocked-slots", label: "Bloqueios" },
-  { href: "/settings", label: "Configurações" },
-];
-
 function getInitial(name?: string | null) {
   return name?.trim()?.charAt(0)?.toUpperCase() || "?";
 }
@@ -64,16 +54,32 @@ export function DashboardSidebar() {
   }
 
   const menuItems = React.useMemo(() => {
-    const items = [...baseItems];
-    // 👇 Usamos a tipagem do seu settings.types que adicionamos antes
-    if (data && (data.role === "ADMIN" || !data.ownerId)) {
-        // Encontra o índice das Configurações
-        const settingsIndex = items.findIndex(item => item.href === '/settings');
-        if (settingsIndex !== -1) {
-          items.splice(settingsIndex, 0, { href: "/team", label: "Equipe" });
-        }
-    }
-    return items;
+    // 1. Verificamos se quem está logado é a Dona (Admin)
+    const isOwner = data && (data.role === "ADMIN" || !data.ownerId);
+
+    // 2. Definimos a lista completa (Visão da Dona)
+    const adminItems = [
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/agenda", label: "Agenda" },
+      { href: "/clients", label: "Clientes" },
+      { href: "/services", label: "Serviços" },
+      { href: "/business-hours", label: "Horários" },
+      { href: "/blocked-slots", label: "Bloqueios" },
+      { href: "/team", label: "Equipe" }, // A Dona vê a equipa
+      { href: "/settings", label: "Configurações" },
+    ];
+
+    // 3. Definimos a lista restrita (Visão da Equipa)
+    const teamItems = [
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/agenda", label: "Agenda" },
+      { href: "/clients", label: "Clientes" },
+      { href: "/blocked-slots", label: "Bloqueios" },
+      { href: "/settings", label: "Configurações" },
+    ];
+
+    // 4. Retornamos a lista correta consoante o cargo
+    return isOwner ? adminItems : teamItems;
   }, [data]);
 
   return (
