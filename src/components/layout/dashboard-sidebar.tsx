@@ -67,6 +67,7 @@ export function DashboardSidebar() {
       { href: "/blocked-slots", label: "Bloqueios", id: "step-bloqueios"  },
       { href: "/team", label: "Equipe", id: "step-equipe"  },
       { href: "/settings", label: "Configurações", id: "step-config" },
+      { href: "/support", label: "Ajuda & Feedback", id: "step-suporte" }, 
     ];
 
     // 3. Definimos a lista restrita (Visão da Equipa)
@@ -74,8 +75,9 @@ export function DashboardSidebar() {
       { href: "/dashboard", label: "Dashboard", id: "step-dashboard" },
       { href: "/agenda", label: "Agenda", id: "step-agenda" },
       { href: "/clients", label: "Clientes", id: "step-clientes" },
-      { href: "/blocked-slots", label: "Bloqueios", id: "step-bloqueios"  },
+      { href: "/blocked-slots", label: "Bloqueios", id: "step-bloqueios"  },      
       { href: "/settings", label: "Configurações", id: "step-config" },
+      { href: "/support", label: "Ajuda & Feedback", id: "step-suporte" }, 
     ];
 
     // 4. Retornamos a lista correta consoante o cargo
