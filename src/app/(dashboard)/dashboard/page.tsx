@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useDashboardMetrics } from "@/features/dashboard/hooks/use-dashboard-metrics";
 import { useDashboardToday } from "@/features/dashboard/hooks/use-dashboard-today";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import { useProductTour } from "@/hooks/use-product-tour"; // 🌟 Importamos o Hook do Tour
 import { 
   DollarSign, 
   Calendar as CalendarIcon, 
@@ -78,6 +80,9 @@ export default function DashboardPage() {
   const { data: metrics, isLoading: loadingMetrics, isError: errorMetrics } = useDashboardMetrics();
   const { data: todayAgenda, isLoading: loadingToday } = useDashboardToday();
   const { data: profile } = useSettings();
+  
+  // 🌟 Inicializamos o Tour
+  const { startTour } = useProductTour();
 
   const appointments: TodayAppointment[] = Array.isArray(todayAgenda) 
     ? todayAgenda 
@@ -85,6 +90,21 @@ export default function DashboardPage() {
 
   const firstName = profile?.name?.split(" ")[0] || "";
   const greeting = `${getGreeting()}${firstName ? `, ${firstName}` : "!"}`;
+
+  // 🌟 Dispara o Tour no primeiro acesso
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem("saas_onboarding_v1");
+    
+    // Só inicia se as métricas já carregaram, para o tour não focar em blocos vazios
+    if (!hasSeenTour && metrics && !loadingMetrics) {
+      const timer = setTimeout(() => {
+        startTour();
+        localStorage.setItem("saas_onboarding_v1", "true");
+      }, 1000); // 1 segundo de delay para as animações Framer Motion terminarem
+      
+      return () => clearTimeout(timer);
+    }
+  }, [metrics, loadingMetrics, startTour]);
 
   if (errorMetrics || (!loadingMetrics && !metrics)) {
     return (
@@ -120,11 +140,11 @@ export default function DashboardPage() {
       {/* 🌟 NOVA SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES BLINDADA */}
       <motion.div 
         variants={statsContainerVariants} initial="hidden" animate="visible"
-        // O Grid adapta-se magicamente: 3 colunas para a Dona, 2 colunas para a equipe!
         className={`grid grid-cols-1 gap-4 ${metrics?.isOwner ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
       >
         {/* Card 1: Faturamento (Admin) / Produção (equipe) */}
-        <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
+        <motion.div 
+          id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -217,6 +237,7 @@ export default function DashboardPage() {
 
       {/* SECÇÃO: AGENDA DE HOJE */}
       <motion.div 
+        id="tour-today-agenda" // 🌟 ID do Tour adicionado aqui!
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
         className="mt-8 sm:mt-10 rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
       >
@@ -227,7 +248,11 @@ export default function DashboardPage() {
               {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full' }).format(new Date()).replace(/^\w/, (c) => c.toUpperCase())}
             </p>
           </div>
-          <Link href="/agenda" className="hidden sm:flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 py-2 px-3 rounded-xl hover:bg-primary/10 active:scale-95">
+          <Link 
+            id="tour-link-agenda" // 🌟 ID do Tour adicionado aqui!
+            href="/agenda" 
+            className="hidden sm:flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 py-2 px-3 rounded-xl hover:bg-primary/10 active:scale-95"
+          >
             Ver agenda completa <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

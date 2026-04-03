@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Lock, Sparkles, CreditCard } from "lucide-react";
+import { CheckCircle2, Lock, Sparkles, CreditCard, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast"; 
-import { motion, Variants } from "framer-motion"; // 🌟 Adicionamos o Framer Motion
-import { MagicButton } from "@/components/ui/magic-button"; // 🌟 Trazemos o botão brilhante
+import { motion, Variants } from "framer-motion";
+import { MagicButton } from "@/components/ui/magic-button";
 
 // Variáveis de animação para os cartões
 const containerVariants: Variants = {
@@ -43,21 +43,35 @@ const checkVariants: Variants = {
 };
 
 export default function BillingPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  // Alterado para string para podermos identificar qual botão está a carregar
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleSubscribe = async (plan: string) => {
-    setIsLoading(true);
+    setLoadingPlan(plan);
     try {
+      // 1. Faz o pedido ao NestJS
       const response = await api.post('/billing/subscribe', { plan });
       
+      // 👉 Extrai os dados seja qual for o formato do Axios
+      const responseData = response.data ? response.data : response;
+      
+      // 2. Avisa que deu tudo certo
       toast.success("Redirecionando para o pagamento seguro...");
       
-      if (response.data.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl;
+      // 3. Captura o link mágico e redireciona!
+      const url = responseData.checkoutUrl;
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        // Se o back-end não mandou a URL, forçamos um erro para ir para o catch
+        throw new Error("Link do Asaas não encontrado na resposta.");
       }
+      
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Erro ao processar assinatura.");
-      setIsLoading(false);
+      console.error("Erro no Front-end:", error); // 👈 Vai imprimir no F12 caso falhe
+      toast.error(error.response?.data?.message || "Erro ao redirecionar para a fatura.");
+      setLoadingPlan(null); 
     }
   };
 
@@ -119,11 +133,17 @@ export default function BillingPage() {
 
             <Button 
               onClick={() => handleSubscribe('STARTER')} 
-              disabled={isLoading}
+              disabled={loadingPlan !== null}
               variant="outline" 
               className="w-full h-12 rounded-2xl font-bold text-base hover:bg-muted/50"
             >
-              Assinar Starter
+              {loadingPlan === 'STARTER' ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" /> A redirecionar...
+                </span>
+              ) : (
+                "Assinar Starter"
+              )}
             </Button>
           </Card>
         </motion.div>
@@ -134,7 +154,8 @@ export default function BillingPage() {
             {/* 🌟 Orbe brilhante dentro do card Premium */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 blur-[60px] rounded-full pointer-events-none" />
             
-            <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-primary to-amber-400 rounded-t-3xl"></div>            <div className="absolute top-5 right-5 bg-primary text-primary-foreground text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-amber-400 rounded-t-3xl"></div>            
+            <div className="absolute top-5 right-5 bg-primary text-primary-foreground text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
               <Sparkles className="h-3.5 w-3.5" /> MAIS POPULAR
             </div>
 
@@ -159,13 +180,13 @@ export default function BillingPage() {
             </motion.ul>
 
             {/* 🌟 O Magic Button em ação! */}
-            <div className="relative z-10 mt-auto w-full" onClick={() => !isLoading && handleSubscribe('PRO')}>
-              {isLoading ? (
+            <div className="relative z-10 mt-auto w-full" onClick={() => loadingPlan === null && handleSubscribe('PRO')}>
+              {loadingPlan === 'PRO' ? (
                 <Button disabled className="w-full h-14 rounded-2xl font-bold text-base shadow-md">
-                  A processar...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" /> A redirecionar...
                 </Button>
               ) : (
-                <MagicButton className="w-full h-14" disabled={isLoading}>
+                <MagicButton className="w-full h-14" disabled={loadingPlan !== null}>
                   <CreditCard className="mr-2 h-5 w-5" />
                   Assinar Premium
                 </MagicButton>

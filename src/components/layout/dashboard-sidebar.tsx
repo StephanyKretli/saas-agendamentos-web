@@ -59,23 +59,23 @@ export function DashboardSidebar() {
 
     // 2. Definimos a lista completa (Visão da Dona)
     const adminItems = [
-      { href: "/dashboard", label: "Dashboard" },
-      { href: "/agenda", label: "Agenda" },
-      { href: "/clients", label: "Clientes" },
-      { href: "/services", label: "Serviços" },
-      { href: "/business-hours", label: "Horários" },
-      { href: "/blocked-slots", label: "Bloqueios" },
-      { href: "/team", label: "Equipe" }, // A Dona vê a equipa
-      { href: "/settings", label: "Configurações" },
+      { href: "/dashboard", label: "Dashboard", id: "step-dashboard" },
+      { href: "/agenda", label: "Agenda", id: "step-agenda" },
+      { href: "/clients", label: "Clientes", id: "step-clientes" },
+      { href: "/services", label: "Serviços", id: "step-servicos" },
+      { href: "/business-hours", label: "Horários", id: "step-horarios"  },
+      { href: "/blocked-slots", label: "Bloqueios", id: "step-bloqueios"  },
+      { href: "/team", label: "Equipe", id: "step-equipe"  },
+      { href: "/settings", label: "Configurações", id: "step-config" },
     ];
 
     // 3. Definimos a lista restrita (Visão da Equipa)
     const teamItems = [
-      { href: "/dashboard", label: "Dashboard" },
-      { href: "/agenda", label: "Agenda" },
-      { href: "/clients", label: "Clientes" },
-      { href: "/blocked-slots", label: "Bloqueios" },
-      { href: "/settings", label: "Configurações" },
+      { href: "/dashboard", label: "Dashboard", id: "step-dashboard" },
+      { href: "/agenda", label: "Agenda", id: "step-agenda" },
+      { href: "/clients", label: "Clientes", id: "step-clientes" },
+      { href: "/blocked-slots", label: "Bloqueios", id: "step-bloqueios"  },
+      { href: "/settings", label: "Configurações", id: "step-config" },
     ];
 
     // 4. Retornamos a lista correta consoante o cargo

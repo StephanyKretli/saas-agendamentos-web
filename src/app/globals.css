@@ -102,6 +102,131 @@
   --border: oklch(1 0 0 / 10%);
 }
 
+/* ============================================================
+   🚀 DRIVER.JS: CLEAN & MINIMALIST (CORREÇÃO DEFINITIVA)
+   ============================================================ */
+
+/* 1. O Balão Principal */
+.driver-popover.driverjs-theme {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  max-width: 350px !important;
+}
+
+/* 2. Ocultar a Seta e corrigir o botão [X] quebrado */
+.driver-popover-arrow,
+.driver-popover-close-btn {
+  display: none !important; /* Esconde o quadrado branco bizarro */
+}
+
+/* 3. Textos */
+.driver-popover-title {
+  font-family: var(--font-sans) !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: var(--foreground) !important;
+  margin-bottom: 8px !important;
+}
+
+.driver-popover-description {
+  font-family: var(--font-sans) !important;
+  font-size: 0.9rem !important;
+  color: var(--muted-foreground) !important;
+  margin-bottom: 24px !important;
+  line-height: 1.5 !important;
+}
+
+/* 4. Footer e Botões */
+.driver-popover-footer {
+  display: block !important;
+  margin-top: 0 !important;
+}
+
+.driver-popover-navigation-btns {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+/* Botão Anterior (Ghost) */
+.driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: var(--muted-foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+/* Botão Próximo (High Contrast) */
+.driver-popover-next-btn {
+  background-color: var(--foreground) !important; /* Fundo Branco no Dark Mode */
+  color: var(--background) !important; /* Texto Preto no Dark Mode */
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  flex-grow: 1 !important;
+  cursor: pointer !important;
+  text-shadow: none !important;
+  text-align: center !important;
+}
+
+.driver-popover-next-btn:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 5. Progresso (Selinho no topo) */
+.driver-popover-progress-text {
+  position: absolute !important;
+  top: -12px !important;
+  right: 20px !important;
+  background-color: var(--foreground) !important;
+  color: var(--background) !important;
+  padding: 4px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+}
+
+/* 6. O Elemento em Destaque */
+.driver-active-element {
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+.driver-highlighted-element {
+  outline: 2px solid var(--foreground) !important;
+  outline-offset: 4px !important;
+  border-radius: inherit !important;
+}
+
+/* 7. Fundo com Blur Premium (Foco Extremo) */
+.driver-overlay {
+  backdrop-filter: blur(8px) !important; 
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+@keyframes pulse-ring {
+  0% { outline-color: hsl(var(--primary) / 0.8); outline-offset: 2px; }
+  50% { outline-color: hsl(var(--primary) / 0.2); outline-offset: 8px; }
+  100% { outline-color: hsl(var(--primary) / 0.8); outline-offset: 2px; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

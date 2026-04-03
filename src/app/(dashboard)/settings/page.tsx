@@ -8,8 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-hot-toast";
-import { User, CheckCircle2, Copy, Camera, Trash2, ShieldCheck, Wallet, Settings as SettingsIcon, DollarSign, Percent, CreditCard } from "lucide-react";
+import { 
+  User, CheckCircle2, Copy, Camera, Trash2, ShieldCheck, 
+  Settings as SettingsIcon, DollarSign, Percent, 
+  CreditCard, AlertCircle, Sparkles 
+} from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion"; 
+import { api } from "@/lib/api";
 
 const tabContentVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
@@ -19,10 +24,14 @@ const tabContentVariants: Variants = {
 export default function SettingsPage() {
   const { data: profile, isLoading } = useSettings();
   const isSalonOwner = !(profile as any)?.ownerId;
+  // 👇 Nova trava de segurança que inclui os gerentes do salão
+  const isAdmin = isSalonOwner || (profile as any)?.role === 'ADMIN'; 
+  
   const adminCentralizedPayments = (profile as any)?.owner?.centralizePayments ?? false;
   
   const updateMutation = useUpdateSettings();
   const updateFinancialMutation = useUpdateFinancial();
+  const [isBillingActionLoading, setIsBillingActionLoading] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,13 +126,46 @@ export default function SettingsPage() {
         updateMutation.mutateAsync(settingsPayload),
         updateFinancialMutation.mutateAsync(financialPayload)
       ]);
+      toast.success("Configurações guardadas com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar configurações", error);
+      toast.error("Erro ao guardar as configurações.");
     }
   };
 
   const handleTabClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  };
+
+  // Funções temporárias para a Assinatura (a serem ligadas ao Backend de pagamentos)
+  const handleMudarPlano = async () => {
+    try {
+      setIsBillingActionLoading(true);
+      // Pede o link ao Back-end
+      const response = await api.post('/billing/subscribe', { plan: 'PRO' });
+      
+      // 👉 A mesma correção: extrai os dados seja qual for o formato do Axios!
+      const responseData = response.data ? response.data : response;
+      const url = responseData.checkoutUrl;
+      
+      if (url) {
+        toast.success("Redirecionando para o Asaas...");
+        window.location.href = url;
+      } else {
+        throw new Error("Link do Asaas não encontrado na resposta.");
+      }
+    } catch (error: any) {
+      console.error("Erro no botão de Configurações:", error);
+      toast.error(error.response?.data?.message || "Erro ao gerar link de pagamento.");
+    } finally {
+      setIsBillingActionLoading(false);
+    }
+  };
+
+  const handleCancelarAssinatura = () => {
+    if (confirm("Tem a certeza que deseja cancelar a sua assinatura? Perderá acesso ao painel no fim do ciclo.")) {
+      toast.success("Solicitação de cancelamento iniciada.");
+    }
   };
 
   const isSaving = updateMutation.isPending || updateFinancialMutation.isPending;
@@ -164,6 +206,10 @@ export default function SettingsPage() {
                   <TabsTrigger value="vitrine" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">Vitrine</TabsTrigger>
                   <TabsTrigger value="seguranca" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all data-[state=active]:text-primary">Segurança</TabsTrigger>
                   <TabsTrigger value="pagamentos" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-amber-600 data-[state=active]:text-amber-600">Financeiro & PIX</TabsTrigger>
+                  {/* 👇 Botão visível para Owner e Admin 👇 */}
+                  {isAdmin && (
+                    <TabsTrigger value="assinatura" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-lg py-2.5 px-6 sm:px-4 text-xs sm:text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-purple-600 data-[state=active]:text-purple-600">Assinatura</TabsTrigger>
+                  )}
                 </TabsList>
               </div>
             </div>
@@ -249,11 +295,9 @@ export default function SettingsPage() {
                 </Card>
             </TabsContent>
 
-            {/* 👇 ABA FINANCEIRA CORRIGIDA COM A LÓGICA EXATA 👇 */}
             <TabsContent value="pagamentos" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
                 
-                {/* 1. MENSAGEM DE BLOQUEIO PARA A equipe (Se pagamentos forem centralizados no admin) */}
                 {!isSalonOwner && adminCentralizedPayments && (
                   <Card className="rounded-3xl border border-border bg-muted/30 shadow-sm p-8 flex flex-col items-center justify-center text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-4 shadow-inner">
@@ -266,7 +310,6 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {/* 2. CONFIGURAÇÃO DO PIX (Aparece para a Admin OU para a equipe se os pagamentos não forem centralizados) */}
                 {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
                   <Card className="rounded-3xl border border-amber-500/20 shadow-xl overflow-hidden ring-1 ring-amber-500/10">
                     <div className="bg-amber-500/10 p-5 sm:p-6 border-b border-amber-500/10 flex items-start gap-4">
@@ -338,7 +381,6 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {/* 3. REGRAS DE REPASSE E COMISSÕES (Exclusivo para a Dona do Salão) */}
                 {isSalonOwner && (
                   <Card className="rounded-3xl border border-primary/20 shadow-xl overflow-hidden ring-1 ring-primary/10">
                     <div className="bg-primary/5 p-5 sm:p-6 border-b border-primary/10 flex items-start gap-4">
@@ -369,7 +411,7 @@ export default function SettingsPage() {
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0">
                           <input type="checkbox" className="sr-only peer" checked={formData.absorbPixFee} onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} />
-                          <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                          <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </label>
                       </div>
 
@@ -406,13 +448,84 @@ export default function SettingsPage() {
                 )}
               </motion.div>
             </TabsContent>
+
+            {/* 👇 Aba visível para Owner e Admin 👇 */}
+            {isAdmin && (
+              <TabsContent value="assinatura" className="outline-none">
+                <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
+                  <Card className="rounded-3xl border border-purple-500/20 shadow-xl overflow-hidden ring-1 ring-purple-500/10">
+                    <div className="bg-purple-500/10 p-5 sm:p-6 border-b border-purple-500/10 flex items-start gap-4">
+                      <div className="bg-purple-500/20 p-3 rounded-2xl text-purple-600 shrink-0 shadow-inner">
+                        <CreditCard className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-black text-foreground">Assinatura e Plano</h2>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Faça a gestão do seu plano no sistema.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-5 sm:p-6 space-y-6 bg-card">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5 gap-4">
+                        <div>
+                          <p className="text-sm font-bold text-purple-600/80 uppercase tracking-wider">O seu plano atual</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            {/* @ts-ignore */}
+                            <h3 className="text-3xl font-black text-foreground capitalize">{profile?.plan || 'Starter'}</h3>
+                            {/* @ts-ignore */}
+                            {profile?.plan === 'PRO' && (
+                               <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500/10 text-amber-500 px-3 py-1.5 rounded-full border border-amber-500/20 shadow-sm">
+                                 <Sparkles className="h-3.5 w-3.5" /> Ilimitado
+                               </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button 
+                            type="button"
+                            onClick={handleMudarPlano} 
+                            className="rounded-xl font-bold shadow-sm bg-purple-600 hover:bg-purple-700 text-white"
+                          >
+                            Gerir Plano
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* ZONA DE PERIGO (Usando Tailwind puro para evitar dependência do shadcn Alert) */}
+                      <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/5 p-5 flex gap-4">
+                        <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-0.5" />
+                        <div className="w-full">
+                          <h4 className="font-bold text-destructive text-lg">Zona de Perigo</h4>
+                          <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <span className="text-sm text-destructive/90 font-medium">
+                              Ao cancelar a assinatura, você perderá acesso ao painel no final do ciclo de faturamento atual. A sua vitrine pública também será desativada.
+                            </span>
+                            <Button 
+                              type="button"
+                              variant="destructive" 
+                              onClick={handleCancelarAssinatura}
+                              className="rounded-xl font-bold whitespace-nowrap shadow-sm"
+                            >
+                              Cancelar Assinatura
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
+
           </Tabs>
         </motion.div>
 
+        {/* Barra de Salvar flutuante - Apenas para abas de configuração que exigem submissão */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:pt-8 flex justify-end z-40">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
             <Button type="submit" disabled={isSaving} className="h-12 w-full sm:w-auto rounded-2xl px-12 text-sm font-bold shadow-sm transition-all">
-              {isSaving ? "A salvar..." : "Salvar Alterações"}
+              {isSaving ? "A guardar..." : "Salvar Alterações"}
               {!isSaving && <CheckCircle2 className="ml-2 h-4 w-4" />}
             </Button>
           </motion.div>
