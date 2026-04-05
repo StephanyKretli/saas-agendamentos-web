@@ -70,7 +70,7 @@ export function DashboardSidebar() {
       { href: "/support", label: "Ajuda & Feedback", id: "step-suporte" }, 
     ];
 
-    // 3. Definimos a lista restrita (Visão da Equipa)
+    // 3. Definimos a lista restrita (Visão da equipe)
     const teamItems = [
       { href: "/dashboard", label: "Dashboard", id: "step-dashboard" },
       { href: "/agenda", label: "Agenda", id: "step-agenda" },

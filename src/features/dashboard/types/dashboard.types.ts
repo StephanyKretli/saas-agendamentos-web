@@ -1,6 +1,7 @@
 export type DashboardMetrics = {
   month: string;
   isOwner: boolean;
+  isPro?: boolean;
   totalAppointments: number;
   scheduled: number;
   completed: number;

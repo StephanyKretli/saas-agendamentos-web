@@ -1,246 +1,285 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
-import { Calendar, Wallet, Users, Bell, ArrowRight, PlayCircle, Smartphone, CheckCircle2, XCircle, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { motion, Variants } from "framer-motion";
+import { 
+  CheckCircle2, X, Sparkles, Wallet, 
+  MessageCircle, ShieldCheck, ArrowRight, Zap
+} from "lucide-react";
+
+// --- VARIANTES DE ANIMAÇÃO ---
+const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } }
+};
+
+const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+};
 
 export default function LandingPage() {
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 }
-    }
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80 } }
-  };
-
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-zinc-950 pb-20 overflow-hidden font-sans">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 overflow-hidden font-sans">
       
-      {/* 🌟 HERO SECTION: O GATILHO E A PROMESSA 🌟 */}
-      <section className="pt-32 pb-16 px-4 text-center max-w-5xl mx-auto space-y-8 relative">
-        {/* Efeitos de luz no fundo */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/20 blur-[120px] rounded-full -z-10" />
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            Pare de perder dinheiro com faltas
-          </span>
-          <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tight leading-[1.1]">
-            A sua agenda cheia, <br className="hidden md:block"/>
-            sem <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-500">dores de cabeça.</span>
-          </h1>
-          <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Liberte-se do WhatsApp. O seu cliente agenda sozinho, paga um sinal via PIX antecipado e recebe lembretes automáticos. <strong>Você foca no seu talento, nós focamos na gestão.</strong>
-          </p>
-          
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link href="/register" className="w-full sm:w-auto">
-              {/* BOTÃO CORRIGIDO E SUPER PREMIUM */}
-              <button className="relative inline-flex h-14 w-full sm:w-auto overflow-hidden rounded-full p-[2px] focus:outline-none group shadow-[0_0_40px_-10px_rgba(168,85,247,0.5)] transition-shadow hover:shadow-[0_0_60px_-15px_rgba(168,85,247,0.7)]">
-                <span className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#a855f7_50%,#E2CBFF_100%)] animate-[spin_3s_linear_infinite]" />
-                <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-zinc-950 px-8 py-1 text-lg font-bold text-white backdrop-blur-3xl transition-colors group-hover:bg-zinc-900">
-                  Começar 14 dias grátis
-                </span>
-              </button>
+      {/* 🌟 CABEÇALHO (RESTAURADO DA VERSÃO 1) */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-8 max-w-6xl">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-black">
+              S
+            </div>
+            <span className="text-xl font-black tracking-tight text-foreground">SaaS Agendamentos</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">
+              Entrar
             </Link>
-            <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium px-4 py-4 transition-colors">
-              <PlayCircle className="h-6 w-6 text-primary" /> Ver como funciona
-            </button>
-          </div>
-          <p className="mt-4 text-xs text-muted-foreground">Não exige cartão de crédito. Configure o seu salão em 2 minutos.</p>
-        </motion.div>
-
-        {/* VÍDEO / MOCKUP DE ALTO IMPACTO */}
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-16 mx-auto max-w-4xl relative rounded-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-xl p-2 shadow-2xl"
-        >
-          {/* Aqui você pode colocar um <video autoPlay loop muted> que você mesma gravou do app funcionando! */}
-          <div className="aspect-video w-full rounded-xl bg-zinc-950 flex flex-col items-center justify-center overflow-hidden relative border border-zinc-800/50">
-             <Smartphone className="h-12 w-12 text-zinc-700 mb-4" />
-             <p className="text-zinc-500 font-medium text-center px-4">
-               Dica: Grave a tela do seu telemóvel usando o app e coloque o vídeo aqui.<br/>Ver o sistema rodando liso converte muito mais que fotos estáticas!
-             </p>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* 🌟 NOVA SESSÃO: AGITAÇÃO DA DOR VS SOLUÇÃO (GATILHO DE NECESSIDADE) 🌟 */}
-      <section className="py-24 px-4 max-w-5xl mx-auto border-t border-zinc-800/50 mt-12">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">A forma antiga está te custando caro.</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Você não abriu o seu negócio para ser recepcionista 24 horas por dia.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* O PROBLEMA */}
-          <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-8">
-            <h3 className="text-xl font-bold text-red-500 flex items-center gap-2 mb-6">
-              <XCircle className="h-6 w-6" /> A realidade atual
-            </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-muted-foreground">
-                <span className="bg-red-500/10 p-1 rounded text-red-500 mt-0.5"><XCircle className="h-4 w-4" /></span>
-                Clientes marcam, não aparecem e você fica com o horário vago, perdendo dinheiro.
-              </li>
-              <li className="flex items-start gap-3 text-muted-foreground">
-                <span className="bg-red-500/10 p-1 rounded text-red-500 mt-0.5"><XCircle className="h-4 w-4" /></span>
-                Seu WhatsApp não para de tocar nos finais de semana e à noite pedindo horários.
-              </li>
-              <li className="flex items-start gap-3 text-muted-foreground">
-                <span className="bg-red-500/10 p-1 rounded text-red-500 mt-0.5"><XCircle className="h-4 w-4" /></span>
-                Fazer o cálculo de comissões da sua equipe no final do mês é um pesadelo no papel.
-              </li>
-            </ul>
-          </div>
-
-          {/* A SOLUÇÃO */}
-          <div className="bg-primary/5 border border-primary/20 rounded-3xl p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-            <h3 className="text-xl font-bold text-primary flex items-center gap-2 mb-6 relative z-10">
-              <CheckCircle2 className="h-6 w-6" /> Com a nossa plataforma
-            </h3>
-            <ul className="space-y-4 relative z-10">
-              <li className="flex items-start gap-3 text-foreground font-medium">
-                <span className="bg-primary/20 p-1 rounded text-primary mt-0.5"><CheckCircle2 className="h-4 w-4" /></span>
-                Garantia de receita: o cliente paga um sinal por PIX para travar o horário. Fim das faltas.
-              </li>
-              <li className="flex items-start gap-3 text-foreground font-medium">
-                <span className="bg-primary/20 p-1 rounded text-primary mt-0.5"><CheckCircle2 className="h-4 w-4" /></span>
-                A sua agenda trabalha sozinha 24/7 com um link exclusivo na bio do seu Instagram.
-              </li>
-              <li className="flex items-start gap-3 text-foreground font-medium">
-                <span className="bg-primary/20 p-1 rounded text-primary mt-0.5"><CheckCircle2 className="h-4 w-4" /></span>
-                Dashboard financeiro automático. Saiba exatamente quanto faturou e quanto deve pagar à equipe.
-              </li>
-            </ul>
+            <Link href="/register">
+              <Button className="rounded-xl font-bold shadow-sm">
+                Criar Conta
+              </Button>
+            </Link>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* 🌟 O BENTO GRID (Funcionalidades Detalhadas) 🌟 */}
-      <section className="max-w-6xl mx-auto px-4 mt-10">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold">Feito para acelerar o seu crescimento</h2>
-        </div>
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]"
-        >
-          {/* Bento Item 1: Ocupa 2 colunas */}
-          <motion.div 
-            variants={itemVariants}
-            className="md:col-span-2 rounded-3xl bg-zinc-900 border border-zinc-800 p-8 flex flex-col md:flex-row justify-between items-center overflow-hidden relative group hover:border-primary/50 transition-colors"
-          >
-            <div className="relative z-10 md:w-1/2 space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <h3 className="text-3xl font-bold text-white">O seu link na Bio</h3>
-              <p className="text-zinc-400 text-lg">
-                Personalize o seu site em minutos. O seu cliente escolhe o serviço, o profissional, vê as horas disponíveis e agenda em segundos.
+      <main>
+        {/* HERO SECTION (ANIMADA E ADAPTADA AO TEMA) */}
+        <section className="relative pt-24 pb-20 lg:pt-36 lg:pb-32 px-4 sm:px-6">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-125 opacity-20 bg-primary/40 rounded-full blur-[120px] -z-10 pointer-events-none" />
+          
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+              
+              {/* Texto Principal */}
+              <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-2xl text-center lg:text-left z-10">
+                <motion.div variants={fadeInUp}>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm font-black text-primary mb-6 shadow-sm">
+                    <Sparkles className="h-4 w-4" /> A revolução na gestão do seu espaço
+                  </span>
+                </motion.div>
+                
+                <motion.div variants={fadeInUp}>
+                  <h1 className="text-5xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1] text-foreground">
+                    Pare de perder dinheiro com <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-amber-500">clientes que faltam.</span>
+                  </h1>
+                </motion.div>
+                
+                <motion.div variants={fadeInUp}>
+                  <p className="text-lg text-muted-foreground font-medium mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                    A única plataforma que exige <strong>sinal antecipado via PIX</strong>, calcula comissões automaticamente e avisa a sua equipe no WhatsApp. Durma descansado enquanto a agenda trabalha por você.
+                  </p>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                  <Link href="/register?plan=pro" className="w-full sm:w-auto">
+                    <Button className="h-16 w-full sm:w-auto rounded-2xl px-8 text-lg font-black bg-amber-500 hover:bg-amber-600 text-white shadow-xl shadow-amber-500/20 border-0 transition-transform hover:scale-105 group relative overflow-hidden">
+                      <span className="relative z-10 flex items-center gap-2">Testar o PRO Grátis <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    </Button>
+                  </Link>
+                  <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5 mt-4 sm:mt-0">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" /> Sem cartão de crédito
+                  </p>
+                </motion.div>
+              </motion.div>
+
+              {/* ELEMENTOS FLUTUANTES (ADAPTADOS AO TEMA CLARO/ESCURO) */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative hidden lg:block h-125"
+              >
+                {/* Mockup WhatsApp Cliente */}
+                <motion.div 
+                  animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="absolute top-10 right-0 w-80 rounded-2xl bg-card/90 backdrop-blur-xl border border-border p-5 shadow-xl z-20"
+                >
+                  <div className="flex gap-3 items-center border-b border-border/50 pb-3 mb-3">
+                    <div className="bg-green-500 p-2 rounded-full"><MessageCircle className="h-5 w-5 text-white" /></div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Novo Agendamento!</p>
+                      <p className="text-xs text-muted-foreground">Há 2 minutos</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground/80 leading-relaxed font-medium">
+                    Olá Ana! O seu agendamento para <strong>Corte Feminino</strong> com a Maria foi confirmado. ✂️
+                  </p>
+                </motion.div>
+
+                {/* Mockup PIX Recebido */}
+                <motion.div 
+                  animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+                  className="absolute bottom-20 -left-10 w-72 rounded-2xl bg-card/90 backdrop-blur-xl border border-amber-500/30 p-5 shadow-lg z-30"
+                >
+                  <div className="flex gap-4 items-center">
+                    <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                      <Zap className="h-6 w-6 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">Sinal PIX Pago</p>
+                      <p className="text-2xl font-black text-foreground">+ R$ 30,00</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Mockup Comissões */}
+                <div className="absolute top-1/2 left-10 w-64 rounded-2xl bg-card border border-border p-5 shadow-xl -translate-y-1/2 z-10">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Dashboard Automático</p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Lucro Líquido</span>
+                      <span className="text-sm font-black text-green-500">R$ 1.450</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden"><div className="w-[70%] h-full bg-green-500" /></div>
+                    
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-sm text-muted-foreground">Comissões a Pagar</span>
+                      <span className="text-sm font-black text-amber-500">R$ 890</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden"><div className="w-[40%] h-full bg-amber-500" /></div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* AGITAR A DOR (ADAPTADO AO TEMA) */}
+        <section className="py-24 bg-muted/30 border-y border-border/50 relative overflow-hidden">
+          <div className="container mx-auto max-w-4xl text-center px-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}>
+              <h2 className="text-3xl lg:text-5xl font-black mb-8 leading-tight text-foreground">
+                Sabe quanto lhe custa um cliente que <span className="text-destructive line-through decoration-4">não aparece</span>?
+              </h2>
+              <p className="text-lg text-muted-foreground font-medium mb-12">
+                Em média, os salões perdem <strong>20% do faturamento</strong> mensal devido a faltas e esquecimentos. Com o nosso sistema de Sinal Antecipado (PIX) e Lembretes de WhatsApp, esse número cai para quase ZERO.
               </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                { title: "Sem Furos", desc: "O cliente paga uma porcentagem para reservar.", icon: <ShieldCheck className="h-6 w-6 text-amber-500" /> },
+                { title: "Zero Esforço", desc: "Avisos automáticos pelo seu próprio WhatsApp.", icon: <MessageCircle className="h-6 w-6 text-green-500" /> },
+                { title: "Paz Mental", desc: "Repasses e comissões calculados na hora.", icon: <Wallet className="h-6 w-6 text-purple-500" /> }
+              ].map((item, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-card border border-border p-6 rounded-3xl text-left shadow-sm hover:shadow-md transition-shadow">
+                  <div className="h-12 w-12 bg-muted rounded-2xl flex items-center justify-center mb-4 border border-border">{item.icon}</div>
+                  <h3 className="text-lg font-black text-foreground mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground font-medium">{item.desc}</p>
+                </motion.div>
+              ))}
             </div>
-            
-            {/* Espaço para mockup do celular */}
-            <div className="relative md:w-1/2 h-full min-h-[200px] w-full mt-6 md:mt-0 flex justify-end items-end group-hover:scale-105 transition-transform duration-700">
-              <div className="w-[80%] h-[120%] bg-zinc-950 rounded-t-3xl border-t-8 border-x-8 border-zinc-800 shadow-2xl translate-y-8 flex items-center justify-center overflow-hidden relative">
-                 <p className="text-xs text-zinc-600 text-center px-4 relative z-10">Coloque um print do seu <br/>SaaS no mobile aqui</p>
-                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+          </div>
+        </section>
+
+        {/* 🌟 PRECIFICAÇÃO (RESTAURADA EXATAMENTE DA VERSÃO 1) */}
+        <section id="pricing" className="py-24 relative">
+          <div className="container mx-auto max-w-5xl px-4 sm:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-black text-foreground">Escolha o plano ideal para o seu momento</h2>
+              <p className="text-muted-foreground font-medium mt-2">Sem taxas escondidas. Cancele quando quiser.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
+              
+              {/* PLANO STARTER */}
+              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+                <h3 className="text-xl font-black text-foreground">Starter</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1 mb-6">Para profissionais independentes e espaços pequenos.</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-black text-foreground">R$ 49</span><span className="text-muted-foreground font-bold">,90/mês</span>
+                </div>
+                <Link href="/register?plan=starter">
+                  <Button variant="outline" className="w-full h-12 rounded-xl font-bold mb-8">Assinar Starter</Button>
+                </Link>
+                
+                <div className="space-y-4 text-sm font-medium">
+                  <FeatureItem text="Vitrine de agendamento online" included={true} />
+                  <FeatureItem text="Equipe de até 3 profissionais" included={true} />
+                  <FeatureItem text="Notificação de WhatsApp (Apenas Cliente)" included={true} />
+                  <FeatureItem text="Dashboard básico (Faturamento bruto)" included={true} />
+                  
+                  <div className="pt-4 border-t border-border/50 space-y-4">
+                    <FeatureItem text="Equipe Ilimitada" included={false} />
+                    <FeatureItem text="Notificação WhatsApp (Para o Profissional)" included={false} />
+                    <FeatureItem text="Sinal PIX Antecipado (Antifaltas)" included={false} />
+                    <FeatureItem text="Cálculo e Repasse de Comissões" included={false} />
+                    <FeatureItem text="Dashboard Avançado (Lucro Líquido)" included={false} />
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
 
-          {/* Bento Item 2: Proteção PIX */}
-          <motion.div 
-            variants={itemVariants}
-            className="rounded-3xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-8 flex flex-col justify-between group hover:shadow-lg transition-all"
-          >
-            <div>
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 mb-6 group-hover:scale-110 transition-transform">
-                <Wallet className="h-6 w-6" />
+              {/* PLANO PRO (DESTAQUE) */}
+              <div className="rounded-3xl border-2 border-amber-500 bg-card p-8 shadow-2xl relative transform md:-translate-y-4">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <span className="bg-amber-500 text-white text-xs font-black uppercase tracking-wider py-1.5 px-4 rounded-full shadow-md flex items-center gap-1">
+                    <Sparkles className="h-3.5 w-3.5" /> Mais Escolhido
+                  </span>
+                </div>
+                
+                <h3 className="text-xl font-black text-foreground mt-2">PRO</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1 mb-6">A gestão completa para salões que querem crescer.</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-black text-foreground">R$ 99</span><span className="text-muted-foreground font-bold">,90/mês</span>
+                </div>
+                <Link href="/register?plan=pro">
+                  <Button className="w-full h-12 rounded-xl font-black mb-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg border-0">Teste Grátis por 14 dias</Button>
+                </Link>
+                <p className="text-center text-xs font-semibold text-muted-foreground mb-6">Acesso total liberado no teste.</p>
+                
+                <div className="space-y-4 text-sm font-medium">
+                  <FeatureItem text="Vitrine de agendamento online" included={true} />
+                  <FeatureItem text="Equipe Ilimitada" included={true} />
+                  <FeatureItem text="Notificação WhatsApp (Cliente e Profissional)" included={true} />
+                  <FeatureItem text="Sinal PIX Antecipado (Antifaltas)" included={true} />
+                  <FeatureItem text="Cálculo e Repasse Automático de Comissões" included={true} />
+                  <FeatureItem text="Dashboard Avançado (Lucro Líquido e Taxas)" included={true} />
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-amber-500">Trava Anti-Faltas</h3>
-              <p className="text-amber-500/70 mt-3">
-                Exija o pagamento de um sinal via PIX para confirmar a reserva. Quem paga sinal, aparece.
-              </p>
+
             </div>
-          </motion.div>
+          </div>
+        </section>
 
-          {/* Bento Item 3: Avisos no WhatsApp */}
-          <motion.div 
-            variants={itemVariants}
-            className="rounded-3xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 p-8 flex flex-col justify-between group hover:shadow-lg transition-all relative overflow-hidden"
-          >
-            <div className="relative z-10">
-              <div className="h-12 w-12 rounded-2xl bg-green-500/20 flex items-center justify-center text-green-500 mb-6 group-hover:rotate-12 transition-transform">
-                <Bell className="h-6 w-6" />
-              </div>
-              <h3 className="text-2xl font-bold text-green-500">Avisos no Zap</h3>
-              <p className="text-green-500/70 mt-3">
-                Lembretes enviados automaticamente pelo sistema no WhatsApp para o cliente não esquecer.
-              </p>
-            </div>
-          </motion.div>
+        {/* FINAL CTA */}
+        <section className="py-24 bg-primary/5 border-t border-border/50 text-center px-6">
+          <div className="container mx-auto max-w-3xl">
+            <h2 className="text-4xl lg:text-5xl font-black text-foreground mb-6 tracking-tight">
+              A sua agenda nunca mais será a mesma.
+            </h2>
+            <p className="text-xl text-muted-foreground font-medium mb-10">
+              Junte-se aos profissionais que já não se preocupam com clientes fantasma. Configure o seu espaço em menos de 5 minutos.
+            </p>
+            <Link href="/register?plan=pro">
+              <Button className="h-16 rounded-2xl px-12 text-lg font-black bg-foreground text-background hover:bg-foreground/90 shadow-lg transition-transform hover:scale-105">
+                Criar Conta Agora
+              </Button>
+            </Link>
+          </div>
+        </section>
+      </main>
+      
+      <footer className="bg-muted py-8 text-center border-t border-border">
+        <p className="text-sm font-bold text-muted-foreground">
+          © {new Date().getFullYear()} Stephany Kretli Development. Todos os direitos reservados.
+        </p>
+      </footer>
+    </div>
+  );
+}
 
-          {/* Bento Item 4: Ocupa 2 colunas - Gestão */}
-          <motion.div 
-            variants={itemVariants}
-            className="md:col-span-2 rounded-3xl bg-zinc-900 border border-zinc-800 p-8 flex flex-col justify-between relative overflow-hidden group hover:border-zinc-700 transition-colors"
-          >
-            <div className="relative z-10 md:w-2/3">
-              <div className="h-12 w-12 rounded-2xl bg-zinc-800 flex items-center justify-center text-white mb-6">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <h3 className="text-3xl font-bold text-white">Relatórios e Comissões</h3>
-              <p className="text-zinc-400 mt-3 text-lg">
-                Acabe com o fechamento manual. O sistema calcula sozinho as comissões de cada profissional e mostra o seu faturamento em tempo real.
-              </p>
-            </div>
-            
-            <div className="absolute top-0 right-0 h-full w-1/3 opacity-30 group-hover:opacity-50 transition-opacity flex items-center justify-end pr-8">
-               <div className="flex -space-x-4">
-                  <div className="w-16 h-16 rounded-full bg-zinc-700 border-4 border-zinc-900"></div>
-                  <div className="w-16 h-16 rounded-full bg-zinc-600 border-4 border-zinc-900"></div>
-                  <div className="w-16 h-16 rounded-full bg-primary/80 border-4 border-zinc-900 flex items-center justify-center text-white font-bold">+3</div>
-               </div>
-            </div>
-          </motion.div>
-
-        </motion.div>
-      </section>
-
-      {/* 🌟 CALL TO ACTION FINAL 🌟 */}
-      <section className="py-24 mt-20 relative">
-        <div className="absolute inset-0 bg-primary/5 border-t border-primary/10"></div>
-        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <h2 className="text-4xl font-bold text-foreground mb-6">Pronto para modernizar o seu salão?</h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">Junte-se a dezenas de profissionais que já automatizaram as suas agendas e aumentaram o seu faturamento.</p>
-          <Link href="/register">
-            <button className="h-14 px-10 rounded-full bg-primary text-primary-foreground text-lg font-bold hover:bg-primary/90 transition-colors shadow-lg hover:shadow-primary/25 hover:-translate-y-1 active:translate-y-0 transform duration-200">
-              Criar o meu salão agora
-            </button>
-          </Link>
-          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" /> Leva menos de 2 minutos
-          </p>
-        </div>
-      </section>
-
-    </main>
+// Componente visual para os Checks da lista de preço
+function FeatureItem({ text, included }: { text: string, included: boolean }) {
+  return (
+    <div className={`flex items-start gap-3 ${included ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+      {included ? (
+        <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+      ) : (
+        <X className="h-5 w-5 shrink-0" />
+      )}
+      <span className="leading-snug mt-0.5">{text}</span>
+    </div>
   );
 }

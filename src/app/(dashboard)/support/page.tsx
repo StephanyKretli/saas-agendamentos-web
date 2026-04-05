@@ -61,7 +61,7 @@ export default function SupportPage() {
       if (formData.type === "COMPLIMENT") {
         toast.success("Elogio enviado! Muito obrigado pelo carinho! ❤️");
       } else if (formData.type === "BUG") {
-        toast.success("Problema reportado. A nossa equipa já vai investigar! 🛠️");
+        toast.success("Problema reportado. A nossa equipe já vai investigar! 🛠️");
       } else {
         toast.success("Sugestão enviada! Vamos analisar com carinho. 🚀");
       }
@@ -106,7 +106,7 @@ export default function SupportPage() {
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-black text-foreground">Suporte Rápido</h3>
-                <p className="text-sm text-muted-foreground mt-1 mb-6 font-medium">Precisa de ajuda imediata? Fale com a nossa equipa diretamente pelo WhatsApp.</p>
+                <p className="text-sm text-muted-foreground mt-1 mb-6 font-medium">Precisa de ajuda imediata? Fale com a nossa equipe diretamente pelo WhatsApp.</p>
                 <Button onClick={handleWhatsApp} className="w-full rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold shadow-sm gap-2 h-11">
                   <MessageCircle className="h-4 w-4" /> Chamar no WhatsApp
                 </Button>

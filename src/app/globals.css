@@ -106,7 +106,6 @@
    🚀 DRIVER.JS: CLEAN & MINIMALIST (CORREÇÃO DEFINITIVA)
    ============================================================ */
 
-/* 1. O Balão Principal */
 .driver-popover.driverjs-theme {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
@@ -117,13 +116,11 @@
   max-width: 350px !important;
 }
 
-/* 2. Ocultar a Seta e corrigir o botão [X] quebrado */
 .driver-popover-arrow,
 .driver-popover-close-btn {
-  display: none !important; /* Esconde o quadrado branco bizarro */
+  display: none !important;
 }
 
-/* 3. Textos */
 .driver-popover-title {
   font-family: var(--font-sans) !important;
   font-size: 1.25rem !important;
@@ -140,7 +137,6 @@
   line-height: 1.5 !important;
 }
 
-/* 4. Footer e Botões */
 .driver-popover-footer {
   display: block !important;
   margin-top: 0 !important;
@@ -152,7 +148,6 @@
   gap: 12px !important;
 }
 
-/* Botão Anterior (Ghost) */
 .driver-popover-prev-btn {
   background-color: transparent !important;
   color: var(--muted-foreground) !important;
@@ -170,10 +165,9 @@
   color: var(--foreground) !important;
 }
 
-/* Botão Próximo (High Contrast) */
 .driver-popover-next-btn {
-  background-color: var(--foreground) !important; /* Fundo Branco no Dark Mode */
-  color: var(--background) !important; /* Texto Preto no Dark Mode */
+  background-color: var(--foreground) !important;
+  color: var(--background) !important;
   border: none !important;
   border-radius: 12px !important;
   padding: 10px 16px !important;
@@ -190,7 +184,6 @@
   transform: translateY(-1px) !important;
 }
 
-/* 5. Progresso (Selinho no topo) */
 .driver-popover-progress-text {
   position: absolute !important;
   top: -12px !important;
@@ -203,10 +196,11 @@
   font-weight: 800 !important;
 }
 
-/* 6. O Elemento em Destaque */
 .driver-active-element {
   position: relative !important;
   z-index: 999999 !important;
+  /* Garante que o elemento ativo ganhe o próprio contexto para não ser engolido por transforms pai */
+  isolation: isolate; 
 }
 
 .driver-highlighted-element {
@@ -215,16 +209,16 @@
   border-radius: inherit !important;
 }
 
-/* 7. Fundo com Blur Premium (Foco Extremo) */
 .driver-overlay {
   backdrop-filter: blur(8px) !important; 
   -webkit-backdrop-filter: blur(8px) !important;
 }
 
+/* 🚀 CORREÇÃO DO BUG: Usando color-mix para garantir a transparência com oklch */
 @keyframes pulse-ring {
-  0% { outline-color: hsl(var(--primary) / 0.8); outline-offset: 2px; }
-  50% { outline-color: hsl(var(--primary) / 0.2); outline-offset: 8px; }
-  100% { outline-color: hsl(var(--primary) / 0.8); outline-offset: 2px; }
+  0% { outline-color: color-mix(in oklch, var(--primary) 80%, transparent); outline-offset: 2px; }
+  50% { outline-color: color-mix(in oklch, var(--primary) 20%, transparent); outline-offset: 8px; }
+  100% { outline-color: color-mix(in oklch, var(--primary) 80%, transparent); outline-offset: 2px; }
 }
 
 @layer base {

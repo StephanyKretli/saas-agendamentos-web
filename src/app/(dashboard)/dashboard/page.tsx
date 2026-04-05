@@ -19,7 +19,8 @@ import {
   LayoutDashboard,
   PiggyBank,
   Users,
-  CreditCard
+  CreditCard,
+  Lock
 } from "lucide-react";
 import type { TodayAppointment } from "@/features/dashboard/types/dashboard.types";
 import { motion, Variants } from "framer-motion";
@@ -161,38 +162,57 @@ export default function DashboardPage() {
 
         {/* Card 2: A Pagar (Admin) / A Receber (equipe) */}
         <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl" />
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                {metrics?.isOwner ? "A Pagar (Equipe)" : "Minha Comissão"}
-              </p>
-              <p className="text-2xl font-black text-foreground">{metrics?.teamCommissionsFormatted || "R$ 0,00"}</p>
+          <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                  {metrics?.isOwner ? "A Pagar (Equipe)" : "Minha Comissão"}
+                </p>
+                <p className="text-2xl font-black text-foreground">{metrics?.teamCommissionsFormatted || "R$ 0,00"}</p>
+              </div>
             </div>
           </div>
+          {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
+          {!metrics?.isPro && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
+              <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
+                <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Card 3: Lucro Líquido e Taxas (APENAS A DONA VÊ) 👑 */}
         {metrics?.isOwner && (
           <motion.div variants={statItemVariants} className="rounded-3xl border border-primary/30 bg-primary/5 p-6 shadow-sm relative overflow-hidden">          
-            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
-                <PiggyBank className="h-6 w-6" />
+            <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
+                  <PiggyBank className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
+                  <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
-                <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+              <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
+                <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
+                <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
               </div>
             </div>
-            {/* Aviso de taxas PIX */}
-            <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
-              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
-              <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
-            </div>
+            {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
+            {!metrics?.isPro && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
+                <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
+                  <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
+                </span>
+              </div>
+            )}
           </motion.div>
         )}
       </motion.div>
