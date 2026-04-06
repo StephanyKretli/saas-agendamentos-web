@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { motion, Variants } from "framer-motion";
 import { 
   CheckCircle2, X, Sparkles, Wallet, 
-  MessageCircle, ShieldCheck, ArrowRight, Zap
+  MessageCircle, ShieldCheck, ArrowRight, Zap,
+  PlayCircle, Smartphone // Novas importações!
 } from "lucide-react";
 
 // --- VARIANTES DE ANIMAÇÃO ---
@@ -23,14 +24,25 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 overflow-hidden font-sans">
       
-      {/* 🌟 CABEÇALHO (RESTAURADO DA VERSÃO 1) */}
+      {/* 🌟 CABEÇALHO (AGORA COM A SUA LOGO!) */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-8 max-w-6xl">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-black">
+          <div className="flex items-center gap-3">
+            {/* 👇 SUA LOGO AQUI 👇 (Coloque logo.png na pasta public) */}
+            <img 
+              src="/logo.png" 
+              alt="Logo do Sistema" 
+              className="h-8 w-auto object-contain"
+              onError={(e) => {
+                // Fallback de segurança: Se não achar a imagem, mostra o "S" de volta
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-black">
               S
             </div>
-            <span className="text-xl font-black tracking-tight text-foreground">SaaS Agendamentos</span>
+            <span className="text-xl font-black tracking-tight text-foreground hidden sm:block">Syncro</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">
@@ -46,14 +58,13 @@ export default function LandingPage() {
       </header>
 
       <main>
-        {/* HERO SECTION (ANIMADA E ADAPTADA AO TEMA) */}
-        <section className="relative pt-24 pb-20 lg:pt-36 lg:pb-32 px-4 sm:px-6">
+        {/* 1. HERO SECTION */}
+        <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 px-4 sm:px-6">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-125 opacity-20 bg-primary/40 rounded-full blur-[120px] -z-10 pointer-events-none" />
           
           <div className="container mx-auto max-w-6xl">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
               
-              {/* Texto Principal */}
               <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-2xl text-center lg:text-left z-10">
                 <motion.div variants={fadeInUp}>
                   <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm font-black text-primary mb-6 shadow-sm">
@@ -86,12 +97,10 @@ export default function LandingPage() {
                 </motion.div>
               </motion.div>
 
-              {/* ELEMENTOS FLUTUANTES (ADAPTADOS AO TEMA CLARO/ESCURO) */}
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
                 className="relative hidden lg:block h-125"
               >
-                {/* Mockup WhatsApp Cliente */}
                 <motion.div 
                   animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                   className="absolute top-10 right-0 w-80 rounded-2xl bg-card/90 backdrop-blur-xl border border-border p-5 shadow-xl z-20"
@@ -108,7 +117,6 @@ export default function LandingPage() {
                   </p>
                 </motion.div>
 
-                {/* Mockup PIX Recebido */}
                 <motion.div 
                   animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
                   className="absolute bottom-20 -left-10 w-72 rounded-2xl bg-card/90 backdrop-blur-xl border border-amber-500/30 p-5 shadow-lg z-30"
@@ -124,7 +132,6 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
 
-                {/* Mockup Comissões */}
                 <div className="absolute top-1/2 left-10 w-64 rounded-2xl bg-card border border-border p-5 shadow-xl -translate-y-1/2 z-10">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Dashboard Automático</p>
                   <div className="space-y-3">
@@ -146,7 +153,129 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* AGITAR A DOR (ADAPTADO AO TEMA) */}
+        {/* 👇 2. NOVA SECÇÃO: VÍDEO DO SISTEMA 👇 */}
+        <section className="py-20 relative overflow-hidden bg-muted/20 border-t border-border/50">
+          <div className="container mx-auto max-w-5xl px-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary mb-4 uppercase tracking-widest">
+                <PlayCircle className="h-3.5 w-3.5" /> Demonstração
+              </span>
+              <h2 className="text-3xl lg:text-5xl font-black mb-4 text-foreground">Veja o sistema em ação</h2>
+              <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
+                Uma interface desenhada para ser simples, intuitiva e incrivelmente rápida. Tudo ao alcance de um clique.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} 
+              className="relative rounded-[2rem] border border-border/50 bg-card/50 p-2 sm:p-4 shadow-2xl backdrop-blur-sm"
+            >
+              <div className="absolute -inset-0.5 bg-linear-to-r from-primary to-amber-500 rounded-[2.2rem] opacity-20 blur-xl pointer-events-none" />
+              
+              <div className="aspect-video w-full rounded-2xl bg-muted overflow-hidden relative border border-border shadow-inner group">
+                {/* Substitua "demo.mp4" pelo nome do seu vídeo na pasta public */}
+                <video 
+                  src="/demo.mp4" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" 
+                  autoPlay loop muted playsInline 
+                  poster="/video-thumb.jpg" 
+                />
+                
+                {/* Fallback visual caso o vídeo demore a carregar */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none">
+                   <div className="h-16 w-16 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow-lg text-primary border border-white/20 group-hover:opacity-0 transition-opacity">
+                     <PlayCircle className="h-8 w-8 ml-1" />
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* 👇 3. NOVA SECÇÃO: RESPONSIVIDADE (MOBILE) 👇 */}
+        <section className="py-24 border-b border-border/50 overflow-hidden">
+          <div className="container mx-auto max-w-6xl px-6">
+            <div className="grid lg:grid-cols-2 gap-16 lg:gap-12 items-center">
+              
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="order-2 lg:order-1">
+                 <motion.div variants={fadeInUp}>
+                   <div className="h-12 w-12 bg-primary/10 text-primary flex items-center justify-center rounded-2xl mb-6 border border-primary/20">
+                     <Smartphone className="h-6 w-6" />
+                   </div>
+                   <h2 className="text-3xl lg:text-5xl font-black text-foreground mb-6 leading-tight">
+                     A gestão do seu salão, <br className="hidden lg:block"/> na palma da mão.
+                   </h2>
+                 </motion.div>
+                 
+                 <motion.div variants={fadeInUp}>
+                   <p className="text-lg text-muted-foreground font-medium mb-8">
+                     Esqueça o computador. Faça a gestão da sua agenda, acompanhe os relatórios financeiros e adicione bloqueios de horários de onde estiver. O nosso sistema é 100% responsivo e funciona perfeitamente no seu celular.
+                   </p>
+                 </motion.div>
+                 
+                 <motion.div variants={fadeInUp} className="space-y-5">
+                   <FeatureItem text="Dashboard financeiro completo no ecrã do celular" included={true} />
+                   <FeatureItem text="Receba notificações de marcações em tempo real no WPP" included={true} />
+                   <FeatureItem text="Envie o link da sua vitrine com 1 clique" included={true} />
+                 </motion.div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} 
+                className="relative flex justify-center lg:justify-end order-1 lg:order-2"
+              >
+                {/* Efeito de brilho fundo */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary/20 blur-[80px] rounded-full -z-10" />
+                
+                {/* MOCKUP DE CELULAR */}
+                <div className="relative w-[280px] h-[580px] bg-card rounded-[3rem] border-[8px] border-muted shadow-2xl overflow-hidden ring-1 ring-border">
+                  {/* Dynamic Island / Notch */}
+                  <div className="absolute top-0 inset-x-0 h-7 flex justify-center z-20">
+                     <div className="w-24 h-6 bg-muted rounded-b-xl shadow-inner" />
+                  </div>
+                  
+                  {/* Conteúdo da Tela do Celular */}
+                  <div className="absolute inset-0 z-10">
+                    {/* 👇 Imagem Real do Mobile (Coloque mobile-app.jpg na pasta public) 👇 */}
+                    <img 
+                      src="/mobile-app.jpg" 
+                      alt="Versão Mobile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback em código (Se não houver imagem, mostra este UI falso bonito)
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    
+                    {/* FALLBACK UI FALSO (Aparece se a imagem não existir) */}
+                    <div className="hidden w-full h-full bg-background pt-12 px-5 flex-col gap-5">
+                       <div className="flex justify-between items-center">
+                         <div>
+                           <div className="h-4 w-20 bg-muted-foreground/20 rounded mb-2" />
+                           <div className="h-6 w-32 bg-foreground rounded" />
+                         </div>
+                         <div className="h-10 w-10 bg-primary/20 rounded-full border border-primary/30" />
+                       </div>
+                       <div className="h-28 bg-card border border-border rounded-2xl p-5 shadow-sm">
+                         <div className="h-4 w-24 bg-muted rounded mb-3" />
+                         <div className="h-8 w-40 bg-foreground/10 rounded" />
+                       </div>
+                       <div className="space-y-3 mt-2">
+                         <div className="h-4 w-16 bg-muted rounded mb-2" />
+                         <div className="h-16 bg-card border border-border rounded-2xl shadow-sm" />
+                         <div className="h-16 bg-card border border-border rounded-2xl shadow-sm" />
+                         <div className="h-16 bg-card border border-border rounded-2xl shadow-sm" />
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. AGITAR A DOR (O CUSTO DE NÃO TER A FERRAMENTA) */}
         <section className="py-24 bg-muted/30 border-y border-border/50 relative overflow-hidden">
           <div className="container mx-auto max-w-4xl text-center px-6">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}>
@@ -174,7 +303,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 🌟 PRECIFICAÇÃO (RESTAURADA EXATAMENTE DA VERSÃO 1) */}
+        {/* 5. PRECIFICAÇÃO */}
         <section id="pricing" className="py-24 relative">
           <div className="container mx-auto max-w-5xl px-4 sm:px-8">
             <div className="text-center mb-16">
@@ -184,7 +313,6 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
               
-              {/* PLANO STARTER */}
               <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
                 <h3 className="text-xl font-black text-foreground">Starter</h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1 mb-6">Para profissionais independentes e espaços pequenos.</p>
@@ -211,7 +339,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* PLANO PRO (DESTAQUE) */}
               <div className="rounded-3xl border-2 border-amber-500 bg-card p-8 shadow-2xl relative transform md:-translate-y-4">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
                   <span className="bg-amber-500 text-white text-xs font-black uppercase tracking-wider py-1.5 px-4 rounded-full shadow-md flex items-center gap-1">
@@ -225,7 +352,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-black text-foreground">R$ 99</span><span className="text-muted-foreground font-bold">,90/mês</span>
                 </div>
                 <Link href="/register?plan=pro">
-                  <Button className="w-full h-12 rounded-xl font-black mb-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg border-0">Teste Grátis por 14 dias</Button>
+                  <Button className="w-full h-12 rounded-xl font-black mb-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg border-0">Testar Grátis por 7 dias</Button>
                 </Link>
                 <p className="text-center text-xs font-semibold text-muted-foreground mb-6">Acesso total liberado no teste.</p>
                 
@@ -243,7 +370,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* FINAL CTA */}
+        {/* 6. FINAL CTA */}
         <section className="py-24 bg-primary/5 border-t border-border/50 text-center px-6">
           <div className="container mx-auto max-w-3xl">
             <h2 className="text-4xl lg:text-5xl font-black text-foreground mb-6 tracking-tight">
@@ -270,7 +397,6 @@ export default function LandingPage() {
   );
 }
 
-// Componente visual para os Checks da lista de preço
 function FeatureItem({ text, included }: { text: string, included: boolean }) {
   return (
     <div className={`flex items-start gap-3 ${included ? 'text-foreground' : 'text-muted-foreground/60'}`}>
