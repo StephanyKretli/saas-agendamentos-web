@@ -8,7 +8,9 @@ export function useApplyBusinessHoursTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: applyBusinessHoursTemplate,
+    // Envolva em uma função que recebe o payload e repassa para a sua função da API
+    mutationFn: (variables: { sourceWeekday: number; targetWeekdays: number[]; replace?: boolean }) => 
+      applyBusinessHoursTemplate(variables), 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["business-hours"] });
       queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] });
