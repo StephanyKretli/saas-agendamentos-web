@@ -140,8 +140,7 @@ export function CancelAppointmentCard({ token }: Props) {
       <div className="mt-5">
         <button
           type="button"
-          onClick={() => cancelMutation.mutate()}
-          disabled={!appointment.canCancel || cancelMutation.isPending}
+          onClick={() => cancelMutation.mutate(token)}
           className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           {cancelMutation.isPending ? "Cancelando..." : "Cancelar agendamento"}

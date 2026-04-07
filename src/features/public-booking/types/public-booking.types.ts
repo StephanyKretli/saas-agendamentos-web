@@ -3,8 +3,10 @@ export interface PublicService {
   name: string;
   duration: number;
   priceCents: number;
+  description?: string | null;
   icon?: string;
   userId?: string;
+  imageUrl?: string | null;
   professionals?: {
     id: string;
     name: string;

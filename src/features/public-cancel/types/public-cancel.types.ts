@@ -13,4 +13,7 @@ export type CancelAppointmentResponse = {
   id: string;
   status: "CANCELED";
   date: string;
+  serviceName: string;   
+  clientName?: string | null;
+  canCancel: boolean;
 };
