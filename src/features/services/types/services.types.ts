@@ -22,8 +22,9 @@ export type Service = {
 
 export type CreateServicePayload = {
   name: string;
-  description?: string | null;
-  price: number;
-  duration: number; // Em minutos
-  imageUrl?: string | null;
+  duration: number;
+  priceCents: number;          // Usando priceCents como o formulário pede
+  icon: string;                // Usando icon
+  professionalIds: string[];   // Lista de profissionais
+  description?: string | null; // Opcional
 };
