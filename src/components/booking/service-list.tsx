@@ -1,4 +1,4 @@
-import type { PublicService } from "@/types/booking";
+import type { PublicService } from "@/types/temp";
 import { ServiceCard } from "./service-card";
 
 type Props = {
