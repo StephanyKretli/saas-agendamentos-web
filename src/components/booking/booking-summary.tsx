@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDuration, formatPrice } from "@/lib/utils";
-import type { PublicService } from "@/types/booking";
-
+import type { PublicService } from "@/features/public-booking/types/public-booking.types";
 type Props = {
   service?: PublicService;
   date?: string;
