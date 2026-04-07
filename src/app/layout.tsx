@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider"; 
-import "@/app/globals.css"; 
+import "./globals.css";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS Agendamentos",
-  description: "Plataforma de agendamento online para profissionais e pequenos negócios",
+  title: "Syncro | Agendamentos Online",
+  description: "A sua plataforma inteligente de agendamentos.",
 };
 
 export default function RootLayout({
