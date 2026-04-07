@@ -1,20 +1,17 @@
 "use client";
 
 import { useState } from "react";
-// 👇 1. Adicionamos o useSearchParams para ler a URL
 import { useRouter, useSearchParams } from "next/navigation"; 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
 import { Scissors, User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
-// 👇 2. Importamos a nossa API para chamar o Asaas e o Login
 import { api } from "@/lib/api"; 
-// Importe a função que você usa para salvar o token (ajuste o caminho se necessário)
 import { saveAccessToken } from "@/lib/auth-storage"; 
+import { Suspense } from "react";
 
-export default function RegisterPage() {
-  const router = useRouter();
+function RegisterContent() {
   const searchParams = useSearchParams();
   const planoEscolhido = searchParams.get("plan"); 
   
@@ -101,7 +98,6 @@ export default function RegisterPage() {
   const isLoading = registerMutation.isPending || isBillingLoading;
 
   return (
-    // ... todo o seu layout HTML continua exatamente IGUAL, só alteramos o botão final:
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       
       {/* LADO ESQUERDO: Apresentação */}
@@ -234,5 +230,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Carregando formulário...</div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }
