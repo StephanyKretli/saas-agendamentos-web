@@ -14,7 +14,6 @@ export type UserSettings = {
   plan: 'STARTER' | 'PRO' | 'BUSINESS';
   maxMembers: number;
   
-  // 👇 Novos campos adicionados para sincronizar com o Backend
   ownerId: string | null;
   requirePixDeposit?: boolean;
   pixDepositPercentage?: number | null;
@@ -37,3 +36,7 @@ export type UpdateSettingsPayload = {
   mercadoPagoAccessToken?: string;
   centralizePayments?: boolean;
 };
+
+// Criando apelidos para evitar erros de importação em outros arquivos
+export type Settings = UserSettings;
+export type UpdateSettingsInput = UpdateSettingsPayload;
