@@ -19,3 +19,11 @@ export type Service = {
     avatarUrl?: string | null;
   }[];
 };
+
+export type CreateServicePayload = {
+  name: string;
+  description?: string | null;
+  price: number;
+  duration: number; // Em minutos
+  imageUrl?: string | null;
+};
