@@ -8,11 +8,12 @@ import { Lock, Eye, EyeOff, CheckCircle2, ShieldCheck, ArrowRight } from "lucide
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { Suspense } from "react";
 
 // 🌟 Importação do seu cliente da API (ajuste o caminho se necessário)
 import { api } from "@/lib/api"; 
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token"); // O token que virá no e-mail
@@ -165,5 +166,13 @@ export default function ResetPasswordPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
