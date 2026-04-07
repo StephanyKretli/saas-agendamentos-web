@@ -16,7 +16,7 @@ import { saveAccessToken } from "@/lib/auth-storage";
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planoEscolhido = searchParams.get("plano"); // Captura ex: "PRO" ou "STARTER" da URL
+  const planoEscolhido = searchParams.get("plan"); 
   
   const registerMutation = useRegister();
   const [isBillingLoading, setIsBillingLoading] = useState(false); // Novo estado para o Asaas
