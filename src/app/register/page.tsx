@@ -40,7 +40,7 @@ function RegisterContent() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.meusyncro.com.br';
     const googleAuthUrl = planoEscolhido 
       ? `${apiUrl}/auth/google?state=${planoEscolhido}` 
-      : `${apiUrl}/auth/google`;
+      : `${apiUrl}/auth/google?state=PRO`; 
       
     window.location.href = googleAuthUrl;
   };
@@ -60,7 +60,9 @@ function RegisterContent() {
 
     try {
       const { confirmPassword, ...dadosDoUsuario } = formData;
-      const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'STARTER' };
+      const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'PRO' };
+
+      await registerMutation.mutateAsync(dataToSend);
 
       // 1. Cria a conta no NestJS
       await registerMutation.mutateAsync(dataToSend);
