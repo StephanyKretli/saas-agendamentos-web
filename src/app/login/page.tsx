@@ -43,8 +43,9 @@ export default function LoginPage() {
 
   // 🌟 Função simples de redirecionamento para a nossa nova rota do NestJS
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3333/auth/google';
-  };
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.meusyncro.com.br';
+  window.location.href = `${apiUrl}/auth/google`;
+};
 
   return (
     <GlowingBackground>
