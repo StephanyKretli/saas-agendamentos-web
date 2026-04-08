@@ -13,8 +13,8 @@ export default function LoginPage() {
   const router = useRouter();
   const loginMutation = useLogin();
 
-  const [email, setEmail] = React.useState("demo@demo.com");
-  const [password, setPassword] = React.useState("123456");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
