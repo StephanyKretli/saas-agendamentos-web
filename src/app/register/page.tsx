@@ -10,6 +10,7 @@ import { Scissors, User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } f
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage"; 
 import { Suspense } from "react";
+import { signIn } from 'next-auth/react';
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -233,10 +234,51 @@ function RegisterContent() {
   );
 }
 
+interface DadosDoFormulario {
+  name?: string; 
+  email: string;
+  password: string;
+}
+
 export default function RegisterPage() {
-  return (
-    <Suspense fallback={<div>Carregando formulário...</div>}>
-      <RegisterContent />
-    </Suspense>
-  );
+  const router = useRouter();
+
+  const handleCadastro = async (dadosDoFormulario: DadosDoFormulario) => {
+    try {
+      // 1. Envia os dados para a sua API criar o usuário
+      const resposta = await fetch('https://api.meusyncro.com.br/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: dadosDoFormulario.name,
+          email: dadosDoFormulario.email,
+          password: dadosDoFormulario.password,
+        }),
+      });
+
+      if (!resposta.ok) {
+        throw new Error('Erro ao criar conta');
+      }
+
+      // 2. O usuário foi criado! Agora fazemos o login automático
+      // Usamos os mesmos dados que ele acabou de digitar
+      const loginResult = await signIn('credentials', {
+        email: dadosDoFormulario.email,
+        password: dadosDoFormulario.password,
+        redirect: false, // Importante: mantemos false para controlarmos o redirecionamento
+      });
+
+      // 3. Verifica se o login deu certo e manda pro Dashboard
+      if (loginResult?.ok) {
+         router.push('/dashboard'); // Ou '/' dependendo de onde fica o seu painel
+      } else {
+         // Se algo deu errado no login, aí sim mandamos pra tela de login manual
+         router.push('/login'); 
+      }
+
+    } catch (error) {
+      console.error("Falha no cadastro:", error);
+      // Aqui você pode mostrar um toast/alerta de erro pro usuário
+    }
+  };
 }
