@@ -4,22 +4,19 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+import { saveAccessToken } from "@/lib/auth-storage";
 
-// 1. Criamos um componente filho que guarda toda a sua lógica que lê a URL
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get("token") || searchParams.get("access_token");
 
   useEffect(() => {
     if (token) {
-      // 🌟 1. Guardar o token exatamente como você faz no Login normal
-      localStorage.setItem("token", token); 
-      
-      // 🌟 2. Redirecionar para o painel principal
+      // Usa a nossa função oficial (que salva no localStorage e nos Cookies)
+      saveAccessToken(token); 
       router.push("/dashboard"); 
     } else {
-      // Se algo correr mal, volta para o login
       router.push("/login");
     }
   }, [token, router]);
@@ -33,10 +30,8 @@ function CallbackContent() {
   );
 }
 
-// 2. A página oficial agora apenas "envelopa" o filho com o Suspense
 export default function AuthCallbackPage() {
   return (
-    // O fallback é o que o Next.js mostra enquanto processa a URL
     <Suspense 
       fallback={
         <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
