@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
-import { Scissors, User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
-import { api } from "@/lib/api"; 
-import { saveAccessToken } from "@/lib/auth-storage"; 
-import { Suspense } from "react";
+import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 import { signIn } from 'next-auth/react';
 
 function RegisterContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const planoEscolhido = searchParams.get("plan"); 
   
   const registerMutation = useRegister();
-  const [isBillingLoading, setIsBillingLoading] = useState(false); // Novo estado para o Asaas
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,7 +36,6 @@ function RegisterContent() {
 
   const handleGoogleLogin = () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    // Se a cliente escolheu um plano, mandamos isso para o backend no state do OAuth!
     const googleAuthUrl = planoEscolhido 
       ? `${apiUrl}/auth/google?state=${planoEscolhido}` 
       : `${apiUrl}/auth/google`;
@@ -62,30 +59,29 @@ function RegisterContent() {
     try {
       const { confirmPassword, ...dadosDoUsuario } = formData;
       
-      // Enviamos os dados do formulário E o plano escolhido na vitrine
+      // Enviamos os dados do formulário E o plano escolhido
       const dataToSend = {
         ...dadosDoUsuario,
-        plan: planoEscolhido || 'STARTER' // Se ela não escolheu, vai para o básico
+        plan: planoEscolhido || 'STARTER'
       };
 
-      // 1. Cria a conta no seu NestJS (O NestJS é quem vai colocar os 14 dias de teste no banco)
+      // 1. Cria a conta no NestJS
       await registerMutation.mutateAsync(dataToSend);
-      
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. Faz o login automático
-      const loginResponse = await api.post('/auth/login', { 
-        email: formData.email, 
-        password: formData.password 
+      // 2. Mágica do Login Automático com NextAuth
+      const loginResult = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false, // Fundamental para não recarregar a tela do zero
       });
-      
-      const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
-      if (token) {
-        saveAccessToken(token); 
-      }
 
-      // 3. Redireciona DIRETAMENTE para o painel para ela aproveitar os 14 dias grátis!
-      window.location.href = "/dashboard";
+      // 3. Redirecionamento inteligente
+      if (loginResult?.ok) {
+        router.push('/dashboard'); 
+      } else {
+        router.push('/login'); 
+      }
       
     } catch (error: any) {
       console.error(error);
@@ -94,8 +90,6 @@ function RegisterContent() {
   };
 
   const inputStyle = "w-full rounded-xl border border-border bg-card/50 px-10 py-3 text-sm shadow-sm transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none";
-
-  // Variável para juntar os estados de loading
   const isLoading = registerMutation.isPending || isBillingLoading;
 
   return (
@@ -103,9 +97,7 @@ function RegisterContent() {
       
       {/* LADO ESQUERDO: Apresentação */}
       <div className="hidden md:flex flex-1 bg-primary/5 border-r border-border flex-col justify-center items-center p-12 relative overflow-hidden">
-        {/* ... */}
         <div className="relative z-10 max-w-md space-y-6 text-center">
-          {/* ... */}
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
             A sua agenda cheia,<br/>sem dores de cabeça.
           </h1>
@@ -122,7 +114,6 @@ function RegisterContent() {
       <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 animate-in fade-in duration-500">
         <div className="mx-auto w-full max-w-md space-y-8">
           
-          {/* Cabeçalho dinâmico caso ela venha da página de planos */}
           <div className="text-center md:text-left space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">
               {planoEscolhido ? `Criar Conta ${planoEscolhido === 'PRO' ? 'Premium' : 'Starter'}` : 'Criar Conta'}
@@ -131,8 +122,6 @@ function RegisterContent() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ... Seus Inputs (User, Mail, Link, Lock) continuam todos iguais ... */}
-            
             <div className="space-y-1 relative">
               <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <input 
@@ -194,7 +183,6 @@ function RegisterContent() {
               </button>
             </div>
 
-            {/* 👇 Botão atualizado com os novos estados de Loading 👇 */}
             <Button 
               type="submit" 
               disabled={isLoading}
@@ -204,7 +192,6 @@ function RegisterContent() {
             </Button>
           </form>
 
-          {/* ... Restante do código (Google Login e Link para /login) ... */}
           <div className="mt-6 flex items-center justify-center space-x-2">
             <span className="h-px w-full bg-border"></span>
             <span className="text-xs font-medium text-muted-foreground uppercase">ou</span>
@@ -234,51 +221,16 @@ function RegisterContent() {
   );
 }
 
-interface DadosDoFormulario {
-  name?: string; 
-  email: string;
-  password: string;
-}
-
+// Essa é a peça que estava faltando! Precisamos exportar o componente principal e 
+// o Next.js exige que páginas que usem "useSearchParams" sejam envolvidas no <Suspense>
 export default function RegisterPage() {
-  const router = useRouter();
-
-  const handleCadastro = async (dadosDoFormulario: DadosDoFormulario) => {
-    try {
-      // 1. Envia os dados para a sua API criar o usuário
-      const resposta = await fetch('https://api.meusyncro.com.br/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: dadosDoFormulario.name,
-          email: dadosDoFormulario.email,
-          password: dadosDoFormulario.password,
-        }),
-      });
-
-      if (!resposta.ok) {
-        throw new Error('Erro ao criar conta');
-      }
-
-      // 2. O usuário foi criado! Agora fazemos o login automático
-      // Usamos os mesmos dados que ele acabou de digitar
-      const loginResult = await signIn('credentials', {
-        email: dadosDoFormulario.email,
-        password: dadosDoFormulario.password,
-        redirect: false, // Importante: mantemos false para controlarmos o redirecionamento
-      });
-
-      // 3. Verifica se o login deu certo e manda pro Dashboard
-      if (loginResult?.ok) {
-         router.push('/dashboard'); // Ou '/' dependendo de onde fica o seu painel
-      } else {
-         // Se algo deu errado no login, aí sim mandamos pra tela de login manual
-         router.push('/login'); 
-      }
-
-    } catch (error) {
-      console.error("Falha no cadastro:", error);
-      // Aqui você pode mostrar um toast/alerta de erro pro usuário
-    }
-  };
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">A carregar...</p>
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
+  );
 }
