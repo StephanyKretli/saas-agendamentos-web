@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage"; 
+import { signIn } from "next-auth/react"; // 👈 A pulseira VIP do Segurança
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -36,7 +37,7 @@ function RegisterContent() {
   };
 
   const handleGoogleLogin = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.meusyncro.com.br';
     const googleAuthUrl = planoEscolhido 
       ? `${apiUrl}/auth/google?state=${planoEscolhido}` 
       : `${apiUrl}/auth/google`;
@@ -59,30 +60,34 @@ function RegisterContent() {
 
     try {
       const { confirmPassword, ...dadosDoUsuario } = formData;
-      
-      const dataToSend = {
-        ...dadosDoUsuario,
-        plan: planoEscolhido || 'STARTER'
-      };
+      const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'STARTER' };
 
       // 1. Cria a conta no NestJS
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. Faz o login automático chamando a sua API
+      // 2. Salva o Token da sua API para o Frontend conseguir ler os dados
       const loginResponse = await api.post('/auth/login', { 
         email: formData.email, 
         password: formData.password 
       });
       
       const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
-      
       if (token) {
-        saveAccessToken(token); // Salva o token de segurança
-        // 3. Redireciona magicamente para o painel!
+        saveAccessToken(token); 
+      }
+      
+      // 3. O PULO DO GATO: Carimba o passaporte no NextAuth para o Middleware te deixar entrar!
+      const nextAuthResult = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (nextAuthResult?.ok) {
         window.location.href = "/dashboard";
       } else {
-        toast.error("Erro ao fazer login automático. Redirecionando...");
+        toast.error("Quase lá! Valide seu acesso na tela de login.");
         router.push("/login");
       }
       
