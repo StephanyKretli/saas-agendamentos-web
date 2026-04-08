@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
 import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
-import { signIn } from 'next-auth/react';
+// 👇 IMPORTAÇÕES RECUPERADAS DO SEU PROJETO 👇
+import { api } from "@/lib/api"; 
+import { saveAccessToken } from "@/lib/auth-storage"; 
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -59,7 +61,6 @@ function RegisterContent() {
     try {
       const { confirmPassword, ...dadosDoUsuario } = formData;
       
-      // Enviamos os dados do formulário E o plano escolhido
       const dataToSend = {
         ...dadosDoUsuario,
         plan: planoEscolhido || 'STARTER'
@@ -69,18 +70,21 @@ function RegisterContent() {
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. Mágica do Login Automático com NextAuth
-      const loginResult = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false, // Fundamental para não recarregar a tela do zero
+      // 2. Faz o login automático usando a SUA API
+      const loginResponse = await api.post('/auth/login', { 
+        email: formData.email, 
+        password: formData.password 
       });
-
-      // 3. Redirecionamento inteligente
-      if (loginResult?.ok) {
-        router.push('/dashboard'); 
+      
+      const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
+      
+      if (token) {
+        saveAccessToken(token); // Salva o token no seu sistema
+        // 3. Redireciona imediatamente para o painel!
+        window.location.href = "/dashboard";
       } else {
-        router.push('/login'); 
+        toast.error("Erro ao fazer login automático. Redirecionando...");
+        router.push("/login");
       }
       
     } catch (error: any) {
@@ -94,7 +98,6 @@ function RegisterContent() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      
       {/* LADO ESQUERDO: Apresentação */}
       <div className="hidden md:flex flex-1 bg-primary/5 border-r border-border flex-col justify-center items-center p-12 relative overflow-hidden">
         <div className="relative z-10 max-w-md space-y-6 text-center">
@@ -113,7 +116,6 @@ function RegisterContent() {
       {/* LADO DIREITO: Formulário */}
       <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 animate-in fade-in duration-500">
         <div className="mx-auto w-full max-w-md space-y-8">
-          
           <div className="text-center md:text-left space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">
               {planoEscolhido ? `Criar Conta ${planoEscolhido === 'PRO' ? 'Premium' : 'Starter'}` : 'Criar Conta'}
@@ -124,46 +126,22 @@ function RegisterContent() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1 relative">
               <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Nome da Empresa (ex: Studio Beauty)" 
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className={inputStyle} 
-              />
+              <input type="text" placeholder="Nome da Empresa (ex: Studio Beauty)" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className={inputStyle} />
             </div>
 
             <div className="space-y-1 relative">
               <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-              <input 
-                type="email" 
-                placeholder="E-mail de acesso" 
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className={inputStyle} 
-              />
+              <input type="email" placeholder="E-mail de acesso" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={inputStyle} />
             </div>
 
             <div className="space-y-1 relative">
               <LinkIcon className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Seu link (ex: studio-beauty)" 
-                value={formData.username}
-                onChange={handleUsernameChange}
-                className={inputStyle} 
-              />
+              <input type="text" placeholder="Seu link (ex: studio-beauty)" value={formData.username} onChange={handleUsernameChange} className={inputStyle} />
             </div>
 
             <div className="space-y-1 relative">
               <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Crie uma senha forte" 
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className={inputStyle} 
-              />
+              <input type={showPassword ? "text" : "password"} placeholder="Crie uma senha forte" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className={inputStyle} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -171,23 +149,13 @@ function RegisterContent() {
 
             <div className="space-y-1 relative">
               <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-              <input 
-                type={showConfirmPassword ? "text" : "password"} 
-                placeholder="Confirme a sua senha" 
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                className={inputStyle} 
-              />
+              <input type={showConfirmPassword ? "text" : "password"} placeholder="Confirme a sua senha" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className={inputStyle} />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground">
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
 
-            <Button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full h-12 rounded-xl font-bold text-base shadow-md transition-all hover:shadow-lg active:scale-95 mt-4 relative overflow-hidden"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl font-bold text-base shadow-md transition-all hover:shadow-lg active:scale-95 mt-4 relative overflow-hidden">
               {isLoading ? "A preparar ambiente..." : "Começar 14 dias grátis"}
             </Button>
           </form>
@@ -214,15 +182,12 @@ function RegisterContent() {
               Faça login aqui
             </Link>
           </p>
-
         </div>
       </div>
     </div>
   );
 }
 
-// Essa é a peça que estava faltando! Precisamos exportar o componente principal e 
-// o Next.js exige que páginas que usem "useSearchParams" sejam envolvidas no <Suspense>
 export default function RegisterPage() {
   return (
     <Suspense fallback={
