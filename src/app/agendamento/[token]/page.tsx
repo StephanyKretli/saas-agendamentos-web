@@ -73,8 +73,8 @@ export default function PublicManageAppointmentPage() {
 
   const isCanceled = appointment.status === "CANCELED";
   const dateObj = new Date(appointment.date);
-  const formattedDate = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(dateObj);
-  const formattedTime = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(dateObj);
+  const formattedDate = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", timeZone: "UTC" }).format(dateObj);
+  const formattedTime = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(dateObj);
 
   return (
     <div className="min-h-screen bg-muted/20 py-12 px-4 sm:px-6 flex justify-center">
