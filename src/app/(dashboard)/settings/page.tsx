@@ -16,7 +16,6 @@ import {
 import { motion, AnimatePresence, Variants } from "framer-motion"; 
 import { api } from "@/lib/api";
 
-// 👇 Importando o seu novo componente de WhatsApp 👇
 import { WhatsappConnect } from "@/components/whatsapp/whatsapp-connect";
 
 const tabContentVariants: Variants = {
@@ -31,7 +30,6 @@ export default function SettingsPage() {
   const adminCentralizedPayments = (profile as any)?.owner?.centralizePayments ?? false;
   const isProPlan = (profile as any)?.plan === 'PRO';
   
-  // Descobre qual é o ID do salão (se for admin, pega o id dele; se for funcionário, pega o ownerId)
   const salonId = profile ? (isSalonOwner ? (profile as any).id : (profile as any).ownerId) : "";
   
   const updateMutation = useUpdateSettings();
@@ -45,6 +43,7 @@ export default function SettingsPage() {
     username: "",
     email: "",
     phone: "",
+    document: "", // 👈 NOVO ESTADO AQUI
     bio: "",
     avatarUrl: "",
     currentPassword: "",
@@ -68,6 +67,8 @@ export default function SettingsPage() {
         email: profile.email || "",
         // @ts-ignore
         phone: profile.phone || "",
+        // @ts-ignore
+        document: profile.document || "", // 👈 CARREGA O DOCUMENTO DO BANCO
         // @ts-ignore
         bio: profile.bio || "",
         // @ts-ignore
@@ -101,31 +102,23 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 1. Mostra a foto na tela instantaneamente para a cliente
     const previewUrl = URL.createObjectURL(file);
     setFormData(prev => ({ ...prev, avatarUrl: previewUrl }));
 
-    // 2. Prepara o arquivo "real" para envio
     const uploadData = new FormData();
     uploadData.append('file', file);
 
-    // 3. Dispara silenciosamente para a sua rota dedicada de avatar!
     try {
       toast.loading("A carregar foto...", { id: "upload-avatar" });
-      
       const response = await api.patch('/settings/avatar', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
       toast.success("Foto de perfil atualizada!", { id: "upload-avatar" });
-      
-      // Opcional: Atualiza o form com a URL definitiva gerada pelo backend
       if ((response as any).data?.avatarUrl) {
         setFormData(prev => ({ ...prev, avatarUrl: (response as any).data.avatarUrl }));
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "A imagem é muito grande. Tente até 2MB.", { id: "upload-avatar" });
-      // Se der erro, tira a preview da tela
       setFormData(prev => ({ ...prev, avatarUrl: profile?.avatarUrl || "" }));
     }
   };
@@ -136,7 +129,8 @@ export default function SettingsPage() {
     const settingsPayload = {
       name: formData.name,
       username: formData.username,
-      phone: formData.phone,        
+      phone: formData.phone,
+      document: formData.document, // 👈 ENVIANDO PARA A API
       bio: formData.bio,            
       requirePixDeposit: formData.requirePixDeposit,
       pixDepositPercentage: formData.pixDepositPercentage,
@@ -181,7 +175,7 @@ export default function SettingsPage() {
       }
     } catch (error: any) {
       console.error("Erro no botão de Configurações:", error);
-      toast.error(error.response?.data?.message || "Erro ao acessar portal de pagamento.");
+      toast.error(error.response?.data?.message || "Erro ao acessar portal de pagamento. Preencha seu CPF nos dados pessoais primeiro.");
     } finally {
       setIsBillingActionLoading(false);
     }
@@ -211,7 +205,6 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-12 max-w-6xl mx-auto px-4 sm:px-0">
       
-      {/* HEADER DA PÁGINA */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <div className="h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary border border-primary/20 shadow-sm">
@@ -229,7 +222,6 @@ export default function SettingsPage() {
           
           <Tabs defaultValue="perfil" className="space-y-8 w-full">
             
-            {/* NAVEGAÇÃO DE TABS (SCROLL HORIZONTAL NO MOBILE) */}
             <div className="w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
               <div className="w-max sm:w-fit rounded-2xl bg-muted/40 p-1.5 border border-border/50 shadow-sm">
                 <TabsList className="bg-transparent p-0 h-auto gap-1.5 w-full flex">
@@ -242,7 +234,6 @@ export default function SettingsPage() {
                     <Store className="h-4 w-4" /> Vitrine
                   </TabsTrigger>
 
-                  {/* 👇 NOVA ABA: WHATSAPP 👇 */}
                   <TabsTrigger value="whatsapp" onClick={handleTabClick} className="flex-1 sm:flex-none sm:min-w-30 rounded-xl py-2.5 px-5 text-sm font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all data-[state=active]:text-green-600 text-muted-foreground flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </TabsTrigger>
@@ -268,7 +259,6 @@ export default function SettingsPage() {
             <TabsContent value="perfil" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="grid gap-6 lg:grid-cols-[300px_1fr]">
                 
-                {/* Cartão da Foto */}
                 <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center gap-4 transition-all hover:shadow-md hover:border-primary/20">
                   <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <div className="h-32 w-32 rounded-full border-4 border-muted overflow-hidden bg-muted flex items-center justify-center transition-all group-hover:border-primary/30 group-hover:shadow-md">
@@ -294,7 +284,7 @@ export default function SettingsPage() {
                   )}
                 </Card>
 
-                {/* Cartão de Dados Pessoais */}
+                {/* Cartão de Dados Pessoais COM O NOVO CAMPO */}
                 <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 transition-all hover:shadow-md">
                   <div className="space-y-6 sm:space-y-8">
                     <div className="grid sm:grid-cols-2 gap-6">
@@ -307,6 +297,21 @@ export default function SettingsPage() {
                         <input value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={inputStyle} placeholder="(11) 99999-9999" />
                       </div>
                     </div>
+                    
+                    {/* 👈 O NOVO CAMPO DE DOCUMENTO 👈 */}
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-2.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">CPF ou CNPJ</label>
+                        <input 
+                          value={formData.document} 
+                          onChange={(e) => setFormData({...formData, document: e.target.value.replace(/\D/g, '')})} 
+                          className={inputStyle} 
+                          placeholder="Apenas números (Ex: 12345678909)" 
+                          maxLength={14} 
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2.5">
                       <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Bio / Descrição</label>
                       <textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`w-full min-h-[120px] resize-none ${inputStyle}`} placeholder="Conte para os seus clientes o que o seu espaço oferece de melhor..." />
@@ -317,7 +322,6 @@ export default function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* CONTEÚDO: VITRINE */}
             <TabsContent value="vitrine" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
                 <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
@@ -348,17 +352,14 @@ export default function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* 👇 CONTEÚDO: WHATSAPP (NOVO) 👇 */}
             <TabsContent value="whatsapp" className="outline-none">
                <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
-                  {/* Incorpora o componente isolado perfeitamente na página */}
                   <div className="flex justify-center sm:justify-start">
                     <WhatsappConnect salonId={salonId} />
                   </div>
                </motion.div>
             </TabsContent>
 
-            {/* CONTEÚDO: SEGURANÇA */}
             <TabsContent value="seguranca" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
                 <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
@@ -384,7 +385,6 @@ export default function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* CONTEÚDO: FINANCEIRO */}
             <TabsContent value="pagamentos" className="outline-none">
               <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
                 
@@ -400,7 +400,6 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {/* 🔒 CARTÃO 1: PIX ANTECIPADO (BLOQUEADO PARA STARTER) */}
                 {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
                   <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-amber-500/20 ring-1 ring-amber-500/10 hover:shadow-xl' : 'border-border/50'}`}>
                     <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/10' : 'bg-muted/30 border-border/50'}`}>
@@ -412,7 +411,6 @@ export default function SettingsPage() {
                           <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Proteção Contra Faltas</h2>
                           <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX para garantir o comparecimento dos clientes.</p>
                         </div>
-                        {/* ETIQUETA PRO */}
                         {!isProPlan && (
                           <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
                             <Lock className="h-3 w-3" /> PRO
@@ -421,7 +419,6 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     
-                    {/* AQUI ESTÁ A MÁGICA: pointer-events-none bloqueia todos os cliques se não for PRO */}
                     <div className={`p-6 sm:p-8 space-y-6 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
                         <div className="max-w-md">
@@ -461,7 +458,6 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {/* 🔒 CARTÃO 2: COMISSÕES (BLOQUEADO PARA STARTER) */}
                 {isSalonOwner && (
                   <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-primary/20 ring-1 ring-primary/10 hover:shadow-xl' : 'border-border/50'}`}>
                     <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/10' : 'bg-muted/30 border-border/50'}`}>
@@ -473,7 +469,6 @@ export default function SettingsPage() {
                           <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Repasses e Comissões</h2>
                           <p className="text-sm text-muted-foreground mt-1 font-medium">Defina as regras financeiras da sua equipe.</p>
                         </div>
-                        {/* ETIQUETA PRO */}
                         {!isProPlan && (
                           <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
                             <Lock className="h-3 w-3" /> PRO
@@ -482,7 +477,6 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     
-                    {/* AQUI ESTÁ A MÁGICA: pointer-events-none bloqueia todos os cliques se não for PRO */}
                     <div className={`p-6 sm:p-8 space-y-8 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
                         <div className="max-w-md">
@@ -540,7 +534,6 @@ export default function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* CONTEÚDO: ASSINATURA */}
             {isAdmin && (
               <TabsContent value="assinatura" className="outline-none">
                 <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
@@ -576,7 +569,6 @@ export default function SettingsPage() {
                         </Button>
                       </div>
 
-                      {/* ZONA DE PERIGO */}
                       <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 flex flex-col sm:flex-row gap-5">
                         <div className="bg-destructive/10 p-3 rounded-full shrink-0 h-fit">
                           <AlertCircle className="h-6 w-6 text-destructive" />
@@ -603,7 +595,6 @@ export default function SettingsPage() {
           </Tabs>
         </motion.div>
 
-        {/* BARRA FLUTUANTE DE SALVAR (Com glassmorphism suave) */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border/50 sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:pt-10 flex justify-end z-40">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto shadow-xl sm:shadow-none rounded-2xl">
             <Button type="submit" disabled={isSaving} className="h-14 w-full sm:w-auto rounded-2xl px-12 text-base font-bold shadow-md transition-all">
