@@ -172,6 +172,7 @@ export default function SettingsPage() {
     }
   };
 
+  const isSaving = updateMutation.isPending || updateFinancialMutation.isPending; // 👈 ADICIONE ESTA LINHA
   if (isLoading) return <div className="p-20 text-center">A carregar...</div>;
 
   // 🌟 CORREÇÃO: Adicionado w-full para os campos ocuparem todo o espaço disponível
