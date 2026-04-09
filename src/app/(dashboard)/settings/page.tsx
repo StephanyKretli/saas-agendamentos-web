@@ -189,9 +189,22 @@ export default function SettingsPage() {
     }
   };
 
-  const handleCancelarAssinatura = () => {
-    if (confirm("Tem a certeza que deseja cancelar a sua assinatura? Perderá acesso ao painel no fim do ciclo.")) {
-      toast.success("Solicitação de cancelamento iniciada.");
+  const handleCancelarAssinatura = async () => {
+    if (!confirm("Tem a certeza que deseja cancelar a sua assinatura? Perderá acesso aos recursos PRO e à vitrine.")) return;
+    
+    try {
+      toast.loading("A cancelar assinatura...", { id: "cancel-sub" });
+      
+      // Dispara o comando de cancelamento para a API
+      await api.delete('/billing/cancel');
+      
+      toast.success("Assinatura cancelada com sucesso!", { id: "cancel-sub" });
+      
+      // Recarrega a página para a tela voltar ao plano STARTER automaticamente
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
+      console.error("Erro ao cancelar:", error);
+      toast.error(error.response?.data?.message || "Erro ao cancelar assinatura.", { id: "cancel-sub" });
     }
   };
 
