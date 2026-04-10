@@ -181,10 +181,11 @@ export default function LandingPage() {
                   className="w-full h-full object-cover"
                 >
                   {/* O navegador tenta carregar o WebM primeiro (melhor qualidade) */}
-                  <source src="/videos/demo.webm" type="video/webm" />
+                  <source src="/demo.webm" type="video/webm" />
                   
                   {/* Se for um navegador muito antigo como o Safari velho, cai para o MP4 */}
-                  <source src="/videos/demo.mp4" type="video/mp4" />
+                  <source src="/demo.mp4" type="video/mp4" />
+
                   
                   Seu navegador não suporta vídeos.
                 </video>
