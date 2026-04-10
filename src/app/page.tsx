@@ -172,21 +172,22 @@ export default function LandingPage() {
             >
               <div className="absolute -inset-0.5 bg-linear-to-r from-primary to-amber-500 rounded-[2.2rem] opacity-20 blur-xl pointer-events-none" />
               
-              <div className="aspect-video w-full rounded-2xl bg-muted overflow-hidden relative border border-border shadow-inner group">
-                {/* Substitua "demo.mp4" pelo nome do seu vídeo na pasta public */}
-                <video 
-                  src="/demo.mp4" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" 
-                  autoPlay loop muted playsInline 
-                  poster="/video-thumb.jpg" 
-                />
-                
-                {/* Fallback visual caso o vídeo demore a carregar */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none">
-                   <div className="h-16 w-16 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow-lg text-primary border border-white/20 group-hover:opacity-0 transition-opacity">
-                     <PlayCircle className="h-8 w-8 ml-1" />
-                   </div>
-                </div>
+              <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline // 🌟 Essencial para não abrir em tela cheia no iPhone
+                  className="w-full h-full object-cover"
+                >
+                  {/* O navegador tenta carregar o WebM primeiro (melhor qualidade) */}
+                  <source src="/videos/demo.webm" type="video/webm" />
+                  
+                  {/* Se for um navegador muito antigo como o Safari velho, cai para o MP4 */}
+                  <source src="/videos/demo.mp4" type="video/mp4" />
+                  
+                  Seu navegador não suporta vídeos.
+                </video>
               </div>
             </motion.div>
           </div>
