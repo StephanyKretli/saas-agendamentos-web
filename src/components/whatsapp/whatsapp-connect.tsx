@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 // Importe a sua configuração de API (ajuste o caminho se necessário)
 import { api } from "@/lib/api"; 
+import { toast } from "react-hot-toast";
 
 interface WhatsappConnectProps {
   salonId: string; // Recebemos o ID do Salão como propriedade
@@ -42,6 +43,8 @@ export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
   // Função para pedir um novo QR Code ao NestJS
   const generateQRCode = async () => {
     setIsGenerating(true);
+    setQrCodeBase64(null); // 🌟 NOVO: Apaga o fantasma da tela antes de pedir o novo!
+
     try {
       // 1. Criamos um carimbo de tempo para enganar o cache do navegador (304)
       const timestamp = new Date().getTime();
@@ -61,9 +64,11 @@ export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
         setQrCodeBase64(qrCode.includes('base64') ? qrCode : `data:image/png;base64,${qrCode}`);
       } else {
         console.error("QR Code vazio na resposta:", data);
+        toast.error("O WhatsApp não devolveu a imagem. Tente de novo.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao gerar QR Code", error);
+      toast.error(error.response?.data?.message || "Erro de conexão. Tente novamente.");
     } finally {
       setIsGenerating(false);
     }
