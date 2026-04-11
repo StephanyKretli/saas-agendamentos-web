@@ -66,22 +66,31 @@ function RegisterContent() {
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. Faz o login silencioso via NextAuth 
-      // (Não precisamos fazer api.post('/auth/login') antes, o NextAuth já faz isso!)
+      // 2. RESTAURADO: Busca o token real na API e salva (Essencial para o seu Dashboard funcionar!)
+      const loginResponse = await api.post('/auth/login', { 
+        email: formData.email, 
+        password: formData.password 
+      });
+      
+      const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
+      if (token) {
+        saveAccessToken(token); 
+      }
+
+      // 3. Carimba o passaporte no NextAuth (Segurança do Frontend)
       const nextAuthResult = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false, 
       });
 
-      // 3. Redirecionamento Blindado
+      // 4. Redirecionamento Blindado
       if (nextAuthResult?.error) {
         console.error("❌ Falha no auto-login:", nextAuthResult.error);
         toast.error("Quase lá! Valide o seu acesso na tela de login.");
-        router.push("/login"); // Só manda pro login se der erro grave
+        router.push("/login");
       } else {
-        // 🎯 O PULO DO GATO: Usamos window.location em vez de router.push 
-        // Isso força o navegador a recarregar a página e ler o cookie de sessão com sucesso!
+        // Agora sim: Token salvo E recarregamento limpo da página!
         window.location.href = "/dashboard";
       }
       
