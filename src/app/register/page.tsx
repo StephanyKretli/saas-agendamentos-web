@@ -62,38 +62,32 @@ function RegisterContent() {
       const { confirmPassword, ...dadosDoUsuario } = formData;
       const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'PRO' };
 
-      // 1. Cria a conta no NestJS (Agora dispara SÓ UMA VEZ!) 🎯
+      // 1. Cria a conta na sua API
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. Salva o Token da sua API para o Frontend conseguir ler os dados
-      const loginResponse = await api.post('/auth/login', { 
-        email: formData.email, 
-        password: formData.password 
-      });
-      
-      const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
-      if (token) {
-        saveAccessToken(token); 
-      }
-      
-      // 3. O PULO DO GATO: Carimba o passaporte no NextAuth para o Middleware te deixar entrar!
+      // 2. Faz o login silencioso via NextAuth 
+      // (Não precisamos fazer api.post('/auth/login') antes, o NextAuth já faz isso!)
       const nextAuthResult = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect: false, 
       });
 
-      if (nextAuthResult?.ok) {
-        window.location.href = "/dashboard";
+      // 3. Redirecionamento Blindado
+      if (nextAuthResult?.error) {
+        console.error("❌ Falha no auto-login:", nextAuthResult.error);
+        toast.error("Quase lá! Valide o seu acesso na tela de login.");
+        router.push("/login"); // Só manda pro login se der erro grave
       } else {
-        toast.error("Quase lá! Valide seu acesso na tela de login.");
-        router.push("/login");
+        // 🎯 O PULO DO GATO: Usamos window.location em vez de router.push 
+        // Isso força o navegador a recarregar a página e ler o cookie de sessão com sucesso!
+        window.location.href = "/dashboard";
       }
       
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Erro ao criar conta. O email ou link já pode estar em uso.");
+      toast.error(error.message || "Erro ao criar conta. O email ou username já pode estar em uso.");
     }
   };
 
