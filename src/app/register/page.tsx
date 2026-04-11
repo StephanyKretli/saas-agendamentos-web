@@ -62,9 +62,7 @@ function RegisterContent() {
       const { confirmPassword, ...dadosDoUsuario } = formData;
       const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'PRO' };
 
-      await registerMutation.mutateAsync(dataToSend);
-
-      // 1. Cria a conta no NestJS
+      // 1. Cria a conta no NestJS (Agora dispara SÓ UMA VEZ!) 🎯
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
