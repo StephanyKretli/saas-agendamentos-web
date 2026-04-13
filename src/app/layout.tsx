@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider"; 
 import "./globals.css";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 
 const geistSans = Geist({
@@ -59,6 +60,9 @@ export default function RootLayout({
           }} 
         />
       </body>
+
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string} />
+
     </html>
   );
 }

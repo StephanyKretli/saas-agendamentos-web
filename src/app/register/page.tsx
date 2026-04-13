@@ -62,41 +62,45 @@ function RegisterContent() {
       const { confirmPassword, ...dadosDoUsuario } = formData;
       const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'PRO' };
 
-      // 1. Cria a conta na sua API
+      console.log("PASSO 1: A criar conta na API...");
       await registerMutation.mutateAsync(dataToSend);
       toast.success("Conta criada! A preparar o seu ambiente...");
 
-      // 2. RESTAURADO: Busca o token real na API e salva (Essencial para o seu Dashboard funcionar!)
+      console.log("PASSO 2: A buscar o Token na API NestJS...");
       const loginResponse = await api.post('/auth/login', { 
         email: formData.email, 
         password: formData.password 
       });
+      console.log("👉 Resposta da API NestJS:", loginResponse);
       
       const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
       if (token) {
+        console.log("✅ Token recebido e salvo no navegador!");
         saveAccessToken(token); 
+      } else {
+        console.error("❌ ALERTA: A API não devolveu o access_token!");
       }
 
-      // 3. Carimba o passaporte no NextAuth (Segurança do Frontend)
+      console.log("PASSO 3: A validar a sessão no NextAuth...");
       const nextAuthResult = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false, 
       });
+      console.log("👉 Resposta do NextAuth:", nextAuthResult);
 
-      // 4. Redirecionamento Blindado
       if (nextAuthResult?.error) {
-        console.error("❌ Falha no auto-login:", nextAuthResult.error);
-        toast.error("Quase lá! Valide o seu acesso na tela de login.");
+        console.error("❌ O NextAuth recusou o login. Motivo:", nextAuthResult.error);
+        toast.error("Conta criada! Por favor, faça login manualmente.");
         router.push("/login");
       } else {
-        // Agora sim: Token salvo E recarregamento limpo da página!
+        console.log("✅ NextAuth aprovado! A redirecionar para o Dashboard...");
         window.location.href = "/dashboard";
       }
       
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Erro ao criar conta. O email ou username já pode estar em uso.");
+      console.error("❌ O processo falhou e caiu no CATCH:", error);
+      toast.error(error.message || "Erro inesperado ao processar o login.");
     }
   };
 
