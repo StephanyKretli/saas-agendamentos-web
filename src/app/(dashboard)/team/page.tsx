@@ -45,6 +45,8 @@ export default function TeamPage() {
     name: "", email: "", username: "", password: "", role: "PROFESSIONAL"
   });
 
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   // 👇 ESTADO E FUNÇÃO PARA O UPGRADE (ASAAS) 👇
   const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
 
@@ -73,10 +75,24 @@ export default function TeamPage() {
   // As funções originais que tinham desaparecido:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 👇 NOVA VALIDAÇÃO DE SENHA (Apenas se for um novo membro)
+    if (!editingMember) {
+      if (formData.password.length < 6) {
+        toast.error("A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+      if (formData.password !== confirmPassword) {
+        toast.error("As senhas não coincidem! Tente novamente.");
+        return;
+      }
+    }
+
     const payload = {
       ...formData,
       username: formData.username || formData.email.split('@')[0], 
-      password: formData.password || "Mudar123!", 
+      // Agora envia a senha que o utilizador digitou:
+      password: formData.password, 
     };
 
     createMutation.mutate(payload, {
@@ -84,6 +100,7 @@ export default function TeamPage() {
         setIsAdding(false);
         setEditingMember(null);
         setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" });
+        setConfirmPassword(""); // Limpa o campo de confirmação
         toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
       },
       onError: (error: any) => {
@@ -94,7 +111,16 @@ export default function TeamPage() {
 
   const handleEdit = (member: any) => {
     setEditingMember(member);
-    setFormData({ name: member.name, email: member.email, username: member.username, password: "", role: member.role || "PROFESSIONAL" });
+    setFormData({ 
+      name: member.name, 
+      email: member.email, 
+      username: member.username, 
+      password: "", 
+      role: member.role || "PROFESSIONAL" 
+    });
+    
+    setConfirmPassword(""); 
+    
     setIsAdding(true);
   };
 
@@ -266,6 +292,24 @@ export default function TeamPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</label>
                   <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full ${inputStyle}`} placeholder="joao@salao.com" />
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</label>
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full ${inputStyle}`} placeholder="joao@salao.com" />
+                </div>
+                
+                {!editingMember && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha de Acesso</label>
+                      <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={`w-full ${inputStyle}`} placeholder="Mínimo 6 caracteres" minLength={6} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Confirmar Senha</label>
+                      <input required type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={`w-full ${inputStyle}`} placeholder="Repita a senha" minLength={6} />
+                    </div>
+                  </>
+                )}
                 
                 {/* 🌟 SELECT DE CARGO (Se for o plano ilimitado) */}
                 {isUnlimitedPlan && (
