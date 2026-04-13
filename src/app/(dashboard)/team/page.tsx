@@ -292,11 +292,6 @@ export default function TeamPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</label>
                   <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full ${inputStyle}`} placeholder="joao@salao.com" />
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">E-mail</label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full ${inputStyle}`} placeholder="joao@salao.com" />
-                </div>
                 
                 {!editingMember && (
                   <>
