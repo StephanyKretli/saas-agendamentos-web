@@ -61,7 +61,7 @@ export default function RootLayout({
         />
       </body>
 
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string} />
+      <GoogleAnalytics gaId="G-2G70NFE4Q5" />
 
     </html>
   );
