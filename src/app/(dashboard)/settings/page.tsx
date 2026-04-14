@@ -682,23 +682,25 @@ export default function SettingsPage() {
         )}
       </Tabs>
 
-      {/* 🔴 UX 2: Centralização de Diálogos de Confirmação (Substituindo o window.confirm) */}
+      {/* 🔴 UX 2: Centralização de Diálogos de Confirmação (Estilizado para Dark Mode/Alto Contraste) */}
       <AlertDialog open={dialogConfig.isOpen} onOpenChange={(open) => !open && setDialogConfig({ isOpen: false, type: null })}>
-        <AlertDialogContent className="rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+        <AlertDialogContent className="rounded-3xl border border-border/40 bg-[#141415] p-6 sm:p-8 shadow-2xl sm:max-w-[420px]">
+          <AlertDialogHeader className="space-y-3">
+            <AlertDialogTitle className="text-xl font-black text-white">
               {dialogConfig.type === 'plan' && `Mudar para o plano ${dialogConfig.payload}?`}
               {dialogConfig.type === 'cancel' && "Deseja mesmo cancelar?"}
               {dialogConfig.type === 'photo' && "Remover foto de perfil?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-sm font-medium text-zinc-400 leading-relaxed">
               {dialogConfig.type === 'plan' && "O novo valor será aplicado na sua próxima fatura. Os recursos serão atualizados instantaneamente."}
               {dialogConfig.type === 'cancel' && "A cobrança será interrompida, mas manterá os recursos PRO até ao fim do ciclo pago."}
               {dialogConfig.type === 'photo' && "Esta ação removerá a sua foto atual e voltará a exibir o ícone padrão."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Voltar</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 border-t border-white/5 pt-5 flex-col sm:flex-row gap-3 sm:gap-0">
+            <AlertDialogCancel className="mt-0 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 px-6 transition-colors">
+              Voltar
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
                 if (dialogConfig.type === 'plan') executePlanChange();
@@ -708,7 +710,7 @@ export default function SettingsPage() {
                   setDialogConfig({ isOpen: false, type: null });
                 }
               }}
-              className={`rounded-xl ${dialogConfig.type === 'cancel' || dialogConfig.type === 'photo' ? 'bg-destructive hover:bg-destructive/90 text-white' : ''}`}
+              className={`rounded-xl font-bold h-12 px-6 shadow-md transition-all ${dialogConfig.type === 'cancel' || dialogConfig.type === 'photo' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'}`}
             >
               Confirmar
             </AlertDialogAction>
