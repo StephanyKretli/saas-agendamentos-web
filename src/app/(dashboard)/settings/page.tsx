@@ -697,9 +697,10 @@ export default function SettingsPage() {
               {dialogConfig.type === 'photo' && "Esta ação removerá a sua foto atual e voltará a exibir o ícone padrão."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-6 border-t border-white/5 pt-6 w-full flex flex-col-reverse sm:flex-row !justify-center items-center gap-4 !space-x-0">
+          {/* Substituímos o AlertDialogFooter por uma div normal */}
+          <div className="mt-6 border-t border-white/5 pt-6 w-full flex flex-col-reverse sm:flex-row items-center justify-center gap-4">
             <AlertDialogCancel className="!m-0 w-full sm:w-[140px] rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 transition-all">
-              Voltar
+              Voltar Teste
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
@@ -718,7 +719,7 @@ export default function SettingsPage() {
             >
               Confirmar
             </AlertDialogAction>
-          </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
 
