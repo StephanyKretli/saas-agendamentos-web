@@ -8,10 +8,11 @@ import { useBookingAvailability } from "@/features/public-booking/hooks/use-book
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
 import { ProfessionalHeader } from "@/features/public-booking/components/professional-header";
 import { ServiceList } from "@/features/public-booking/components/service-list";
-import { DatePickerCard } from "@/features/public-booking/components/date-picker-card";
 import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
 import { BookingForm } from "@/features/public-booking/components/booking-form";
 import { BookingSuccess } from "@/features/public-booking/components/booking-success";
+// 🌟 1. O calendário profissional importado aqui:
+import { Calendar } from "@/components/ui/calendar";
 import type {
   CreatePublicAppointmentResponse,
   PublicService,
@@ -25,10 +26,18 @@ function formatPrice(priceCents: number) {
   }).format(priceCents / 100);
 }
 
-function formatDateLabel(date: string | null) {
+// 🌟 2. Atualizado para receber e formatar um objeto Date
+function formatDateLabel(date: Date | undefined) {
   if (!date) return "Não selecionada";
-  const [year, month, day] = date.split("-");
-  return `${day}/${month}/${year}`;
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(date);
+}
+
+// 🌟 3. Função de segurança para converter Date em String sem problemas de Fuso Horário
+function formatToYYYYMMDD(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function StepBadge({
@@ -88,7 +97,7 @@ function SelectionSummary({
 }: {
   selectedService: PublicService | null;
   selectedProfessional: any | null;
-  selectedDate: string | null;
+  selectedDate: Date | undefined; // 🌟 4. Atualizado o tipo aqui
   selectedTime: string | null;
 }) {
   return (
@@ -136,7 +145,8 @@ export default function BookingPage() {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
   const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null);
-  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+  // 🌟 5. O estado da data agora armazena o objeto Date
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
   const [createdAppointment, setCreatedAppointment] = React.useState<CreatePublicAppointmentResponse | null>(null);
   const [lastClientName, setLastClientName] = React.useState("");
@@ -155,7 +165,8 @@ export default function BookingPage() {
   const availabilityQuery = useBookingAvailability({
     username,
     serviceId: selectedService?.id ?? null,
-    date: selectedDate,
+    // 🌟 6. Converte para string na hora de perguntar à API os horários livres
+    date: selectedDate ? formatToYYYYMMDD(selectedDate) : null,
     professionalId: selectedProfessional?.id ?? null, 
   });
 
@@ -168,11 +179,14 @@ export default function BookingPage() {
   async function handleSubmitBooking(values: PublicBookingFormValues) {
     if (!selectedService || !selectedDate || !selectedTime || !selectedProfessional) return;
 
+    // 🌟 7. Monta a string final perfeitamente para o backend do NestJS
+    const dateString = formatToYYYYMMDD(selectedDate);
+
     const response = await createAppointmentMutation.mutateAsync({
       username,
       payload: {
         serviceId: selectedService.id,
-        date: `${selectedDate}T${selectedTime}:00`,
+        date: `${dateString}T${selectedTime}:00`,
         professionalId: selectedProfessional.id,
         clientName: values.clientName,
         clientPhone: values.clientPhone,
@@ -202,13 +216,11 @@ export default function BookingPage() {
             <BookingSuccess 
               clientName={lastClientName} 
               serviceName={selectedService?.name!} 
-              date={selectedDate!} 
+              // 🌟 8. Passa a string para o componente de sucesso
+              date={formatToYYYYMMDD(selectedDate!)} 
               time={selectedTime!}
-              // 🌟 1. Se o backend exigir PIX, enviamos PENDING para o componente ficar amarelo
               paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
-              // 🌟 2. Calculamos o valor de 20% que o cliente tem de pagar agora
               depositCents={selectedService ? Math.round(selectedService.priceCents * 0.2) : 0}
-              // 🌟 3. Pegamos a string gigante do Copia e Cola enviada pelo Mercado Pago
               pixPayload={createdAppointment.pixData?.qrCodePayload}
             />
           </div>
@@ -282,7 +294,7 @@ export default function BookingPage() {
                   </section>
                 )}
 
-                {/* PASSO 3: DATA */}
+                {/* PASSO 3: DATA (O SEGREDO REVELADO) */}
                 {currentStep === 3 && selectedService && selectedProfessional && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
@@ -293,7 +305,22 @@ export default function BookingPage() {
                         <h2 className="text-xl font-semibold">Escolha a data</h2>
                       </div>
                     </div>
-                    <DatePickerCard value={selectedDate} onChange={(value) => { setSelectedDate(value); setCurrentStep(4); }} />
+                    
+                    {/* 🌟 9. O Calendário Shadcn elegante e à prova de bugs! */}
+                    <div className="flex justify-center rounded-xl border border-border bg-background p-3">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(newDate) => {
+                          setSelectedDate(newDate);
+                          if (newDate) {
+                            setCurrentStep(4);
+                          }
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        className="rounded-md"
+                      />
+                    </div>
                   </section>
                 )}
 
