@@ -697,27 +697,29 @@ export default function SettingsPage() {
               {dialogConfig.type === 'photo' && "Esta ação removerá a sua foto atual e voltará a exibir o ícone padrão."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-6 border-t border-white/5 pt-6 flex flex-col-reverse sm:flex-row justify-center sm:justify-center items-center gap-4 sm:space-x-0 w-full">
-            <AlertDialogCancel className="m-0 sm:m-0 w-full sm:w-auto rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 px-8 transition-all">
-              Voltar
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                if (dialogConfig.type === 'plan') executePlanChange();
-                if (dialogConfig.type === 'cancel') executeCancelation();
-                if (dialogConfig.type === 'photo') {
-                  setFormData(prev => ({ ...prev, avatarUrl: "" }));
-                  setDialogConfig({ isOpen: false, type: null });
-                }
-              }}
-              className={`m-0 sm:m-0 w-full sm:w-auto rounded-xl font-bold h-12 px-8 shadow-md transition-all ${
-                dialogConfig.type === 'cancel' || dialogConfig.type === 'photo' 
-                  ? 'bg-red-500 hover:bg-red-600 text-white border border-red-500' 
-                  : 'bg-amber-500 hover:bg-amber-600 text-white border border-amber-500'
-              }`}
-            >
-              Confirmar
-            </AlertDialogAction>
+          <AlertDialogFooter className="mt-6 border-t border-white/5 pt-6 w-full sm:block">
+            <div className="flex flex-col-reverse sm:flex-row justify-center items-center gap-4 w-full">
+              <AlertDialogCancel className="m-0 sm:m-0 w-full sm:w-[140px] rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 transition-all">
+                Voltar
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  if (dialogConfig.type === 'plan') executePlanChange();
+                  if (dialogConfig.type === 'cancel') executeCancelation();
+                  if (dialogConfig.type === 'photo') {
+                    setFormData(prev => ({ ...prev, avatarUrl: "" }));
+                    setDialogConfig({ isOpen: false, type: null });
+                  }
+                }}
+                className={`m-0 sm:m-0 w-full sm:w-[140px] rounded-xl font-bold h-12 shadow-md transition-all ${
+                  dialogConfig.type === 'cancel' || dialogConfig.type === 'photo' 
+                    ? 'bg-red-500 hover:bg-red-600 text-white border border-red-500' 
+                    : 'bg-amber-500 hover:bg-amber-600 text-white border border-amber-500'
+                }`}
+              >
+                Confirmar
+              </AlertDialogAction>
+            </div>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
