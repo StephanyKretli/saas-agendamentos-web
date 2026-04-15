@@ -398,138 +398,236 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="pagamentos" className="outline-none">
-            <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
-              {!isSalonOwner && adminCentralizedPayments && (
-                <Card className="rounded-3xl border border-border/50 bg-muted/20 shadow-sm p-10 flex flex-col items-center justify-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-5 shadow-inner"><ShieldCheck className="h-8 w-8" /></div>
-                  <h3 className="text-xl font-black text-foreground">Gestão Centralizada</h3>
-                  <p className="text-sm text-muted-foreground mt-2 max-w-md font-medium leading-relaxed">As regras financeiras e a cobrança de PIX são geridas exclusivamente pela administração do salão.</p>
-                </Card>
-              )}
+  <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
+    
+    {/* ALERTA PARA NÃO-PROPRIETÁRIOS */}
+    {!isSalonOwner && adminCentralizedPayments && (
+      <Card className="rounded-3xl border border-border/50 bg-muted/20 shadow-sm p-10 flex flex-col items-center justify-center text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-5 shadow-inner">
+          <ShieldCheck className="h-8 w-8" />
+        </div>
+        <h3 className="text-xl font-black text-foreground">Gestão Centralizada</h3>
+        <p className="text-sm text-muted-foreground mt-2 max-w-md font-medium leading-relaxed">
+          As regras financeiras e a cobrança de PIX são geridas exclusivamente pela administração do salão.
+        </p>
+      </Card>
+    )}
 
-              {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
-                <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-amber-500/20 ring-1 ring-amber-500/10 hover:shadow-xl' : 'border-border/50'}`}>
-                  <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/10' : 'bg-muted/30 border-border/50'}`}>
-                    <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}><ShieldCheck className="h-6 w-6" /></div>
-                    <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Proteção Contra Faltas</h2>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX.</p>
-                      </div>
-                      {!isProPlan && <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm"><Lock className="h-3 w-3" /> PRO</span>}
-                    </div>
-                  </div>
+    {/* PROTEÇÃO CONTRA FALTAS (SINAL) */}
+    {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
+      <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-amber-500/20 ring-1 ring-amber-500/10 hover:shadow-xl' : 'border-border/50'}`}>
+        <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/10' : 'bg-muted/30 border-border/50'}`}>
+          <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Proteção Contra Faltas</h2>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX.</p>
+            </div>
+            {!isProPlan && (
+              <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                <Lock className="h-3 w-3" /> PRO
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <div className={`p-6 sm:p-8 space-y-6 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
+            <div className="max-w-md">
+              <label className="text-base font-bold text-foreground">Cobrar PIX Antecipado (Sinal)</label>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Exija um pagamento parcial no momento do agendamento online.</p>
+            </div>
+            <label className="relative inline-flex items-center shrink-0 cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="peer sr-only" 
+                checked={formData.requirePixDeposit} 
+                onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})} 
+              />
+              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:border-amber-500 peer-checked:after:translate-x-full"></div>
+            </label>
+          </div>
+
+          <AnimatePresence>
+            {formData.requirePixDeposit && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                <div className="space-y-8 p-6 mt-2 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-inner">
                   
-                  <div className={`p-6 sm:p-8 space-y-6 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
-                      <div className="max-w-md">
-                        <label className="text-base font-bold text-foreground">Cobrar PIX Antecipado (Sinal)</label>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Exija um pagamento parcial no momento do agendamento online.</p>
-                      </div>
-                      <label className="relative inline-flex items-center shrink-0 cursor-pointer">
-                        <input type="checkbox" className="peer sr-only" checked={formData.requirePixDeposit} onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})} />
-                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:border-amber-500 peer-checked:after:translate-x-full"></div>
-                      </label>
+                  {/* PERCENTUAL DO SINAL */}
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-bold text-foreground">Percentagem do Sinal</label>
+                      <span className="text-4xl font-black text-amber-600">{formData.pixDepositPercentage}%</span>
                     </div>
-
-                    <AnimatePresence>
-                      {formData.requirePixDeposit && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                          <div className="space-y-8 p-6 mt-2 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-inner">
-                            <div className="space-y-5">
-                              <div className="flex items-center justify-between">
-                                <label className="text-sm font-bold text-foreground">Percentagem do Sinal</label>
-                                <span className="text-4xl font-black text-amber-600">{formData.pixDepositPercentage}%</span>
-                              </div>
-                              <input type="range" min="5" max="100" step="5" value={formData.pixDepositPercentage} onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})} className="w-full h-3 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500" />
-                            </div>
-                            <hr className="border-amber-500/10" />
-                            <div className="space-y-4">
-                              <label className="text-sm font-bold text-foreground">Mercado Pago Access Token</label>
-                              {/* 🔴 UX 4: Toggle de visibilidade */}
-                              <div className="relative">
-                                <input type={showToken ? "text" : "password"} placeholder="APP_USR-..." value={formData.mercadoPagoAccessToken} onChange={(e) => setFormData({...formData, mercadoPagoAccessToken: e.target.value})} className={`w-full ${inputStyle} pr-12 font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500 focus:ring-amber-500/20`} />
-                                <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-3.5 text-muted-foreground hover:text-amber-600 transition-colors">
-                                  {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <input 
+                      type="range" 
+                      min="5" 
+                      max="100" 
+                      step="5" 
+                      value={formData.pixDepositPercentage} 
+                      onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})} 
+                      className="w-full h-3 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500" 
+                    />
                   </div>
-                </Card>
-              )}
 
-              {isSalonOwner && (
-                <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-primary/20 ring-1 ring-primary/10 hover:shadow-xl' : 'border-border/50'}`}>
-                  <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/10' : 'bg-muted/30 border-border/50'}`}>
-                    <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}><DollarSign className="h-6 w-6" /></div>
-                    <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Repasses e Comissões</h2>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Defina as regras financeiras da sua equipe.</p>
-                      </div>
-                      {!isProPlan && <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm"><Lock className="h-3 w-3" /> PRO</span>}
-                    </div>
-                  </div>
-                  
-                  <div className={`p-6 sm:p-8 space-y-8 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
-                      <div className="max-w-md">
-                        <label className="text-base font-bold text-foreground">Centralizar Pagamentos</label>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Se ativo, todo o valor dos agendamentos entra na conta do salão.</p>
-                      </div>
-                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                        <input type="checkbox" className="peer sr-only" checked={formData.centralizePayments} onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} />
-                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
-                      </label>
-                    </div>
+                  <hr className="border-amber-500/10" />
 
-                    <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-border/50">
-                      <div className="max-w-md">
-                        <label className="text-base font-bold text-foreground">Absorver Taxa do PIX</label>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Se desativado, a taxa é descontada antes de calcular a comissão.</p>
+                  {/* CAMPO DO TOKEN E PASSO A PASSO */}
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-bold text-foreground">Mercado Pago Access Token</label>
+                        <a 
+                          href="https://www.mercadopago.com.br/developers/pt/panel" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
+                        >
+                          Ir para Painel Developer <Copy className="h-3 w-3" />
+                        </a>
                       </div>
-                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                        <input type="checkbox" className="peer sr-only" checked={formData.absorbPixFee} onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} />
-                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
-                      </label>
+                      <div className="relative">
+                        <input 
+                          type={showToken ? "text" : "password"} 
+                          placeholder="APP_USR-..." 
+                          value={formData.mercadoPagoAccessToken} 
+                          onChange={(e) => setFormData({...formData, mercadoPagoAccessToken: e.target.value})} 
+                          className={`w-full ${inputStyle} pr-12 font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500 focus:ring-amber-500/20`} 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setShowToken(!showToken)} 
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-amber-600 transition-colors"
+                        >
+                          {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
-                      <div className="space-y-3">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Tipo de Comissão</label>
-                        <div className="flex gap-4 p-1 bg-muted/30 rounded-xl">
-                          <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "PERCENTAGE" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
-                            <input type="radio" name="commissionType" value="PERCENTAGE" checked={formData.commissionType === "PERCENTAGE"} onChange={() => setFormData({...formData, commissionType: "PERCENTAGE"})} className="hidden" />
-                            <Percent className="h-4 w-4" /> Porcentagem
-                          </label>
-                          <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "FIXED" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
-                            <input type="radio" name="commissionType" value="FIXED" checked={formData.commissionType === "FIXED"} onChange={() => setFormData({...formData, commissionType: "FIXED"})} className="hidden" />
-                            <DollarSign className="h-4 w-4" /> Fixo (R$)
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                          {formData.commissionType === "PERCENTAGE" ? "Taxa Base Padrão" : "Valor Base Padrão"}
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            {formData.commissionType === "PERCENTAGE" ? <Percent className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground text-sm font-bold">R$</span>}
-                          </div>
-                          <input type="number" min="0" step={formData.commissionType === "PERCENTAGE" ? "1" : "0.01"} placeholder="Ex: 50" value={formData.defaultCommissionRate} onChange={(e) => setFormData({...formData, defaultCommissionRate: e.target.value ? Number(e.target.value) : ""})} className={`w-full pl-12 h-[52px] text-lg font-semibold ${inputStyle}`} />
-                        </div>
-                      </div>
+                    {/* GUIA PASSO A PASSO */}
+                    <div className="bg-background/50 rounded-xl p-5 border border-amber-500/10 space-y-3">
+                      <p className="text-xs font-black uppercase tracking-widest text-amber-600 flex items-center gap-2">
+                        <AlertCircle className="h-3.5 w-3.5" /> Como obter seu Token:
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">1</span>
+                          Acesse o Mercado Pago Developers e crie uma aplicação (Checkout Transparente).
+                        </li>
+                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">2</span>
+                          No menu lateral, vá em Credenciais de Produção.
+                        </li>
+                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">3</span>
+                          Copie o campo "Access Token" (começa com APP_USR) e cole acima.
+                        </li>
+                      </ul>
                     </div>
                   </div>
-                </Card>
-              )}
-            </motion.div>
-          </TabsContent>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </Card>
+    )}
+
+    {/* REPASSES E COMISSÕES */}
+    {isSalonOwner && (
+      <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-primary/20 ring-1 ring-primary/10 hover:shadow-xl' : 'border-border/50'}`}>
+        <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/10' : 'bg-muted/30 border-border/50'}`}>
+          <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+            <DollarSign className="h-6 w-6" />
+          </div>
+          <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Repasses e Comissões</h2>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Defina as regras financeiras da sua equipe.</p>
+            </div>
+            {!isProPlan && (
+              <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                <Lock className="h-3 w-3" /> PRO
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <div className={`p-6 sm:p-8 space-y-8 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
+            <div className="max-w-md">
+              <label className="text-base font-bold text-foreground">Centralizar Pagamentos</label>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Se ativo, todo o valor dos agendamentos entra na conta do salão.</p>
+            </div>
+            <label className="relative inline-flex cursor-pointer items-center shrink-0">
+              <input 
+                type="checkbox" 
+                className="peer sr-only" 
+                checked={formData.centralizePayments} 
+                onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} 
+              />
+              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
+            </label>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-border/50">
+            <div className="max-w-md">
+              <label className="text-base font-bold text-foreground">Absorver Taxa do PIX</label>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Se desativado, a taxa é descontada antes de calcular a comissão.</p>
+            </div>
+            <label className="relative inline-flex cursor-pointer items-center shrink-0">
+              <input 
+                type="checkbox" 
+                className="peer sr-only" 
+                checked={formData.absorbPixFee} 
+                onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} 
+              />
+              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Tipo de Comissão</label>
+              <div className="flex gap-4 p-1 bg-muted/30 rounded-xl">
+                <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "PERCENTAGE" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
+                  <input type="radio" name="commissionType" value="PERCENTAGE" checked={formData.commissionType === "PERCENTAGE"} onChange={() => setFormData({...formData, commissionType: "PERCENTAGE"})} className="hidden" />
+                  <Percent className="h-4 w-4" /> Porcentagem
+                </label>
+                <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "FIXED" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
+                  <input type="radio" name="commissionType" value="FIXED" checked={formData.commissionType === "FIXED"} onChange={() => setFormData({...formData, commissionType: "FIXED"})} className="hidden" />
+                  <DollarSign className="h-4 w-4" /> Fixo (R$)
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                {formData.commissionType === "PERCENTAGE" ? "Taxa Base Padrão" : "Valor Base Padrão"}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  {formData.commissionType === "PERCENTAGE" ? <Percent className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground text-sm font-bold">R$</span>}
+                </div>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step={formData.commissionType === "PERCENTAGE" ? "1" : "0.01"} 
+                  placeholder="Ex: 50" 
+                  value={formData.defaultCommissionRate} 
+                  onChange={(e) => setFormData({...formData, defaultCommissionRate: e.target.value ? Number(e.target.value) : ""})} 
+                  className={`w-full pl-12 h-[52px] text-lg font-semibold ${inputStyle}`} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    )}
+  </motion.div>
+</TabsContent>
 
           {/* 🔴 UX 10: Form de Segurança isolado */}
         <TabsContent value="seguranca" className="outline-none">
