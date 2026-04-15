@@ -700,7 +700,7 @@ export default function SettingsPage() {
           {/* Substituímos o AlertDialogFooter por uma div normal */}
           <div className="mt-6 border-t border-white/5 pt-6 w-full flex flex-col-reverse sm:flex-row items-center justify-center gap-4">
             <AlertDialogCancel className="!m-0 w-full sm:w-[140px] rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 transition-all">
-              Voltar Teste
+              Voltar
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
