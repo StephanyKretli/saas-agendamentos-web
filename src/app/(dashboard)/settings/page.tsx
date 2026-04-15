@@ -119,7 +119,9 @@ export default function SettingsPage() {
   }, [profile]);
 
   // 🔴 Verifica se há alterações
-  const isDirty = JSON.stringify(formData) !== originalData;
+  const isDirty = activeTab === "seguranca" 
+  ? (!!passwordData.newPassword && !!passwordData.currentPassword) 
+  : JSON.stringify(formData) !== originalData;
 
   // 🔴 UX 8: Máscara dinâmica de CPF/CNPJ
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,8 +168,14 @@ export default function SettingsPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  e.preventDefault();
     if (!isDirty) return;
+
+    // 🔴 Se estiver na aba segurança, dispara a troca de senha
+    if (activeTab === "seguranca") {
+      handlePasswordSubmit(e);
+      return;
+  }
 
     const settingsPayload = {
       name: formData.name, username: formData.username, phone: formData.phone,
@@ -523,6 +531,31 @@ export default function SettingsPage() {
             </motion.div>
           </TabsContent>
 
+          {/* 🔴 UX 10: Form de Segurança isolado */}
+        <TabsContent value="seguranca" className="outline-none">
+          <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
+            <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
+              <div className="flex items-start gap-4 mb-6 pb-6 border-b border-border/50">
+                <div className="bg-muted p-3 rounded-2xl text-foreground"><Lock className="h-6 w-6" /></div>
+                <div>
+                  <h2 className="text-xl font-black text-foreground">Segurança da Conta</h2>
+                  <p className="text-sm text-muted-foreground mt-1 font-medium">Atualize a sua senha de acesso ao painel.</p>
+                </div>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha Atual</label>
+                  <input type="password" required value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} className={inputStyle} placeholder="••••••••" />
+                </div>
+                <div className="space-y-2.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nova Senha</label>
+                  <input type="password" required minLength={6} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className={inputStyle} placeholder="Mínimo 6 caracteres" />
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
           {/* 🔴 UX 1: Renderização condicional da barra de Salvar */}
           {showSaveBar && (
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border/50 sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:pt-10 flex justify-end z-40">
@@ -535,38 +568,6 @@ export default function SettingsPage() {
             </div>
           )}
         </form>
-
-        {/* 🔴 UX 10: Form de Segurança isolado */}
-        <TabsContent value="seguranca" className="outline-none">
-          <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
-            <form onSubmit={handlePasswordSubmit}>
-              <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
-                <div className="flex items-start gap-4 mb-6 pb-6 border-b border-border/50">
-                  <div className="bg-muted p-3 rounded-2xl text-foreground"><Lock className="h-6 w-6" /></div>
-                  <div>
-                    <h2 className="text-xl font-black text-foreground">Segurança da Conta</h2>
-                    <p className="text-sm text-muted-foreground mt-1 font-medium">Atualize a sua senha de acesso ao painel.</p>
-                  </div>
-                </div>
-                <div className="grid gap-6 sm:grid-cols-2 mb-6">
-                  <div className="space-y-2.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha Atual</label>
-                    <input type="password" required value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} className={inputStyle} placeholder="••••••••" />
-                  </div>
-                  <div className="space-y-2.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nova Senha</label>
-                    <input type="password" required minLength={6} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className={inputStyle} placeholder="Mínimo 6 caracteres" />
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isPasswordLoading || !passwordData.newPassword} className="h-11 rounded-xl px-8 font-bold">
-                    {isPasswordLoading ? "A atualizar..." : "Atualizar Senha"}
-                  </Button>
-                </div>
-              </Card>
-            </form>
-          </motion.div>
-        </TabsContent>
 
         <TabsContent value="whatsapp" className="outline-none">
            <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
