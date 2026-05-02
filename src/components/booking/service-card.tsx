@@ -1,8 +1,30 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { formatDuration, formatPrice } from "@/lib/utils";
+import { cn, formatDuration, formatPrice } from "@/lib/utils";
 import type { PublicService } from "@/types/booking";
-import * as Icons from "lucide-react"; // Importamos todos os ícones para poder escolher dinamicamente
+
+// 🌟 Importamos explicitamente para o Next.js NUNCA os apagar!
+// 🌟 Importamos 'Wind' em vez de 'Spray'
+import { 
+  Scissors, 
+  Eye, 
+  Wand2, 
+  Sparkles, 
+  Pencil, 
+  Crown, 
+  Wind, // Trocado aqui!
+  LayoutGrid 
+} from "lucide-react";
+
+// 🌟 Dicionário de Ícones
+const iconMap: Record<string, React.ElementType> = {
+  scissors: Scissors,
+  eye: Eye,
+  wand2: Wand2,
+  sparkles: Sparkles,
+  pencil: Pencil,
+  crown: Crown,
+  spray: Wind, // Quando o banco pedir "spray", desenhamos o "Wind"
+};
 
 type Props = {
   service: PublicService;
@@ -10,28 +32,15 @@ type Props = {
   onSelect: () => void;
 };
 
-// 🌟 Componente que renderiza magicamente o ícone salvo no seu banco de dados
-// 🌟 Conversor robusto: transforma "meu-icone-legal" ou "meu_icone_legal" em "MeuIconeLegal"
-function toPascalCase(string: string) {
-  if (!string) return "";
-  return string
-    .match(/[a-z0-9]+/gi) // Extrai apenas as palavras, ignorando hifens e espaços
-    ?.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join("") || "";
-}
-
 function DynamicIcon({ iconName }: { iconName?: string | null }) {
-  if (!iconName) return <Icons.LayoutGrid className="h-5 w-5" />;
+  // Se vier nulo ou vazio do backend
+  if (!iconName) return <LayoutGrid className="h-5 w-5" />;
 
-  const formattedName = toPascalCase(iconName);
-  const IconComponent = (Icons as any)[formattedName];
+  // Procura no nosso dicionário (tudo em minúsculo para garantir)
+  const IconComponent = iconMap[iconName.toLowerCase()];
 
-  // Se a biblioteca não encontrar o ícone formatado, usamos o padrão
-  if (!IconComponent) {
-    // 🕵️‍♀️ O Detetive: Isto vai imprimir no Console do seu navegador os nomes que estão a falhar!
-    console.warn(`Ícone não encontrado no Lucide: Original [${iconName}] -> Formatado [${formattedName}]`);
-    return <Icons.LayoutGrid className="h-5 w-5" />;
-  }
+  // Se o ícone não estiver no dicionário, cai para o padrão
+  if (!IconComponent) return <LayoutGrid className="h-5 w-5" />;
 
   return <IconComponent className="h-5 w-5" />;
 }
@@ -50,12 +59,11 @@ export function ServiceCard({ service, selected, onSelect }: Props) {
         <CardContent className="p-5">
           <div className="flex items-start gap-4">
             
-            {/* 🌟 Caixinha do Ícone - Puxando direto do seu banco! */}
+            {/* Caixinha do Ícone */}
             <div className={cn(
               "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
               selected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
             )}>
-              {/* Nota: Verifique se a propriedade no seu banco se chama 'icon' ou 'iconName' */}
               <DynamicIcon iconName={service.icon as string | undefined} />
             </div>
 
