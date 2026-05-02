@@ -4,7 +4,7 @@ export interface PublicService {
   duration: number;
   priceCents: number;
   description?: string | null;
-  icon?: string;
+  icon?: string | null;
   userId?: string;
   imageUrl?: string | null;
   professionals?: {
