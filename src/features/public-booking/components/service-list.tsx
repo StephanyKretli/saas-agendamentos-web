@@ -8,11 +8,14 @@ import {
   Crown, 
   Heart, 
   Smile,
+  Eye,      // 🌟 Adicionado
+  Pencil,   // 🌟 Adicionado
+  Wind,     // 🌟 Adicionado (para o Ozônio/Spray)
   LayoutGrid
 } from "lucide-react";
 import type { PublicService } from "../types/public-booking.types";
 
-// Mapa de ícones correspondente ao que o profissional escolhe no painel
+// 🌟 Mapa de ícones atualizado com TUDO o que está no seu banco de dados
 const ICON_MAP: Record<string, React.ElementType> = {
   scissors: Scissors,
   brush: Brush,
@@ -23,6 +26,9 @@ const ICON_MAP: Record<string, React.ElementType> = {
   crown: Crown,
   heart: Heart,
   smile: Smile,
+  eye: Eye,       // 🌟 Agora o "Fox Eyes" vai aparecer!
+  pencil: Pencil, // 🌟 Agora o "Design" vai aparecer!
+  spray: Wind,    // 🌟 Mapeando "spray" do banco para o ícone "Wind"
 };
 
 type ServiceListProps = {
@@ -61,9 +67,13 @@ export function ServiceList({
       {services.map((service) => {
         const isSelected = selectedServiceId === service.id;
         
-        // Pega no ícone correspondente ou usa um genérico (LayoutGrid) se não existir
-        const IconComponent = (service.icon && ICON_MAP[service.icon]) 
-          ? ICON_MAP[service.icon] 
+        // 🕵️‍♀️ Log para você ver no console se o nome vindo do banco bate com o mapa
+        console.log(`Serviço: ${service.name} | Ícone no Banco: ${service.icon}`);
+
+        // Busca no mapa usando o nome em minúsculo (conforme está no seu DBeaver)
+        const iconKey = service.icon?.toLowerCase();
+        const IconComponent = (iconKey && ICON_MAP[iconKey]) 
+          ? ICON_MAP[iconKey] 
           : LayoutGrid;
 
         return (
@@ -79,7 +89,6 @@ export function ServiceList({
           >
             <div className="flex items-start gap-4">
               
-              {/* LÓGICA DE EXIBIÇÃO: Imagem ou Ícone */}
               {service.imageUrl ? (
                 <img
                   src={service.imageUrl}
