@@ -11,15 +11,27 @@ type Props = {
 };
 
 // 🌟 Componente que renderiza magicamente o ícone salvo no seu banco de dados
+// 🌟 Conversor robusto: transforma "meu-icone-legal" ou "meu_icone_legal" em "MeuIconeLegal"
+function toPascalCase(string: string) {
+  if (!string) return "";
+  return string
+    .match(/[a-z0-9]+/gi) // Extrai apenas as palavras, ignorando hifens e espaços
+    ?.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("") || "";
+}
+
 function DynamicIcon({ iconName }: { iconName?: string | null }) {
-  // Se o serviço não tiver ícone no banco, exibe o de quadradinhos (LayoutGrid)
   if (!iconName) return <Icons.LayoutGrid className="h-5 w-5" />;
 
-  // Busca o ícone exato pelo nome salvo no banco (ex: "Eye", "Scissors", "Crown")
-  const IconComponent = (Icons as any)[iconName];
+  const formattedName = toPascalCase(iconName);
+  const IconComponent = (Icons as any)[formattedName];
 
-  // Se por acaso o nome salvo for inválido, cai no padrão de quadradinhos
-  if (!IconComponent) return <Icons.LayoutGrid className="h-5 w-5" />;
+  // Se a biblioteca não encontrar o ícone formatado, usamos o padrão
+  if (!IconComponent) {
+    // 🕵️‍♀️ O Detetive: Isto vai imprimir no Console do seu navegador os nomes que estão a falhar!
+    console.warn(`Ícone não encontrado no Lucide: Original [${iconName}] -> Formatado [${formattedName}]`);
+    return <Icons.LayoutGrid className="h-5 w-5" />;
+  }
 
   return <IconComponent className="h-5 w-5" />;
 }
