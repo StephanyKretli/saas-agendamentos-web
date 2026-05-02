@@ -46,6 +46,7 @@ function DynamicIcon({ iconName }: { iconName?: string | null }) {
 }
 
 export function ServiceCard({ service, selected, onSelect }: Props) {
+  console.log("Dados do Serviço dentro do Card:", service.name, "Ícone recebido:", service.icon);
   return (
     <button className="w-full text-left" onClick={onSelect} type="button">
       <Card
