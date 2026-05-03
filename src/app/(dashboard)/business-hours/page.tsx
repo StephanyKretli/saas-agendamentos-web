@@ -196,7 +196,9 @@ export default function BusinessHoursPage() {
               <DropdownMenuItem
                 onClick={() => setSelectedProfessionalId("")}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-colors ${
-                  selectedProfessionalId === "" ? "bg-primary/15 text-primary font-bold focus:bg-primary/20" : "hover:bg-accent hover:text-accent-foreground"
+                  selectedProfessionalId === "" 
+                    ? "bg-primary/15 text-primary font-bold data-[highlighted]:bg-primary/20" 
+                    : "text-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                 }`}
               >
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center shadow-sm ${selectedProfessionalId === "" ? 'bg-primary/20' : 'bg-muted-foreground/10'}`}>
@@ -210,7 +212,9 @@ export default function BusinessHoursPage() {
                   key={member.id}
                   onClick={() => setSelectedProfessionalId(member.id)}
                   className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 last:mb-0 outline-none transition-colors ${
-                    selectedProfessionalId === String(member.id) ? "bg-primary/15 text-primary font-bold focus:bg-primary/20" : "hover:bg-accent hover:text-accent-foreground"
+                    selectedProfessionalId === String(member.id) 
+                      ? "bg-primary/15 text-primary font-bold data-[highlighted]:bg-primary/20" 
+                      : "text-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                   }`}
                 >
                   {member.avatarUrl ? (
