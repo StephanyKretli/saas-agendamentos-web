@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createBlockedDate } from "../api/create-blocked-date"
 import { CreateBlockedDateInput } from "../types/blocked-date"
 import { toast } from "react-hot-toast"
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useCreateBlockedDate() {
   const queryClient = useQueryClient()
@@ -15,8 +17,9 @@ export function useCreateBlockedDate() {
       queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] })
       toast.success("Dia bloqueado com sucesso!")
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao bloquear dia")
-    }
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao bloquear dia");
+          toast.error(errorMessage);
+        },
   })
 }

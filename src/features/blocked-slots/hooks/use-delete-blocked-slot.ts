@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteBlockedSlot } from "../api/delete-blocked-slot";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useDeleteBlockedSlot() {
   const queryClient = useQueryClient();
@@ -23,9 +25,9 @@ export function useDeleteBlockedSlot() {
 
       toast.success("Bloqueio removido com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Exibe erro caso o servidor não consiga processar a exclusão
-      toast.error(error.message || "Erro ao remover bloqueio");
-    }
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao remover bloqueio");
+          toast.error(errorMessage);
+        },
   });
 }

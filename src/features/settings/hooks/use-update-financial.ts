@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 // Ajuste o import da sua instância do Axios/Fetch
 import { api } from "@/lib/api"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 interface UpdateFinancialData {
   absorbPixFee?: boolean;
@@ -23,8 +25,9 @@ export function useUpdateFinancial() {
       // Atualiza os dados do perfil na tela instantaneamente
       queryClient.invalidateQueries({ queryKey: ["settings"] }); 
     },
-    onError: () => {
-      toast.error("Erro ao salvar as configurações. Tente novamente.");
+    onError: (error: unknown) => {
+      const errorMessage = extractErrorMessage(error, "Erro ao salvar as configurações. Tente novamente.");
+      toast.error(errorMessage);
     },
   });
 }

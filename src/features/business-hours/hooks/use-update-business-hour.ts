@@ -3,6 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateBusinessHour } from "../services/business-hours.api";
 import { toast } from "react-hot-toast";
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useUpdateBusinessHour(professionalId?: string) {
   const queryClient = useQueryClient();
@@ -16,8 +18,11 @@ export function useUpdateBusinessHour(professionalId?: string) {
       
       toast.success("Horário atualizado com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao atualizar horário");
+    onError: (error: unknown) => {
+    
+      const errorMessage = extractErrorMessage(error, "Erro ao atualizar horário");
+      
+      toast.error(errorMessage);
     }
   });
 }

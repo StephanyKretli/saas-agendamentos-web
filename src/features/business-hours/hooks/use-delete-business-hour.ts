@@ -3,6 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteBusinessHour } from "../services/business-hours.api";
 import { toast } from "react-hot-toast";
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useDeleteBusinessHour(professionalId?: string) {
   const queryClient = useQueryClient();
@@ -15,8 +17,11 @@ export function useDeleteBusinessHour(professionalId?: string) {
       
       toast.success("Horário removido com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao remover horário");
+    onError: (error: unknown) => {
+    
+      const errorMessage = extractErrorMessage(error, "Erro ao remover horário");
+      
+      toast.error(errorMessage);
     }
   });
 }

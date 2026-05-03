@@ -3,7 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPublicAppointment } from "../services/public-booking.api";
 import type { CreatePublicAppointmentPayload } from "../types/public-booking.types";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 type MutationParams = {
   username: string;
@@ -26,9 +28,9 @@ export function useCreatePublicAppointment() {
       toast.success("Agendamento realizado com sucesso!"); //
     },
     
-    onError: (error: any) => {
-      // Exibe a mensagem de erro (ex: "Este horário já foi preenchido")
-      toast.error(error.message || "Não foi possível concluir o agendamento."); //
-    },
+    onError: (error: unknown) => {
+              const errorMessage = extractErrorMessage(error, "Erro ao criar serviço");
+              toast.error(errorMessage);
+            },
   });
 }

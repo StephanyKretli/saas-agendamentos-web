@@ -3,6 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteClient } from "../services/clients.api"; // Verifique se o caminho da sua API está correto
 import { toast } from "react-hot-toast";
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useDeleteClient() {
   const queryClient = useQueryClient();
@@ -15,9 +17,9 @@ export function useDeleteClient() {
       
       toast.success("Cliente removido com sucesso!");
     },
-    onError: (error: any) => {
-      // Exibe a mensagem de erro vinda do servidor (ex: "Cliente possui agendamentos ativos")
-      toast.error(error.message || "Erro ao remover cliente");
-    },
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao remover cliente");
+          toast.error(errorMessage);
+        },
   });
 }

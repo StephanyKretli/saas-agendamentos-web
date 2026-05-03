@@ -19,6 +19,8 @@ import {
   Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X, Infinity, Sparkles, AlertCircle
 } from "lucide-react";
 import { api } from "@/lib/api"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -103,9 +105,10 @@ export default function TeamPage() {
         setConfirmPassword(""); // Limpa o campo de confirmação
         toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.message || "Erro ao salvar profissional");
-      }
+      onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao salvar profissional.");
+          toast.error(errorMessage);
+        },
     });
   };
 
@@ -137,10 +140,7 @@ export default function TeamPage() {
 
   const handleRemove = (memberId: string) => {
     if (confirm("Tem certeza que deseja remover este membro da equipe?")) {
-      removeMutation.mutate(memberId, {
-        onSuccess: () => toast.success("Profissional removido!"),
-        onError: (error: any) => toast.error(error.response?.data?.message || "Erro ao remover."),
-      });
+      removeMutation.mutate(memberId);
     }
   };
 

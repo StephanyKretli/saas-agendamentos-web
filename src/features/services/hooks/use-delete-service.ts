@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteService } from "../api/delete-service"
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useDeleteService() {
   const queryClient = useQueryClient()
@@ -15,9 +17,9 @@ export function useDeleteService() {
       
       toast.success("Serviço deletado com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Exibe a mensagem de erro vinda da sua API (ex: "Nome já existe")
-      toast.error(error.message || "Erro ao deletar serviço");
-    }
+    onError: (error: unknown) => {
+              const errorMessage = extractErrorMessage(error, "Erro ao deletar serviço");
+              toast.error(errorMessage);
+            },
   });
 }

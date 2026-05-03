@@ -4,7 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import { queryKeys } from "@/lib/query-keys";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useCompleteAppointment(date: string) {
   const queryClient = useQueryClient();
@@ -22,8 +24,9 @@ export function useCompleteAppointment(date: string) {
 
       toast.success("Agendamento realizado com sucesso!"); //
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao efetuar agendamento"); //
-    },
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao efetuar agendamento");
+          toast.error(errorMessage);
+        },
   });
 }

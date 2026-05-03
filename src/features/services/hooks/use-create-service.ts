@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createService } from "../services/services.api"; 
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useCreateService() {
   const queryClient = useQueryClient();
@@ -15,9 +17,9 @@ export function useCreateService() {
       
       toast.success("Serviço criado com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Exibe a mensagem de erro vinda da sua API (ex: "Nome já existe")
-      toast.error(error.message || "Erro ao criar serviço");
-    }
+    onError: (error: unknown) => {
+              const errorMessage = extractErrorMessage(error, "Erro ao criar serviço");
+              toast.error(errorMessage);
+            },
   });
 }

@@ -4,7 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import { queryKeys } from "@/lib/query-keys";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 type RescheduleInput = {
   appointmentId: string;
@@ -41,9 +43,9 @@ export function useRescheduleAppointment(currentDate: string) {
 
       toast.success("Agendamento reagendado com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Usa a mensagem tratada pelo seu interceptor do axios
-      toast.error(error.message || "Erro ao reagendar agendamento"); //
-    },
+    onError: (error: unknown) => {
+              const errorMessage = extractErrorMessage(error, "Erro ao reagendar agendamento");
+              toast.error(errorMessage);
+            },
   });
 }

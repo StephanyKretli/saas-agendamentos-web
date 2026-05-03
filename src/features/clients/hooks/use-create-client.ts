@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "../services/clients.api";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
@@ -15,9 +17,9 @@ export function useCreateClient() {
       
       toast.success("Cliente cadastrado com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Exibe mensagens de erro do backend (ex: "E-mail já cadastrado")
-      toast.error(error.message || "Erro ao cadastrar cliente");
-    }
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao cadastrar cliente");
+          toast.error(errorMessage);
+        },
   });
 }

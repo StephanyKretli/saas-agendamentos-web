@@ -3,7 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createBlockedSlot } from "../api/create-blocked-slot";
 import type { CreateBlockedSlotInput } from "../types/blocked-slot";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast"; 
+import { extractErrorMessage } from "@/lib/error-utils";
+
 
 export function useCreateBlockedSlot() {
   const queryClient = useQueryClient();
@@ -24,9 +26,9 @@ export function useCreateBlockedSlot() {
 
       toast.success("Horário bloqueado com sucesso!"); //
     },
-    onError: (error: any) => {
-      // Exibe erros de validação (ex: "Este horário já está ocupado por um agendamento")
-      toast.error(error.message || "Erro ao bloquear horário");
-    }
+    onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error, "Erro ao bloquear horário");
+          toast.error(errorMessage);
+        },
   });
 }
