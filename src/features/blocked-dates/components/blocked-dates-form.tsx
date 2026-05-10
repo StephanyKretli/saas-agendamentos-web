@@ -3,12 +3,18 @@
 import { FormEvent, useState } from "react"
 import { useCreateBlockedDate } from "../hooks/use-create-blocked-date"
 
-export function BlockedDatesForm() {
+// 🌟 Tipagem adicionada
+type Props = {
+  professionalId: string;
+};
+
+export function BlockedDatesForm({ professionalId }: Props) {
   const [date, setDate] = useState("")
   const [reason, setReason] = useState("")
   const [error, setError] = useState<string | null>(null)
 
-  const { mutateAsync, isPending } = useCreateBlockedDate()
+  // 🌟 Repassando o ID para o hook
+  const { mutateAsync, isPending } = useCreateBlockedDate(professionalId)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

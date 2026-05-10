@@ -6,20 +6,21 @@ import { CreateBlockedDateInput } from "../types/blocked-date"
 import { toast } from "react-hot-toast"
 import { extractErrorMessage } from "@/lib/error-utils";
 
-
-export function useCreateBlockedDate() {
+export function useCreateBlockedDate(professionalId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateBlockedDateInput) => createBlockedDate(data),
+    // 🌟 Repassamos o professionalId para a API
+    mutationFn: (data: CreateBlockedDateInput) => createBlockedDate(data, professionalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blocked-dates"] })
+      // 🌟 Atualizamos apenas a lista deste profissional específico
+      queryClient.invalidateQueries({ queryKey: ["blocked-dates", professionalId] })
       queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] })
       toast.success("Dia bloqueado com sucesso!")
     },
     onError: (error: unknown) => {
-          const errorMessage = extractErrorMessage(error, "Erro ao bloquear dia");
-          toast.error(errorMessage);
-        },
+      const errorMessage = extractErrorMessage(error, "Erro ao bloquear dia");
+      toast.error(errorMessage);
+    },
   })
 }

@@ -7,8 +7,14 @@ function combineDateTime(date: string, time: string) {
   return `${date}T${time}:00`;
 }
 
-export function BlockedSlotForm() {
-  const createMutation = useCreateBlockedSlot();
+// 🌟 Tipagem adicionada
+type Props = {
+  professionalId: string;
+};
+
+export function BlockedSlotForm({ professionalId }: Props) {
+  // 🌟 Repassando o ID para o hook
+  const createMutation = useCreateBlockedSlot(professionalId);
 
   const [date, setDate] = React.useState("");
   const [startTime, setStartTime] = React.useState("");

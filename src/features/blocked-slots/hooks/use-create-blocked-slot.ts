@@ -6,29 +6,28 @@ import type { CreateBlockedSlotInput } from "../types/blocked-slot";
 import { toast } from "react-hot-toast"; 
 import { extractErrorMessage } from "@/lib/error-utils";
 
-
-export function useCreateBlockedSlot() {
+// 🌟 1. Aceita o professionalId
+export function useCreateBlockedSlot(professionalId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateBlockedSlotInput) => createBlockedSlot(data),
+    // 🌟 2. Repassa o payload e o ID do profissional para a API
+    mutationFn: (data: CreateBlockedSlotInput) => createBlockedSlot(data, professionalId),
     onSuccess: async () => {
-      // Atualiza a lista de bloqueios no painel administrativo
+      // 🌟 3. Atualiza apenas a lista do profissional que sofreu a alteração
       await queryClient.invalidateQueries({
-        queryKey: ["blocked-slots"],
+        queryKey: ["blocked-slots", professionalId],
       });
 
-      // MUITO IMPORTANTE: Invalida a disponibilidade pública para remover 
-      // esses horários da visão do cliente final imediatamente
       await queryClient.invalidateQueries({
         queryKey: ["public-booking-availability"],
       });
 
-      toast.success("Horário bloqueado com sucesso!"); //
+      toast.success("Horário bloqueado com sucesso!"); 
     },
     onError: (error: unknown) => {
-          const errorMessage = extractErrorMessage(error, "Erro ao bloquear horário");
-          toast.error(errorMessage);
-        },
+      const errorMessage = extractErrorMessage(error, "Erro ao bloquear horário");
+      toast.error(errorMessage);
+    },
   });
 }

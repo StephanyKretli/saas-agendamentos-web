@@ -11,8 +11,14 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
-export function BlockedSlotList() {
-  const { data = [] } = useBlockedSlots();
+// 🌟 Tipagem adicionada
+type Props = {
+  professionalId: string;
+};
+
+export function BlockedSlotList({ professionalId }: Props) {
+  // 🌟 Repassando o ID para o hook de leitura
+  const { data = [] } = useBlockedSlots(professionalId);
   const deleteMutation = useDeleteBlockedSlot();
 
   const items = useMemo(() => {

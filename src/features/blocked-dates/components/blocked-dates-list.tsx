@@ -13,8 +13,14 @@ function formatBlockedDate(dateString: string) {
   }).format(new Date(dateString));
 }
 
-export function BlockedDatesList() {
-  const { data = [] } = useBlockedDates();
+// 🌟 Tipagem adicionada
+type Props = {
+  professionalId: string;
+};
+
+export function BlockedDatesList({ professionalId }: Props) {
+  // 🌟 Repassando o ID para o hook de leitura
+  const { data = [] } = useBlockedDates(professionalId);
   const { mutate, isPending } = useDeleteBlockedDate();
 
   const sortedData = useMemo(() => {
