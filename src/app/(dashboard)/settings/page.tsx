@@ -136,7 +136,8 @@ export default function SettingsPage() {
 
   const handleCopyLink = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const link = `${window.location.origin}/book/${formData.username}`;
+    // 🌟 Fixamos o domínio oficial da vitrine para evitar erros com o localhost ou subdomínios (app.)
+    const link = `https://meusyncro.com.br/book/${formData.username}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado com sucesso!");
   };
@@ -381,18 +382,24 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground mt-1 font-medium">Personalize o link que os seus clientes usam para agendar.</p>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Link de Agendamento Público</label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <span className="absolute left-4 top-3.5 text-sm text-muted-foreground opacity-60 font-medium">meusyncro.com.br/book/</span>
-                      <input value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})} className={`w-full pl-[110px] ${inputStyle} font-semibold text-primary`} />
-                    </div>
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-                      <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-xl gap-2 h-[46px] w-full sm:w-auto px-8 font-bold shadow-sm border-border hover:bg-muted"><Copy className="h-4 w-4" /> Copiar</Button>
-                    </motion.div>
-                  </div>
-                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-3.5 text-sm text-muted-foreground opacity-60 font-medium">
+                  meusyncro.com.br/book/
+                </span>
+                {/* 🌟 Ajustado de pl-[110px] para pl-[200px] para o texto não sobrepor */}
+                <input 
+                  value={formData.username} 
+                  onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})} 
+                  className={`w-full pl-[200px] ${inputStyle} font-semibold text-primary`} 
+                />
+              </div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                <Button type="button" variant="outline" onClick={handleCopyLink} className="rounded-xl gap-2 h-[46px] w-full sm:w-auto px-8 font-bold shadow-sm border-border hover:bg-muted">
+                  <Copy className="h-4 w-4" /> Copiar
+                </Button>
+              </motion.div>
+            </div>
               </Card>
             </motion.div>
           </TabsContent>
