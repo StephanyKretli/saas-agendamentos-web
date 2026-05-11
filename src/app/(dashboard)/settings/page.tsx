@@ -385,7 +385,7 @@ export default function SettingsPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Link de Agendamento Público</label>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
-                      <span className="absolute left-4 top-3.5 text-sm text-muted-foreground opacity-60 font-medium">app.com/book/</span>
+                      <span className="absolute left-4 top-3.5 text-sm text-muted-foreground opacity-60 font-medium">meusyncro.com.br/book/</span>
                       <input value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})} className={`w-full pl-[110px] ${inputStyle} font-semibold text-primary`} />
                     </div>
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
