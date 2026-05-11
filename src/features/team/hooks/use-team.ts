@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api"; 
-import { toast } from "sonner"; // Sonner é excelente, ótima escolha!
+import { toast } from "sonner"; 
 import { extractErrorMessage } from "@/lib/error-utils";
 
 export function useTeam() {
@@ -40,6 +40,24 @@ export function useCreateMember() {
   });
 }
 
+export function useUpdateMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await api.patch(`/team/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+    },
+    onError: (error: unknown) => {
+      const errorMessage = extractErrorMessage(error, "Erro ao atualizar profissional.");
+      toast.error(errorMessage);
+    },
+  });
+}
+
 export function useRemoveMember() {
   const queryClient = useQueryClient();
 
@@ -58,4 +76,6 @@ export function useRemoveMember() {
       toast.error(errorMessage);
     },
   });
+
+  
 }

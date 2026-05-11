@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "react-hot-toast";
-import { useTeam, useCreateMember, useRemoveMember } from "@/features/team/hooks/use-team";
+import { useTeam, useCreateMember, useRemoveMember, useUpdateMember } from "@/features/team/hooks/use-team";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X, Infinity, Sparkles, AlertCircle
@@ -37,6 +37,7 @@ export default function TeamPage() {
   const { data: profile, isLoading: isLoadingProfile } = useSettings(); 
   const createMutation = useCreateMember();
   const removeMutation = useRemoveMember();
+  const updateMutation = useUpdateMember();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
@@ -97,19 +98,28 @@ export default function TeamPage() {
       password: formData.password, 
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        setIsAdding(false);
-        setEditingMember(null);
-        setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" });
-        setConfirmPassword(""); // Limpa o campo de confirmação
-        toast.success(editingMember ? "Profissional atualizado!" : "Profissional adicionado!");
-      },
-      onError: (error: unknown) => {
-          const errorMessage = extractErrorMessage(error, "Erro ao salvar profissional.");
-          toast.error(errorMessage);
-        },
-    });
+    if (editingMember) {
+      // 🌟 SE ESTIVER EDITANDO, CHAMA O UPDATE
+      updateMutation.mutate({ id: editingMember.id, data: payload }, {
+        onSuccess: () => {
+          setIsAdding(false);
+          setEditingMember(null);
+          setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" });
+          setConfirmPassword("");
+          toast.success("Profissional atualizado com sucesso!");
+        }
+      });
+    } else {
+      // 🌟 SE FOR NOVO, CHAMA O CREATE
+      createMutation.mutate(payload, {
+        onSuccess: () => {
+          setIsAdding(false);
+          setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" });
+          setConfirmPassword("");
+          toast.success("Profissional adicionado!");
+        }
+      });
+    }
   };
 
   const handleEdit = (member: any) => {
@@ -133,9 +143,18 @@ export default function TeamPage() {
       toast.error("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
-    toast.success(`Senha de ${resettingMember.name} atualizada com sucesso!`);
-    setResettingMember(null);
-    setNewPassword("");
+
+    // 🌟 AGORA SIM ELE ENVIA PARA A API!
+    updateMutation.mutate({ 
+      id: resettingMember.id, 
+      data: { password: newPassword } 
+    }, {
+      onSuccess: () => {
+        toast.success(`Senha de ${resettingMember.name} atualizada com sucesso!`);
+        setResettingMember(null);
+        setNewPassword("");
+      }
+    });
   };
 
   const handleRemove = (memberId: string) => {
