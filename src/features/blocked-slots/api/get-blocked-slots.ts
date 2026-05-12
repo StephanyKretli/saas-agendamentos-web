@@ -5,12 +5,12 @@ import type { BlockedSlot } from "../types/blocked-slot";
 export async function getBlockedSlots(
   professionalId?: string
 ): Promise<BlockedSlot[]> {
-  // 🌟 1. Mesma coisa aqui, guardamos a resposta
-  const response = await api.get("/blocked-slots", {
+  const response: any = await api.get("/blocked-slots", {
     headers: getAuthHeaders(),
     params: { professionalId } 
   });
   
-  // 🌟 2. E entregamos só o array limpo!
-  return response.data;
+  // 🌟 Extrai a lista verdadeira, não importa quantas caixas "data" existam
+  const rawData = response?.data?.data || response?.data || response;
+  return Array.isArray(rawData) ? rawData : [];
 }

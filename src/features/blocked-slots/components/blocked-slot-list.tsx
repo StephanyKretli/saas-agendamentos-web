@@ -11,22 +11,19 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
-// 🌟 Tipagem adicionada
 type Props = {
   professionalId: string;
 };
 
 export function BlockedSlotList({ professionalId }: Props) {
-  // 🌟 Repassando o ID para o hook de leitura
   const { data = [] } = useBlockedSlots(professionalId);
   const deleteMutation = useDeleteBlockedSlot();
 
   const items = useMemo(() => {
-    const now = new Date().getTime();
-    
-    return [...data]
-      .filter((item) => new Date(item.end).getTime() >= now)
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    // 🌟 Apenas ordena, o filtro já foi feito no Hook!
+    return [...data].sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    );
   }, [data]);
 
   return (
