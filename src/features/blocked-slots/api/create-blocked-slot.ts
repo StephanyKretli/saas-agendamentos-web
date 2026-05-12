@@ -6,9 +6,10 @@ export async function createBlockedSlot(
   data: CreateBlockedSlotInput, 
   professionalId?: string,
 ): Promise<BlockedSlot> {
-  // O Axios recebe 3 argumentos no POST: URL, Payload (data), e Configurações
-  return api.post("/blocked-slots", data, {
+  // 🌟 CORREÇÃO: Colocamos o professionalId JUNTO com as datas no "corpo" do payload!
+  const payload = professionalId ? { ...data, professionalId } : data;
+
+  return api.post("/blocked-slots", payload, {
     headers: getAuthHeaders(),
-    params: { professionalId } // 🌟 Aqui está! Isso transforma a requisição em /blocked-slots?professionalId=123
   }) as Promise<BlockedSlot>;
 }

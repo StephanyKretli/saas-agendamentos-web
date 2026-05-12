@@ -52,24 +52,24 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number, 
 
 export default function BlockedDatesPage() {
   const [activeTab, setActiveTab] = useState<"dates" | "slots">("dates");
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("");
+  
+  // 🌟 INICIA COMO NULL PARA NÃO ESTOURAR NO RELOAD
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(null);
   
   const { data: team = [], isLoading: loadingTeam } = useTeam();
-
-  // 🌟 1. DESCOBRE QUEM ESTÁ LOGADO
   const { data: profile } = useSettings();
   const isSalonOwner = profile && !(profile as any).ownerId;
 
-  // 🌟 2. AUTO-SELECIONA O PERFIL CORRETO
+  // AUTO-SELECIONA O PERFIL CORRETO
   useEffect(() => {
     if (profile && !selectedProfessionalId) {
-      // Se for funcionário, tranca no ID dele. Se for dona, começa no ID dela.
       setSelectedProfessionalId(String((profile as any).id));
     }
   }, [profile, selectedProfessionalId]);
 
-  const { data: activeDates = [], isLoading: loadingDates } = useBlockedDates(selectedProfessionalId);
-  const { data: activeSlots = [], isLoading: loadingSlots } = useBlockedSlots(selectedProfessionalId);
+  // Passa string vazia enquanto carrega para não estoirar os hooks
+  const { data: activeDates = [] } = useBlockedDates(selectedProfessionalId || "");
+  const { data: activeSlots = [] } = useBlockedSlots(selectedProfessionalId || "");
 
   const selectedMember = team.find((m: any) => String(m.id) === selectedProfessionalId) || profile;
   
@@ -90,7 +90,6 @@ export default function BlockedDatesPage() {
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground">Profissional:</span>
           
-          {/* 🌟 MÁGICA DE PERMISSÃO: Se for Dona, mostra o Dropdown. Se não for, mostra o perfil fixo */}
           {isSalonOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -127,7 +126,6 @@ export default function BlockedDatesPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            // 🚫 VISÃO DO FUNCIONÁRIO: Vê apenas o seu próprio perfil como um selo fixo
             <div className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm">
               {profile?.avatarUrl ? (
                 <img src={(profile as any).avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
@@ -174,50 +172,57 @@ export default function BlockedDatesPage() {
         </button>
       </div>
 
-      {/* CONTEÚDO DINÂMICO */}
-      <AnimatePresence mode="wait">
-        {activeTab === "dates" ? (
-          <motion.div
-            key="dates-tab"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="grid gap-8 lg:grid-cols-[380px_1fr]"
-          >
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
-              <h3 className="text-lg font-bold mb-4">Bloquear Dia Inteiro</h3>
-              <BlockedDatesForm professionalId={selectedProfessionalId} />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                Dias Bloqueados
-                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{activeDates.length}</span>
-              </h3>
-              <BlockedDatesList professionalId={selectedProfessionalId} />
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="slots-tab"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="grid gap-8 lg:grid-cols-[380px_1fr]"
-          >
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
-              <h3 className="text-lg font-bold mb-4">Bloquear Horário</h3>
-              <BlockedSlotForm professionalId={selectedProfessionalId} />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                Horários Bloqueados
-                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{activeSlots.length}</span>
-              </h3>
-              <BlockedSlotList professionalId={selectedProfessionalId} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 🌟 PROTEGE O RENDER ENQUANTO O ID NÃO ESTIVER PRONTO */}
+      {!selectedProfessionalId ? (
+        <div className="flex h-40 items-center justify-center text-sm font-medium text-muted-foreground">
+          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          A carregar...
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {activeTab === "dates" ? (
+            <motion.div
+              key="dates-tab"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="grid gap-8 lg:grid-cols-[380px_1fr]"
+            >
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
+                <h3 className="text-lg font-bold mb-4">Bloquear Dia Inteiro</h3>
+                <BlockedDatesForm professionalId={selectedProfessionalId} />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  Dias Bloqueados
+                  <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{activeDates.length}</span>
+                </h3>
+                <BlockedDatesList professionalId={selectedProfessionalId} />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="slots-tab"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="grid gap-8 lg:grid-cols-[380px_1fr]"
+            >
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
+                <h3 className="text-lg font-bold mb-4">Bloquear Horário</h3>
+                <BlockedSlotForm professionalId={selectedProfessionalId} />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  Horários Bloqueados
+                  <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{activeSlots.length}</span>
+                </h3>
+                <BlockedSlotList professionalId={selectedProfessionalId} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
