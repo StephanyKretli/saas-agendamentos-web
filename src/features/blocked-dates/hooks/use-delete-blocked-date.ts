@@ -1,25 +1,13 @@
-"use client"
+"use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteBlockedDate } from "../api/delete-blocked-date"
-import { toast } from "react-hot-toast"
-import { extractErrorMessage } from "@/lib/error-utils";
+import { useQuery } from "@tanstack/react-query";
+import { getBlockedDates } from "../api/get-blocked-dates";
 
-export function useDeleteBlockedDate() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => deleteBlockedDate(id),
-    onSuccess: async () => {
-      // 🌟 APAGAMOS O 'professionalId' DAQUI TAMBÉM!
-      await queryClient.invalidateQueries({ queryKey: ["blocked-dates"] });
-      await queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] });
-      
-      toast.success("Bloqueio removido com sucesso!");
-    },
-    onError: (error: unknown) => {
-      const errorMessage = extractErrorMessage(error, "Erro ao remover bloqueio");
-      toast.error(errorMessage);
-    },
+export function useBlockedDates(professionalId: string) {
+  return useQuery({
+    // 🌟 O ID TAMBÉM VEM PARA AQUI!
+    queryKey: ["blocked-dates", professionalId],
+    queryFn: () => getBlockedDates(professionalId),
+    enabled: !!professionalId,
   });
 }
