@@ -6,16 +6,14 @@ import { toast } from "react-hot-toast";
 import { extractErrorMessage } from "@/lib/error-utils";
 
 // 🌟 1. Aceita o professionalId para podermos limpar o cache exato
-export function useDeleteBlockedSlot(professionalId?: string) {
+export function useDeleteBlockedSlot() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    // Na deleção, a API geralmente só precisa do ID do bloqueio em si
     mutationFn: (id: string) => deleteBlockedSlot(id),
     onSuccess: async () => {
-      // 🌟 2. Atualiza apenas a lista do profissional
       await queryClient.invalidateQueries({
-        queryKey: ["blocked-slots", professionalId],
+        queryKey: ["blocked-slots"],
       });
 
       await queryClient.invalidateQueries({

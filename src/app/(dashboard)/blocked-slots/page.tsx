@@ -5,6 +5,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { useBlockedDates } from "@/features/blocked-dates/hooks/use-blocked-dates";
 import { useBlockedSlots } from "@/features/blocked-slots/hooks/use-blocked-slots";
 import { useTeam } from "@/features/team/hooks/use-team";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 
 import { BlockedDatesForm } from "@/features/blocked-dates/components/blocked-dates-form";
 import { BlockedDatesList } from "@/features/blocked-dates/components/blocked-dates-list";
@@ -55,18 +56,23 @@ export default function BlockedDatesPage() {
   
   const { data: team = [], isLoading: loadingTeam } = useTeam();
 
-  // 🌟 Auto-seleciona o primeiro membro da equipe ao carregar
+  // 🌟 1. DESCOBRE QUEM ESTÁ LOGADO
+  const { data: profile } = useSettings();
+  const isSalonOwner = profile && !(profile as any).ownerId;
+
+  // 🌟 2. AUTO-SELECIONA O PERFIL CORRETO
   useEffect(() => {
-    if (team.length > 0 && !selectedProfessionalId) {
-      setSelectedProfessionalId(String(team[0].id));
+    if (profile && !selectedProfessionalId) {
+      // Se for funcionário, tranca no ID dele. Se for dona, começa no ID dela.
+      setSelectedProfessionalId(String((profile as any).id));
     }
-  }, [team, selectedProfessionalId]);
+  }, [profile, selectedProfessionalId]);
 
   const { data: activeDates = [], isLoading: loadingDates } = useBlockedDates(selectedProfessionalId);
   const { data: activeSlots = [], isLoading: loadingSlots } = useBlockedSlots(selectedProfessionalId);
 
-  const selectedMember = team.find((m: any) => String(m.id) === selectedProfessionalId);
-
+  const selectedMember = team.find((m: any) => String(m.id) === selectedProfessionalId) || profile;
+  
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-4 sm:p-8">
       
@@ -98,28 +104,60 @@ export default function BlockedDatesPage() {
               </button>
             </DropdownMenuTrigger>
             
-            <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border-border/50 bg-card/95 backdrop-blur-sm">
-              {team.map((member: any) => (
-                <DropdownMenuItem
-                  key={member.id}
-                  onClick={() => setSelectedProfessionalId(String(member.id))}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 last:mb-0 outline-none transition-colors ${
-                    selectedProfessionalId === String(member.id) 
-                      ? "bg-primary/15 text-primary font-bold data-[highlighted]:bg-primary/20" 
-                      : "text-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
-                  }`}
-                >
-                  {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+            <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Profissional:</span>
+          
+          {/* 🌟 MÁGICA DE PERMISSÃO: Se for Dona, mostra o Dropdown. Se não for, mostra o perfil fixo */}
+          {isSalonOwner ? (
+            <DropdownMenu>
+              {/* === MANTENHA O SEU CÓDIGO ORIGINAL DO DROPDOWNMENU AQUI DENTRO === */}
+              <DropdownMenuTrigger asChild>
+                <button className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-accent focus:outline-none">
+                  {selectedMember?.avatarUrl ? (
+                    <img src={(selectedMember as any).avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                   ) : (
-                    <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted-foreground/10">
-                      <User className="h-4 w-4" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <User className="h-3.5 w-3.5" />
                     </div>
                   )}
-                  <span className="flex-1 truncate text-sm">{member.name}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
+                  <span className="truncate max-w-[150px]">{selectedMember?.name || "Selecionar..."}</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border-border/50 bg-card/95 backdrop-blur-sm">
+                {team.map((member: any) => (
+                  <DropdownMenuItem
+                    key={member.id}
+                    onClick={() => setSelectedProfessionalId(String(member.id))}
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-colors hover:bg-primary/10 hover:text-primary focus:bg-primary/10"
+                  >
+                    {member.avatarUrl ? (
+                      <img src={member.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted-foreground/10">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                    <span className="flex-1 truncate text-sm">{member.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // 🚫 VISÃO DO FUNCIONÁRIO: Vê apenas o seu próprio perfil como um selo fixo
+            <div className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm">
+              {profile?.avatarUrl ? (
+                <img src={(profile as any).avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <User className="h-3.5 w-3.5" />
+                </div>
+              )}
+              <span className="truncate max-w-[150px]">{(profile as any).name}</span>
+            </div>
+          )}
+        </div>
           </DropdownMenu>
         </div>
       </div>
