@@ -106,7 +106,7 @@ export default function BlockedDatesPage() {
                 </button>
               </DropdownMenuTrigger>
               
-              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border-border/50 bg-card/95 backdrop-blur-sm">
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border border-border bg-card">
                 {team.map((member: any) => (
                   <DropdownMenuItem
                     key={member.id}
