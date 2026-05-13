@@ -111,17 +111,20 @@ export default function BlockedDatesPage() {
                   <DropdownMenuItem
                     key={member.id}
                     onClick={() => setSelectedProfessionalId(String(member.id))}
-                    /* 🌟 HOVER CORRIGIDO: Agora usa bg-accent e data-highlighted para ser visível no Dark Mode */
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-all hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                    /* 🌟 Adicionamos 'text-foreground' para garantir que o texto fique claro no modo escuro por padrão */
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-all text-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                   >
                     {member.avatarUrl ? (
                       <img src={member.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                     ) : (
                       <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted-foreground/10">
-                        <User className="h-4 w-4" />
+                        <User className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
-                    <span className="flex-1 truncate text-sm font-medium">{member.name}</span>
+                    {/* 🌟 Garantimos que o span também use a cor correta */}
+                    <span className="flex-1 truncate text-sm font-medium text-inherit">
+                      {member.name}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
