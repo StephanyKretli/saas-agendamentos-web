@@ -23,7 +23,9 @@ export async function cancelAppointment(id: string) {
 }
 
 export async function createAppointment(data: CreateAppointmentPayload) {
-  return api.post('/appointments', data);
+  return api.post('/appointments', data, {
+    headers: getAuthHeaders(),
+  });
 }
 
 export async function rescheduleAppointment(id: string, date: string) {
@@ -33,5 +35,8 @@ export async function rescheduleAppointment(id: string, date: string) {
 export interface CreateAppointmentPayload {
   clientId: string;
   serviceId: string;
+  date: string; // 🌟 Certifique-se que o date está aqui
   notes?: string;
+  professionalId?: string; // 🌟 Adicione esta linha
 }
+
