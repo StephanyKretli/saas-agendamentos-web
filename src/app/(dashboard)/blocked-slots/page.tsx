@@ -52,22 +52,18 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number, 
 
 export default function BlockedDatesPage() {
   const [activeTab, setActiveTab] = useState<"dates" | "slots">("dates");
-  
-  // 🌟 INICIA COMO NULL PARA NÃO ESTOURAR NO RELOAD
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(null);
   
   const { data: team = [], isLoading: loadingTeam } = useTeam();
   const { data: profile } = useSettings();
   const isSalonOwner = profile && !(profile as any).ownerId;
 
-  // AUTO-SELECIONA O PERFIL CORRETO
   useEffect(() => {
     if (profile && !selectedProfessionalId) {
       setSelectedProfessionalId(String((profile as any).id));
     }
   }, [profile, selectedProfessionalId]);
 
-  // Passa string vazia enquanto carrega para não estoirar os hooks
   const { data: activeDates = [] } = useBlockedDates(selectedProfessionalId || "");
   const { data: activeSlots = [] } = useBlockedSlots(selectedProfessionalId || "");
 
@@ -91,7 +87,6 @@ export default function BlockedDatesPage() {
           <span className="text-sm font-medium text-muted-foreground">Profissional:</span>
           
           {isSalonOwner ? (
-            /* 🌟 O modal={false} impede que o fundo escureça */
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/50 focus:outline-none active:scale-95">
@@ -107,7 +102,6 @@ export default function BlockedDatesPage() {
                 </button>
               </DropdownMenuTrigger>
               
-              {/* 🌟 Ajustamos o background para ser sólido e a borda mais visível */}
               <DropdownMenuContent 
                 align="end" 
                 sideOffset={8}
@@ -117,7 +111,8 @@ export default function BlockedDatesPage() {
                   <DropdownMenuItem
                     key={member.id}
                     onClick={() => setSelectedProfessionalId(String(member.id))}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-colors hover:bg-primary/10 hover:text-primary focus:bg-primary/10"
+                    /* 🌟 HOVER CORRIGIDO: Agora usa bg-accent e data-highlighted para ser visível no Dark Mode */
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 outline-none transition-all hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                   >
                     {member.avatarUrl ? (
                       <img src={member.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
@@ -178,7 +173,7 @@ export default function BlockedDatesPage() {
         </button>
       </div>
 
-      {/* 🌟 PROTEGE O RENDER ENQUANTO O ID NÃO ESTIVER PRONTO */}
+      {/* CONTEÚDO DINÂMICO */}
       {!selectedProfessionalId ? (
         <div className="flex h-40 items-center justify-center text-sm font-medium text-muted-foreground">
           <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -189,9 +184,10 @@ export default function BlockedDatesPage() {
           {activeTab === "dates" ? (
             <motion.div
               key="dates-tab"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2 }}
               className="grid gap-8 lg:grid-cols-[380px_1fr]"
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
@@ -209,9 +205,10 @@ export default function BlockedDatesPage() {
           ) : (
             <motion.div
               key="slots-tab"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2 }}
               className="grid gap-8 lg:grid-cols-[380px_1fr]"
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
