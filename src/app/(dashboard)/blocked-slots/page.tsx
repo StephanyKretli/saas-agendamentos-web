@@ -91,9 +91,10 @@ export default function BlockedDatesPage() {
           <span className="text-sm font-medium text-muted-foreground">Profissional:</span>
           
           {isSalonOwner ? (
-            <DropdownMenu>
+            /* 🌟 O modal={false} impede que o fundo escureça */
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <button className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-accent focus:outline-none">
+                <button className="flex h-11 items-center gap-3 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/50 focus:outline-none active:scale-95">
                   {selectedMember?.avatarUrl ? (
                     <img src={(selectedMember as any).avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                   ) : (
@@ -106,7 +107,12 @@ export default function BlockedDatesPage() {
                 </button>
               </DropdownMenuTrigger>
               
-              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border border-border bg-card">
+              {/* 🌟 Ajustamos o background para ser sólido e a borda mais visível */}
+              <DropdownMenuContent 
+                align="end" 
+                sideOffset={8}
+                className="w-64 rounded-2xl p-2 shadow-2xl border border-border bg-card ring-1 ring-black/5"
+              >
                 {team.map((member: any) => (
                   <DropdownMenuItem
                     key={member.id}
@@ -120,7 +126,7 @@ export default function BlockedDatesPage() {
                         <User className="h-4 w-4" />
                       </div>
                     )}
-                    <span className="flex-1 truncate text-sm">{member.name}</span>
+                    <span className="flex-1 truncate text-sm font-medium">{member.name}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
