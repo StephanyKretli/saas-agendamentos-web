@@ -6,7 +6,6 @@ import type { CreatePublicAppointmentPayload } from "../types/public-booking.typ
 import { toast } from "react-hot-toast"; 
 import { extractErrorMessage } from "@/lib/error-utils";
 
-
 type MutationParams = {
   username: string;
   payload: CreatePublicAppointmentPayload;
@@ -25,12 +24,12 @@ export function useCreatePublicAppointment() {
         queryKey: ["public-booking-availability"],
       });
 
-      toast.success("Agendamento realizado com sucesso!"); //
+      toast.success("Agendamento realizado com sucesso!"); 
     },
     
     onError: (error: unknown) => {
-              const errorMessage = extractErrorMessage(error, "Erro ao criar serviço");
-              toast.error(errorMessage);
-            },
+      const errorMessage = extractErrorMessage(error, "Erro ao criar serviço");
+      toast.error(errorMessage);
+    },
   });
 }

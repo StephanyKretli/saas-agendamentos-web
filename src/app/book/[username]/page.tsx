@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, Check } from "lucide-react";
+// 🌟 1. Adicionado o Wrench (Chave Inglesa) nas importações
+import { ChevronLeft, Check, Wrench } from "lucide-react";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
@@ -12,7 +13,6 @@ import { ServiceList } from "@/features/public-booking/components/service-list";
 import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
 import { BookingForm } from "@/features/public-booking/components/booking-form";
 import { BookingSuccess } from "@/features/public-booking/components/booking-success";
-// 🌟 1. O calendário profissional importado aqui:
 import { Calendar } from "@/components/ui/calendar";
 import type {
   CreatePublicAppointmentResponse,
@@ -27,13 +27,11 @@ function formatPrice(priceCents: number) {
   }).format(priceCents / 100);
 }
 
-// 🌟 2. Atualizado para receber e formatar um objeto Date
 function formatDateLabel(date: Date | undefined) {
   if (!date) return "Não selecionada";
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(date);
 }
 
-// 🌟 3. Função de segurança para converter Date em String sem problemas de Fuso Horário
 function formatToYYYYMMDD(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -90,17 +88,27 @@ function StepBadge({
   );
 }
 
+// 🌟 2. Resumo lateral atualizado para mostrar o preço/tempo dinâmico
 function SelectionSummary({
   selectedService,
   selectedProfessional,
   selectedDate,
   selectedTime,
+  isMaintenanceBooking,
 }: {
   selectedService: PublicService | null;
   selectedProfessional: any | null;
-  selectedDate: Date | undefined; // 🌟 4. Atualizado o tipo aqui
+  selectedDate: Date | undefined; 
   selectedTime: string | null;
+  isMaintenanceBooking: boolean;
 }) {
+  
+  // Calcula valores reais baseados na flag de manutenção
+  const isMaint = isMaintenanceBooking && selectedService?.hasMaintenance;
+  const finalPrice = isMaint ? selectedService.maintenancePriceCents! : selectedService?.priceCents;
+  const finalDuration = isMaint ? selectedService.maintenanceDurationMinutes : selectedService?.duration;
+  const serviceName = selectedService ? `${selectedService.name}${isMaint ? ' (Manutenção)' : ''}` : "Não selecionado";
+
   return (
     <aside className="rounded-3xl border border-border bg-card p-5 shadow-sm sticky top-6">
       <h3 className="text-base font-semibold text-foreground">
@@ -110,10 +118,10 @@ function SelectionSummary({
       <div className="mt-4 space-y-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Serviço</p>
-          <p className="mt-1 text-sm text-foreground">{selectedService ? selectedService.name : "Não selecionado"}</p>
+          <p className="mt-1 text-sm text-foreground">{serviceName}</p>
           {selectedService && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {selectedService.duration} min • {formatPrice(selectedService.priceCents)}
+              {finalDuration} min • {formatPrice(finalPrice || 0)}
             </p>
           )}
         </div>
@@ -146,9 +154,12 @@ export default function BookingPage() {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
   const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null);
-  // 🌟 5. O estado da data agora armazena o objeto Date
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
+  
+  // 🌟 3. O estado mágico que controla o preço
+  const [isMaintenanceBooking, setIsMaintenanceBooking] = React.useState(false);
+
   const [createdAppointment, setCreatedAppointment] = React.useState<CreatePublicAppointmentResponse | null>(null);
   const [lastClientName, setLastClientName] = React.useState("");
 
@@ -163,24 +174,24 @@ export default function BookingPage() {
     }
   }, [currentStep]);
 
+  // 🌟 4. Adiciona a flag na query para caso o backend precise dela para calcular blocos
   const availabilityQuery = useBookingAvailability({
     username,
     serviceId: selectedService?.id ?? null,
-    // 🌟 6. Converte para string na hora de perguntar à API os horários livres
     date: selectedDate ? formatToYYYYMMDD(selectedDate) : null,
     professionalId: selectedProfessional?.id ?? null, 
+    isMaintenance: isMaintenanceBooking,
   });
 
   const createAppointmentMutation = useCreatePublicAppointment();
 
   React.useEffect(() => {
     setSelectedTime(null);
-  }, [selectedService, selectedProfessional, selectedDate]);
+  }, [selectedService, selectedProfessional, selectedDate, isMaintenanceBooking]);
 
   async function handleSubmitBooking(values: PublicBookingFormValues) {
     if (!selectedService || !selectedDate || !selectedTime || !selectedProfessional) return;
 
-    // 🌟 7. Monta a string final perfeitamente para o backend do NestJS
     const dateString = formatToYYYYMMDD(selectedDate);
 
     const response = await createAppointmentMutation.mutateAsync({
@@ -193,6 +204,8 @@ export default function BookingPage() {
         clientPhone: values.clientPhone,
         clientEmail: values.clientEmail || undefined,
         notes: values.notes || undefined,
+        // 🌟 5. Envia a flag para o NestJS cobrar mais barato!
+        isMaintenance: isMaintenanceBooking,
       },
     });
 
@@ -206,6 +219,10 @@ export default function BookingPage() {
   if (!data) return null;
 
   const availableProfessionals = selectedService?.professionals || [];
+  
+  // Calcula o valor do depósito corretamente para a tela de Sucesso
+  const isMaint = isMaintenanceBooking && selectedService?.hasMaintenance;
+  const finalPriceCents = isMaint ? selectedService?.maintenancePriceCents! : selectedService?.priceCents!;
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
@@ -217,11 +234,10 @@ export default function BookingPage() {
             <BookingSuccess 
               clientName={lastClientName} 
               serviceName={selectedService?.name!} 
-              // 🌟 8. Passa a string para o componente de sucesso
               date={formatToYYYYMMDD(selectedDate!)} 
               time={selectedTime!}
               paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
-              depositCents={selectedService ? Math.round(selectedService.priceCents * 0.2) : 0}
+              depositCents={selectedService ? Math.round(finalPriceCents * 0.2) : 0}
               pixPayload={createdAppointment.pixData?.qrCodePayload}
             />
           </div>
@@ -229,7 +245,7 @@ export default function BookingPage() {
           <>
             <section ref={stepsContainerRef} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
               <StepBadge step={1} title="Serviço" active={currentStep === 1} done={currentStep > 1} onClick={() => setCurrentStep(1)} />
-              <StepBadge step={2} title="Profissional" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
+              <StepBadge step={2} title="Detalhes" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
               <StepBadge step={3} title="Data" active={currentStep === 3} done={currentStep > 3} onClick={() => setCurrentStep(3)} />
               <StepBadge step={4} title="Horário" active={currentStep === 4} done={currentStep > 4} onClick={() => setCurrentStep(4)} />
               <StepBadge step={5} title="Seus dados" active={currentStep === 5} done={false} onClick={() => setCurrentStep(5)} />
@@ -250,13 +266,14 @@ export default function BookingPage() {
                       onSelectService={(service) => { 
                         setSelectedService(service); 
                         setSelectedProfessional(null); 
+                        setIsMaintenanceBooking(false); // Reseta ao trocar de serviço
                         setCurrentStep(2); 
                       }} 
                     />
                   </section>
                 )}
 
-                {/* PASSO 2: PROFISSIONAL */}
+                {/* PASSO 2: PROFISSIONAL E TIPO DE ATENDIMENTO */}
                 {currentStep === 2 && selectedService && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
@@ -264,38 +281,88 @@ export default function BookingPage() {
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
                       <div>
-                        <h2 className="text-xl font-semibold text-foreground">Escolha o profissional</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">Quem gostaria que realizasse o serviço?</p>
+                        <h2 className="text-xl font-semibold text-foreground">Detalhes do Atendimento</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">Configure as suas preferências</p>
                       </div>
                     </div>
-                    
-                    {availableProfessionals.length === 0 ? (
-                      <div className="p-4 text-center border rounded-2xl bg-muted/30">
-                        <p className="text-sm text-muted-foreground">Nenhum profissional disponível para este serviço.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {availableProfessionals.map((prof) => (
+
+                    {/* 🌟 6. EXPERIÊNCIA DO CLIENTE: Abas de Seleção elegantes */}
+                    {selectedService.hasMaintenance && (
+                      <div className="mb-8 space-y-3">
+                        <label className="text-sm font-semibold text-foreground block">
+                          Qual é o tipo de procedimento?
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/60 rounded-xl border border-border/60">
+                          
+                          {/* Procedimento Inicial */}
                           <button
-                            key={prof.id}
-                            onClick={() => { setSelectedProfessional(prof); setCurrentStep(3); }}
-                            className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${selectedProfessional?.id === prof.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:bg-muted/50"}`}
+                            type="button"
+                            onClick={() => setIsMaintenanceBooking(false)}
+                            className={`flex flex-col items-center justify-center py-3 px-3 rounded-lg text-center transition-all duration-200 ${
+                              !isMaintenanceBooking
+                                ? "bg-background text-foreground shadow-sm font-semibold border border-border/50 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                            }`}
                           >
-                            <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
-                              {prof.avatarUrl ? <img src={prof.avatarUrl} alt={prof.name} className="h-full w-full object-cover"/> : prof.name.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm text-foreground">{prof.name}</p>
-                            </div>
-                            {selectedProfessional?.id === prof.id && <Check className="absolute right-4 h-5 w-5 text-primary" />}
+                            <span className="text-sm">Procedimento Inicial</span>
+                            <span className="text-xs opacity-80 font-normal mt-1">
+                              {formatPrice(selectedService.priceCents)} • {selectedService.duration} min
+                            </span>
                           </button>
-                        ))}
+
+                          {/* Manutenção */}
+                          <button
+                            type="button"
+                            onClick={() => setIsMaintenanceBooking(true)}
+                            className={`flex flex-col items-center justify-center py-3 px-3 rounded-lg text-center transition-all duration-200 ${
+                              isMaintenanceBooking
+                                ? "bg-primary/10 text-primary shadow-sm font-semibold border border-primary/20 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                            }`}
+                          >
+                            <span className="text-sm flex items-center gap-1.5 justify-center">
+                              <Wrench className="h-3.5 w-3.5" /> Manutenção
+                            </span>
+                            <span className="text-xs opacity-80 font-normal mt-1">
+                              {formatPrice(selectedService.maintenancePriceCents || 0)} • {selectedService.maintenanceDurationMinutes} min
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     )}
+                    
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-foreground block">
+                        Escolha o profissional
+                      </label>
+                      {availableProfessionals.length === 0 ? (
+                        <div className="p-4 text-center border rounded-2xl bg-muted/30">
+                          <p className="text-sm text-muted-foreground">Nenhum profissional disponível para este serviço.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {availableProfessionals.map((prof) => (
+                            <button
+                              key={prof.id}
+                              onClick={() => { setSelectedProfessional(prof); setCurrentStep(3); }}
+                              className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${selectedProfessional?.id === prof.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:bg-muted/50"}`}
+                            >
+                              <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+                                {prof.avatarUrl ? <img src={prof.avatarUrl} alt={prof.name} className="h-full w-full object-cover"/> : prof.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm text-foreground">{prof.name}</p>
+                              </div>
+                              {selectedProfessional?.id === prof.id && <Check className="absolute right-4 h-5 w-5 text-primary" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </section>
                 )}
 
-                {/* PASSO 3: DATA (O SEGREDO REVELADO) */}
+                {/* PASSO 3: DATA */}
                 {currentStep === 3 && selectedService && selectedProfessional && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
@@ -307,7 +374,6 @@ export default function BookingPage() {
                       </div>
                     </div>
                     
-                    {/* 🌟 9. O Calendário Shadcn elegante e à prova de bugs! */}
                     <div className="flex justify-center rounded-xl border border-border bg-background p-3">
                       <Calendar
                         mode="single"
@@ -356,8 +422,14 @@ export default function BookingPage() {
                 )}
               </div>
 
-              <div className="space-y-4">
-                <SelectionSummary selectedService={selectedService} selectedProfessional={selectedProfessional} selectedDate={selectedDate} selectedTime={selectedTime} />
+              <div className="space-y-4 hidden md:block">
+                <SelectionSummary 
+                  selectedService={selectedService} 
+                  selectedProfessional={selectedProfessional} 
+                  selectedDate={selectedDate} 
+                  selectedTime={selectedTime} 
+                  isMaintenanceBooking={isMaintenanceBooking} 
+                />
               </div>
             </div>
           </>

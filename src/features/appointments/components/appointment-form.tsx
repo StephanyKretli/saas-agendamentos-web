@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "react-hot-toast"; //
+import { toast } from "react-hot-toast";
 import { Calendar, Clock, User, Scissors, AlignLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClients } from "@/features/clients/hooks/use-clients";
@@ -21,6 +21,8 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   const [date, setDate] = useState(initialDate || "");
   const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
+  // 🌟 1. Adicionado o estado para controlar se é manutenção
+  const [isMaintenanceBooking, setIsMaintenanceBooking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: clientsData } = useClients();
@@ -28,6 +30,9 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
 
   const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.items ?? []);
   const services = Array.isArray(servicesData) ? servicesData : (servicesData?.items ?? []);
+
+  // 🌟 2. Encontra os detalhes do serviço que a pessoa selecionou no select
+  const selectedServiceDetails = services.find((s: any) => s.id === serviceId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,15 +45,16 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
         date: `${date}T${time}:00`, 
         notes,
         professionalId,
+        // 🌟 3. Envia a flag para o back-end saber que deve cobrar mais barato
+        isMaintenance: isMaintenanceBooking,
       };
       
       await createAppointment(payload);
       
-      toast.success("Agendamento criado com sucesso!"); // Substitui o console/alert
+      toast.success("Agendamento criado com sucesso!");
       onSuccess?.();
       
     } catch (error: any) {
-      // Exibe a mensagem tratada pelo seu interceptor da api.ts
       toast.error(error.message || "Erro ao salvar agendamento");
     } finally {
       setIsLoading(false);
@@ -86,7 +92,11 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
           <select 
             required
             value={serviceId}
-            onChange={(e) => setServiceId(e.target.value)}
+            // Quando troca de serviço, reseta a caixinha de manutenção por segurança
+            onChange={(e) => {
+              setServiceId(e.target.value);
+              setIsMaintenanceBooking(false); 
+            }}
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="" disabled>Selecione um serviço...</option>
@@ -97,6 +107,31 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
             ))}
           </select>
         </div>
+
+        {/* 🌟 4. A CAIXINHA DE MANUTENÇÃO */}
+        {selectedServiceDetails?.hasMaintenance && (
+          <div className="mt-2 flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700 rounded-xl">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-zinc-100">
+                É um agendamento de manutenção?
+              </span>
+              <span className="text-xs text-zinc-400 mt-1">
+                Tempo: {selectedServiceDetails.maintenanceDurationMinutes} min • 
+                Preço: R$ {(selectedServiceDetails.maintenancePriceCents / 100).toFixed(2)}
+              </span>
+            </div>
+            
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer"
+                checked={isMaintenanceBooking}
+                onChange={(e) => setIsMaintenanceBooking(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+        )}
       </div>
 
       {/* DATA E HORA */}

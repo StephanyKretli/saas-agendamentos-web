@@ -1,8 +1,7 @@
 import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type { PaginatedAppointmentsResponse } from "../types/appointments.types";
-import { promises } from "dns";
-
+import { useState } from 'react';
 
 export async function getMyAppointments(): Promise<PaginatedAppointmentsResponse> {
   return api.get("/appointments/me", {
@@ -35,8 +34,9 @@ export async function rescheduleAppointment(id: string, date: string) {
 export interface CreateAppointmentPayload {
   clientId: string;
   serviceId: string;
-  date: string; // 🌟 Certifique-se que o date está aqui
+  date: string; 
   notes?: string;
-  professionalId?: string; // 🌟 Adicione esta linha
+  professionalId?: string; 
+  isMaintenance?: boolean;
 }
 

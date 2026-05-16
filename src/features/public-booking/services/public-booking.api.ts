@@ -22,14 +22,19 @@ export async function getBookingAvailability(params: {
   username: string;
   serviceId: string;
   date: string;
-  professionalId: string; // 👇 NOVO PARÂMETRO ADICIONADO AQUI
+  professionalId: string; 
+  isMaintenance?: boolean;
 }): Promise<PublicAvailabilityResponse> {
-  // 👇 INCLUÍDO NO SEARCH PARAMS PARA FORMAR A URL CORRETA
   const searchParams = new URLSearchParams({
     serviceId: params.serviceId,
     date: params.date,
     professionalId: params.professionalId, 
   });
+
+  // 🌟 A PEÇA QUE FALTAVA: Adicionar a flag na URL se for manutenção!
+  if (params.isMaintenance) {
+    searchParams.append("isMaintenance", "true");
+  }
 
   return api.get(
     `/public/book/${params.username}/availability?${searchParams.toString()}`,

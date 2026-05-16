@@ -12,6 +12,9 @@ export interface PublicService {
     name: string;
     avatarUrl?: string | null;
   }[];
+  hasMaintenance: boolean;
+  maintenanceDurationMinutes: number | null;
+  maintenancePriceCents: number | null;
 }
 
 export type PublicBookingProfileResponse = {
@@ -38,6 +41,7 @@ export type CreatePublicAppointmentPayload = {
   clientPhone: string;
   clientEmail?: string;
   notes?: string;
+  isMaintenance?: boolean;
 };
 
 // 🌟 Tipagem atualizada para casar perfeitamente com o retorno do NestJS
