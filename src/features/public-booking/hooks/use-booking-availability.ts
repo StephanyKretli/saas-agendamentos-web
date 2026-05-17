@@ -3,36 +3,45 @@
 import { useQuery } from "@tanstack/react-query";
 import { getBookingAvailability } from "../services/public-booking.api";
 
-type UseBookingAvailabilityParams = {
+// 🌟 Tipagem atualizada para o "Carrinho"
+export type UseBookingAvailabilityParams = {
   username: string;
-  serviceId: string | null;
+  serviceId?: string | null; // Mantido por retrocompatibilidade
+  cartItems?: { serviceId: string; isMaintenance: boolean }[]; // O NOSSO CARRINHO AQUI!
   date: string | null;
   professionalId: string | null; 
-  isMaintenance?: boolean; // 🌟 ADICIONADO AQUI
 };
 
 export function useBookingAvailability({
   username,
   serviceId,
+  cartItems, // Extraindo o carrinho
   date,
   professionalId,
-  isMaintenance, // 🌟 ADICIONADO AQUI
 }: UseBookingAvailabilityParams) {
   
   // MÁGICA: Se não houver UUID do profissional, usa o username da URL!
   const effectiveProfId = professionalId || username;
 
   return useQuery({
-    // 🌟 Adicionamos o isMaintenance na chave para forçar recarregamento se a aba mudar
-    queryKey: ["public-booking-availability", username, serviceId, date, effectiveProfId, isMaintenance],
+    // 🌟 Usamos JSON.stringify no carrinho para o React Query saber quando ele muda de verdade
+    queryKey: [
+      "public-booking-availability", 
+      username, 
+      serviceId, 
+      cartItems ? JSON.stringify(cartItems) : null, 
+      date, 
+      effectiveProfId
+    ],
     queryFn: () =>
       getBookingAvailability({
         username,
-        serviceId: serviceId!,
+        serviceId: serviceId || undefined,
+        cartItems, // 🌟 Passa o carrinho para a chamada da API
         date: date!,
         professionalId: effectiveProfId!,
-        isMaintenance, // 🌟 Passa a flag para a API
       }),
-    enabled: !!username && !!serviceId && !!date && !!effectiveProfId,
+    // 🌟 A API só vai buscar horários se tiver data, profissional e (um serviceId antigo OU um carrinho preenchido)
+    enabled: !!username && !!date && !!effectiveProfId && (!!serviceId || (cartItems !== undefined && cartItems.length > 0)),
   });
 }

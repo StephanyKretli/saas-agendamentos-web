@@ -33,15 +33,26 @@ export type PublicAvailabilityResponse = {
   slots: string[];
 };
 
+// 🌟 Tipagem ADICIONADA: Parâmetros da busca de horários com suporte ao Carrinho
+export type UseBookingAvailabilityParams = {
+  username: string;
+  serviceId?: string; // Opcional (legado)
+  cartItems?: { serviceId: string; isMaintenance: boolean }[]; // O array de múltiplos serviços!
+  date: string | null;
+  professionalId: string | null;
+};
+
+// 🌟 Tipagem ATUALIZADA: Payload de agendamento com suporte ao Carrinho
 export type CreatePublicAppointmentPayload = {
-  serviceId: string;
+  serviceId?: string; // Mantido como opcional para não quebrar códigos antigos
+  isMaintenance?: boolean; // Mantido como opcional
+  services?: { serviceId: string; isMaintenance: boolean }[]; // O novo array com o carrinho!
   date: string;
   professionalId: string;
   clientName: string;
   clientPhone: string;
   clientEmail?: string;
   notes?: string;
-  isMaintenance?: boolean;
 };
 
 // 🌟 Tipagem atualizada para casar perfeitamente com o retorno do NestJS

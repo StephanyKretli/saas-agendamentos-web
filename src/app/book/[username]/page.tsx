@@ -3,22 +3,29 @@ export const dynamic = 'force-dynamic';
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-// 🌟 1. Adicionado o Wrench (Chave Inglesa) nas importações
-import { ChevronLeft, Check, Wrench } from "lucide-react";
+import { ChevronLeft, Check, Wrench, Search, Plus, Trash2, Scissors } from "lucide-react";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
 import { ProfessionalHeader } from "@/features/public-booking/components/professional-header";
-import { ServiceList } from "@/features/public-booking/components/service-list";
 import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
 import { BookingForm } from "@/features/public-booking/components/booking-form";
 import { BookingSuccess } from "@/features/public-booking/components/booking-success";
 import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 import type {
   CreatePublicAppointmentResponse,
   PublicService,
 } from "@/features/public-booking/types/public-booking.types";
 import type { PublicBookingFormValues } from "@/features/public-booking/schemas/public-booking.schema";
+
+// --- TIPAGEM DO CARRINHO ---
+export interface CartItem {
+  service: PublicService;
+  isMaintenance: boolean;
+  finalPrice: number;
+  finalDuration: number;
+}
 
 function formatPrice(priceCents: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -39,19 +46,7 @@ function formatToYYYYMMDD(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function StepBadge({
-  step,
-  title,
-  active,
-  done,
-  onClick,
-}: {
-  step: number;
-  title: string;
-  active: boolean;
-  done: boolean;
-  onClick: () => void;
-}) {
+function StepBadge({ step, title, active, done, onClick }: any) {
   return (
     <button
       type="button"
@@ -68,77 +63,61 @@ function StepBadge({
       ].join(" ")}
     >
       <div className="flex items-center gap-3">
-        <div
-          className={[
+        <div className={[
             "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-            active
-              ? "bg-primary text-primary-foreground"
-              : done
-                ? "bg-green-500 text-white"
-                : "bg-muted text-muted-foreground",
-          ].join(" ")}
-        >
+            active ? "bg-primary text-primary-foreground" : done ? "bg-green-500 text-white" : "bg-muted text-muted-foreground",
+          ].join(" ")}>
           {done ? "✓" : step}
         </div>
-        <div>
-          <p className="text-sm font-medium text-foreground">{title}</p>
-        </div>
+        <div><p className="text-sm font-medium text-foreground">{title}</p></div>
       </div>
     </button>
   );
 }
 
-// 🌟 2. Resumo lateral atualizado para mostrar o preço/tempo dinâmico
-function SelectionSummary({
-  selectedService,
-  selectedProfessional,
-  selectedDate,
-  selectedTime,
-  isMaintenanceBooking,
-}: {
-  selectedService: PublicService | null;
-  selectedProfessional: any | null;
-  selectedDate: Date | undefined; 
-  selectedTime: string | null;
-  isMaintenanceBooking: boolean;
-}) {
-  
-  // Calcula valores reais baseados na flag de manutenção
-  const isMaint = isMaintenanceBooking && selectedService?.hasMaintenance;
-  const finalPrice = isMaint ? selectedService.maintenancePriceCents! : selectedService?.priceCents;
-  const finalDuration = isMaint ? selectedService.maintenanceDurationMinutes : selectedService?.duration;
-  const serviceName = selectedService ? `${selectedService.name}${isMaint ? ' (Manutenção)' : ''}` : "Não selecionado";
+// 🌟 RESUMO LATERAL ATUALIZADO PARA MÚLTIPLOS SERVIÇOS
+function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime }: any) {
+  const totalDuration = cart.reduce((acc: number, item: CartItem) => acc + item.finalDuration, 0);
+  const totalPrice = cart.reduce((acc: number, item: CartItem) => acc + item.finalPrice, 0);
 
   return (
     <aside className="rounded-3xl border border-border bg-card p-5 shadow-sm sticky top-6">
-      <h3 className="text-base font-semibold text-foreground">
+      <h3 className="text-base font-semibold text-foreground border-b pb-3 mb-4">
         Resumo do agendamento
       </h3>
-
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Serviço</p>
-          <p className="mt-1 text-sm text-foreground">{serviceName}</p>
-          {selectedService && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {finalDuration} min • {formatPrice(finalPrice || 0)}
-            </p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Serviços Selecionados</p>
+          {cart.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum serviço selecionado</p>
+          ) : (
+            <div className="space-y-2">
+              {cart.map((item: CartItem, idx: number) => (
+                <div key={idx} className="bg-muted/40 p-2 rounded-lg text-sm">
+                  <p className="font-medium">{item.service.name} {item.isMaintenance && <span className="text-primary text-xs">(Manutenção)</span>}</p>
+                  <p className="text-xs text-muted-foreground">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
+                </div>
+              ))}
+              <div className="flex justify-between font-bold text-sm pt-2 border-t mt-2">
+                <span>Total ({totalDuration} min)</span>
+                <span>{formatPrice(totalPrice)}</span>
+              </div>
+            </div>
           )}
         </div>
-
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Profissional</p>
           <p className="mt-1 text-sm text-foreground">{selectedProfessional ? selectedProfessional.name : "Não selecionado"}</p>
         </div>
-
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Data</p>
-          <p className="mt-1 text-sm text-foreground">{formatDateLabel(selectedDate)}</p>
-        </div>
-
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Horário</p>
-          <p className="mt-1 text-sm text-foreground">{selectedTime ?? "Não selecionado"}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Data</p>
+            <p className="mt-1 text-sm text-foreground">{formatDateLabel(selectedDate)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Horário</p>
+            <p className="mt-1 text-sm text-foreground">{selectedTime ?? "Não selecionado"}</p>
+          </div>
         </div>
       </div>
     </aside>
@@ -152,14 +131,15 @@ export default function BookingPage() {
   const { data, isLoading, isError } = useBookingProfile(username);
 
   const [currentStep, setCurrentStep] = React.useState(1);
-  const [selectedService, setSelectedService] = React.useState<PublicService | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  
+  // 🌟 ESTADO DO CARRINHO (Substitui o selectedService singular)
+  const [cart, setCart] = React.useState<CartItem[]>([]);
+  
   const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
   
-  // 🌟 3. O estado mágico que controla o preço
-  const [isMaintenanceBooking, setIsMaintenanceBooking] = React.useState(false);
-
   const [createdAppointment, setCreatedAppointment] = React.useState<CreatePublicAppointmentResponse | null>(null);
   const [lastClientName, setLastClientName] = React.useState("");
 
@@ -168,44 +148,62 @@ export default function BookingPage() {
   React.useEffect(() => {
     if (stepsContainerRef.current) {
       const activeElement = stepsContainerRef.current.querySelector('[data-active="true"]');
-      if (activeElement) {
-        activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      }
+      if (activeElement) activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     }
   }, [currentStep]);
 
-  // 🌟 4. Adiciona a flag na query para caso o backend precise dela para calcular blocos
+  // Filtra serviços baseado na busca
+  const filteredServices = React.useMemo(() => {
+    if (!data?.services) return [];
+    return data.services.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [data?.services, searchTerm]);
+
+  // Lógica para adicionar ao carrinho
+  const handleAddService = (service: PublicService, isMaintenance: boolean) => {
+    if (cart.some(item => item.service.id === service.id && item.isMaintenance === isMaintenance)) return;
+    
+    setCart([...cart, {
+      service,
+      isMaintenance,
+      finalPrice: isMaintenance ? service.maintenancePriceCents! : service.priceCents,
+      finalDuration: isMaintenance ? service.maintenanceDurationMinutes! : service.duration
+    }]);
+  };
+
+  const handleRemoveService = (index: number) => {
+    setCart(cart.filter((_, i) => i !== index));
+  };
+
+  // ⚠️ ATENÇÃO: A query do backend precisará ser ajustada para receber arrays no futuro.
+  // Por enquanto, enviamos um payload modificado.
   const availabilityQuery = useBookingAvailability({
     username,
-    serviceId: selectedService?.id ?? null,
+    cartItems: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), // Adaptar no backend
     date: selectedDate ? formatToYYYYMMDD(selectedDate) : null,
-    professionalId: selectedProfessional?.id ?? null, 
-    isMaintenance: isMaintenanceBooking,
+    professionalId: selectedProfessional?.id ?? null,
   });
 
   const createAppointmentMutation = useCreatePublicAppointment();
 
   React.useEffect(() => {
     setSelectedTime(null);
-  }, [selectedService, selectedProfessional, selectedDate, isMaintenanceBooking]);
+  }, [cart, selectedProfessional, selectedDate]);
 
   async function handleSubmitBooking(values: PublicBookingFormValues) {
-    if (!selectedService || !selectedDate || !selectedTime || !selectedProfessional) return;
+    if (cart.length === 0 || !selectedDate || !selectedTime || !selectedProfessional) return;
 
     const dateString = formatToYYYYMMDD(selectedDate);
 
     const response = await createAppointmentMutation.mutateAsync({
       username,
       payload: {
-        serviceId: selectedService.id,
+        services: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), // Adaptar DTO no backend
         date: `${dateString}T${selectedTime}:00`,
         professionalId: selectedProfessional.id,
         clientName: values.clientName,
         clientPhone: values.clientPhone,
         clientEmail: values.clientEmail || undefined,
         notes: values.notes || undefined,
-        // 🌟 5. Envia a flag para o NestJS cobrar mais barato!
-        isMaintenance: isMaintenanceBooking,
       },
     });
 
@@ -218,11 +216,10 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  const availableProfessionals = selectedService?.professionals || [];
-  
-  // Calcula o valor do depósito corretamente para a tela de Sucesso
-  const isMaint = isMaintenanceBooking && selectedService?.hasMaintenance;
-  const finalPriceCents = isMaint ? selectedService?.maintenancePriceCents! : selectedService?.priceCents!;
+  // Cruza os profissionais que fazem TODOS os serviços selecionados (ou simplifica para os profissionais do 1º serviço no MVP)
+  const availableProfessionals = cart.length > 0 ? (cart[0].service.professionals || []) : [];
+
+  const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
@@ -233,19 +230,19 @@ export default function BookingPage() {
           <div className="mx-auto max-w-2xl animate-in fade-in zoom-in-95 duration-300">
             <BookingSuccess 
               clientName={lastClientName} 
-              serviceName={selectedService?.name!} 
+              serviceName={`${cart.length} serviço(s)`} 
               date={formatToYYYYMMDD(selectedDate!)} 
               time={selectedTime!}
               paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
-              depositCents={selectedService ? Math.round(finalPriceCents * 0.2) : 0}
+              depositCents={totalDepositCents}
               pixPayload={createdAppointment.pixData?.qrCodePayload}
             />
           </div>
         ) : (
           <>
             <section ref={stepsContainerRef} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
-              <StepBadge step={1} title="Serviço" active={currentStep === 1} done={currentStep > 1} onClick={() => setCurrentStep(1)} />
-              <StepBadge step={2} title="Detalhes" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
+              <StepBadge step={1} title="Serviços" active={currentStep === 1} done={currentStep > 1} onClick={() => setCurrentStep(1)} />
+              <StepBadge step={2} title="Profissional" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
               <StepBadge step={3} title="Data" active={currentStep === 3} done={currentStep > 3} onClick={() => setCurrentStep(3)} />
               <StepBadge step={4} title="Horário" active={currentStep === 4} done={currentStep > 4} onClick={() => setCurrentStep(4)} />
               <StepBadge step={5} title="Seus dados" active={currentStep === 5} done={false} onClick={() => setCurrentStep(5)} />
@@ -254,90 +251,97 @@ export default function BookingPage() {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 
-                {/* PASSO 1: SERVIÇOS */}
+                {/* PASSO 1: BUSCA, CARRINHO E ESCOLHA DE MANUTENÇÃO */}
                 {currentStep === 1 && (
-                  <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="mb-4">
-                      <h2 className="text-xl font-semibold text-foreground">Escolha um serviço</h2>
+                  <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-foreground">Monte seu atendimento</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Busque e adicione os procedimentos que deseja.</p>
                     </div>
-                    <ServiceList 
-                      services={data.services} 
-                      selectedServiceId={selectedService?.id ?? null} 
-                      onSelectService={(service) => { 
-                        setSelectedService(service); 
-                        setSelectedProfessional(null); 
-                        setIsMaintenanceBooking(false); // Reseta ao trocar de serviço
-                        setCurrentStep(2); 
-                      }} 
-                    />
+
+                    {/* Barra de Busca */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Buscar serviço..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+
+                    {/* Lista Dinâmica com Manutenção */}
+                    <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2">
+                      {filteredServices.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">Nenhum serviço encontrado.</p>
+                      ) : (
+                        filteredServices.map((service) => (
+                          <div key={service.id} className="p-4 rounded-xl border border-border bg-background flex flex-col sm:flex-row gap-4 justify-between sm:items-center hover:border-primary/30 transition-colors">
+                            <div>
+                              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                {service.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mt-1">{service.duration} min • {formatPrice(service.priceCents)}</p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleAddService(service, false)}
+                                className="whitespace-nowrap"
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Adicionar
+                              </Button>
+
+                              {service.hasMaintenance && (
+                                <Button 
+                                  variant="secondary" 
+                                  size="sm" 
+                                  onClick={() => handleAddService(service, true)}
+                                  className="whitespace-nowrap bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                                >
+                                  <Wrench className="h-4 w-4 mr-1" /> Manutenção
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Footer do Passo 1 (Avançar) */}
+                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        {cart.length} serviço(s) selecionado(s)
+                      </p>
+                      <Button 
+                        disabled={cart.length === 0} 
+                        onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
+                      >
+                        Avançar para Profissional
+                      </Button>
+                    </div>
                   </section>
                 )}
 
-                {/* PASSO 2: PROFISSIONAL E TIPO DE ATENDIMENTO */}
-                {currentStep === 2 && selectedService && (
+                {/* PASSO 2: PROFISSIONAL */}
+                {currentStep === 2 && cart.length > 0 && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
                       <button onClick={() => setCurrentStep(1)} className="p-2 hover:bg-muted rounded-full transition-colors shrink-0">
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
                       <div>
-                        <h2 className="text-xl font-semibold text-foreground">Detalhes do Atendimento</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">Configure as suas preferências</p>
+                        <h2 className="text-xl font-semibold text-foreground">Escolha o profissional</h2>
                       </div>
                     </div>
-
-                    {/* 🌟 6. EXPERIÊNCIA DO CLIENTE: Abas de Seleção elegantes */}
-                    {selectedService.hasMaintenance && (
-                      <div className="mb-8 space-y-3">
-                        <label className="text-sm font-semibold text-foreground block">
-                          Qual é o tipo de procedimento?
-                        </label>
-                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/60 rounded-xl border border-border/60">
-                          
-                          {/* Procedimento Inicial */}
-                          <button
-                            type="button"
-                            onClick={() => setIsMaintenanceBooking(false)}
-                            className={`flex flex-col items-center justify-center py-3 px-3 rounded-lg text-center transition-all duration-200 ${
-                              !isMaintenanceBooking
-                                ? "bg-background text-foreground shadow-sm font-semibold border border-border/50 scale-[1.02]"
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                            }`}
-                          >
-                            <span className="text-sm">Procedimento Inicial</span>
-                            <span className="text-xs opacity-80 font-normal mt-1">
-                              {formatPrice(selectedService.priceCents)} • {selectedService.duration} min
-                            </span>
-                          </button>
-
-                          {/* Manutenção */}
-                          <button
-                            type="button"
-                            onClick={() => setIsMaintenanceBooking(true)}
-                            className={`flex flex-col items-center justify-center py-3 px-3 rounded-lg text-center transition-all duration-200 ${
-                              isMaintenanceBooking
-                                ? "bg-primary/10 text-primary shadow-sm font-semibold border border-primary/20 scale-[1.02]"
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                            }`}
-                          >
-                            <span className="text-sm flex items-center gap-1.5 justify-center">
-                              <Wrench className="h-3.5 w-3.5" /> Manutenção
-                            </span>
-                            <span className="text-xs opacity-80 font-normal mt-1">
-                              {formatPrice(selectedService.maintenancePriceCents || 0)} • {selectedService.maintenanceDurationMinutes} min
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
                     
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-foreground block">
-                        Escolha o profissional
-                      </label>
                       {availableProfessionals.length === 0 ? (
                         <div className="p-4 text-center border rounded-2xl bg-muted/30">
-                          <p className="text-sm text-muted-foreground">Nenhum profissional disponível para este serviço.</p>
+                          <p className="text-sm text-muted-foreground">Nenhum profissional disponível.</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -363,27 +367,19 @@ export default function BookingPage() {
                 )}
 
                 {/* PASSO 3: DATA */}
-                {currentStep === 3 && selectedService && selectedProfessional && (
+                {currentStep === 3 && cart.length > 0 && selectedProfessional && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
                       <button onClick={() => setCurrentStep(2)} className="p-2 hover:bg-muted rounded-full">
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
-                      <div>
-                        <h2 className="text-xl font-semibold">Escolha a data</h2>
-                      </div>
+                      <h2 className="text-xl font-semibold">Escolha a data</h2>
                     </div>
-                    
                     <div className="flex justify-center rounded-xl border border-border bg-background p-3">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={(newDate) => {
-                          setSelectedDate(newDate);
-                          if (newDate) {
-                            setCurrentStep(4);
-                          }
-                        }}
+                        onSelect={(newDate) => { setSelectedDate(newDate); if (newDate) setCurrentStep(4); }}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         className="rounded-md"
                       />
@@ -398,9 +394,7 @@ export default function BookingPage() {
                       <button onClick={() => setCurrentStep(3)} className="p-2 hover:bg-muted rounded-full">
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
-                      <div>
-                        <h2 className="text-xl font-semibold">Escolha o horário</h2>
-                      </div>
+                      <h2 className="text-xl font-semibold">Escolha o horário</h2>
                     </div>
                     <TimeSlotsGrid slots={availabilityQuery.data?.slots ?? []} selectedTime={selectedTime} onSelectTime={(time) => { setSelectedTime(time); setCurrentStep(5); }} isLoading={availabilityQuery.isLoading} />
                   </section>
@@ -413,9 +407,7 @@ export default function BookingPage() {
                       <button onClick={() => setCurrentStep(4)} className="p-2 hover:bg-muted rounded-full">
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
-                      <div>
-                        <h2 className="text-xl font-semibold">Quase lá!</h2>
-                      </div>
+                      <h2 className="text-xl font-semibold">Quase lá!</h2>
                     </div>
                     <BookingForm onSubmit={handleSubmitBooking} isSubmitting={createAppointmentMutation.isPending} />
                   </section>
@@ -424,11 +416,10 @@ export default function BookingPage() {
 
               <div className="space-y-4 hidden md:block">
                 <SelectionSummary 
-                  selectedService={selectedService} 
+                  cart={cart}
                   selectedProfessional={selectedProfessional} 
                   selectedDate={selectedDate} 
                   selectedTime={selectedTime} 
-                  isMaintenanceBooking={isMaintenanceBooking} 
                 />
               </div>
             </div>

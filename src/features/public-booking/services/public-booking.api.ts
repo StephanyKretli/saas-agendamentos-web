@@ -20,20 +20,29 @@ export async function getBookingProfile(
 
 export async function getBookingAvailability(params: {
   username: string;
-  serviceId: string;
+  serviceId?: string; // 🌟 Agora é opcional
+  cartItems?: { serviceId: string; isMaintenance: boolean }[]; // 🌟 O Carrinho entra aqui!
   date: string;
   professionalId: string; 
   isMaintenance?: boolean;
 }): Promise<PublicAvailabilityResponse> {
   const searchParams = new URLSearchParams({
-    serviceId: params.serviceId,
     date: params.date,
     professionalId: params.professionalId, 
   });
 
-  // 🌟 A PEÇA QUE FALTAVA: Adicionar a flag na URL se for manutenção!
+  // Mantém a compatibilidade com a versão antiga de 1 serviço
+  if (params.serviceId) {
+    searchParams.append("serviceId", params.serviceId);
+  }
+
   if (params.isMaintenance) {
     searchParams.append("isMaintenance", "true");
+  }
+
+  // 🌟 A NOVA PEÇA: Se houver um carrinho, transforma o array em string e envia na URL!
+  if (params.cartItems && params.cartItems.length > 0) {
+    searchParams.append("cartItems", JSON.stringify(params.cartItems));
   }
 
   return api.get(
