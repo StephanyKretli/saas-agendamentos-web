@@ -18,6 +18,9 @@ export type Service = {
     name: string;
     avatarUrl?: string | null;
   }[];
+  hasMaintenance?: boolean;
+  maintenanceDurationMinutes?: number | null;
+  maintenancePriceCents?: number | null;
 };
 
 export type CreateServicePayload = {

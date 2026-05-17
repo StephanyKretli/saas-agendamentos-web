@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { useDeleteService } from "../hooks/use-delete-service";
 import { toast } from "react-hot-toast";
 import { Service } from "@/features/services/types/services.types";
-// IMPORTANTE: Adicionados Trash2, Clock e Edit3 que estavam faltando
 import { 
   Scissors, Brush, Sparkles, Droplets, Flower2, Wand2, Heart, Crown, Smile,
   HandIcon, Zap, GlassWater, User, SprayCan, Gem, Footprints, Eye, 
-  PencilLine, // Novo ícone de maquiagem
-  Trash2,     // Ícone para excluir
-  Clock,      // Ícone para duração
-  Edit3       // Ícone para editar
+  PencilLine,
+  Trash2,     
+  Clock,      
+  Edit3,      
+  RefreshCw // 🌟 Ícone adicionado para a manutenção
 } from "lucide-react";
 
 interface ServiceListProps {
@@ -62,6 +62,16 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
                 {/* @ts-ignore */}
                 {service.description || "Sem descrição disponível."}
               </p>
+              
+              {/* 🌟 SELO DE MANUTENÇÃO (Aparece apenas se hasMaintenance for true) */}
+              {service.hasMaintenance && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-500">
+                  <RefreshCw className="h-3 w-3" />
+                  <span>
+                    Manutenção: {(service.maintenanceDurationMinutes)}min • R$ {(Number(service.maintenancePriceCents ?? 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -94,37 +104,25 @@ export function ServiceList({ services, onDeleteSuccess, onEdit }: ServiceListPr
 
 export function getServiceIcon(iconId: string | null | undefined) {
   const icons: Record<string, any> = {
-    // Barbearia
     scissors: Scissors,
     spray: SprayCan,
     user: User,
-
-    // Salão / Cabelo
     wand2: Wand2,
     droplets: Droplets,
     crown: Crown,
-
-    // Unhas
     hand: HandIcon,
     foot: Footprints,
     sparkles: Sparkles,
-
-    // Estética & Pele
     glass: GlassWater,
     PencilLine: PencilLine,
     zap: Zap,
     eye: Eye,
     gem: Gem,
-
-    // Bem-estar / Outros
     flower2: Flower2,
     heart: Heart,
     smile: Smile,
   };
 
-  // Se o ícone não for encontrado (ou for nulo), 
-  // usamos a Scissors (Tesoura) como fallback padrão.
   const IconComponent = icons[iconId as string] || Scissors;
-  
   return <IconComponent className="h-5 w-5" />;
 }
