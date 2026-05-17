@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, Check, Wrench, Search, Plus, Trash2, Scissors } from "lucide-react";
+import { ChevronLeft, Check, Wrench, Search, Plus, Trash2, Scissors, Calendar as CalendarIcon, Sparkles } from "lucide-react";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
@@ -74,7 +74,6 @@ function StepBadge({ step, title, active, done, onClick }: any) {
   );
 }
 
-// Resumo Lateral (Desktop)
 function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime, onRemove }: any) {
   const totalDuration = cart.reduce((acc: number, item: CartItem) => acc + item.finalDuration, 0);
   const totalPrice = cart.reduce((acc: number, item: CartItem) => acc + item.finalPrice, 0);
@@ -94,7 +93,7 @@ function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTi
               {cart.map((item: CartItem, idx: number) => (
                 <div key={idx} className="bg-muted/40 p-2 rounded-lg text-sm flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{item.service.name} {item.isMaintenance && <span className="text-primary text-xs">(Manutenção)</span>}</p>
+                    <p className="font-medium">{item.service.name} {item.isMaintenance && <span className="text-emerald-500 text-xs font-semibold">(Manutenção)</span>}</p>
                     <p className="text-xs text-muted-foreground">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
                   </div>
                   <button onClick={() => onRemove(idx)} className="text-muted-foreground hover:text-destructive p-1 transition-colors">
@@ -148,13 +147,6 @@ export default function BookingPage() {
 
   const stepsContainerRef = React.useRef<HTMLElement>(null);
 
-  React.useEffect(() => {
-    if (stepsContainerRef.current) {
-      const activeElement = stepsContainerRef.current.querySelector('[data-active="true"]');
-      if (activeElement) activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-    }
-  }, [currentStep]);
-
   const filteredServices = React.useMemo(() => {
     if (!data?.services) return [];
     return data.services.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -166,8 +158,8 @@ export default function BookingPage() {
     setCart([...cart, {
       service,
       isMaintenance,
-      finalPrice: isMaintenance ? service.maintenancePriceCents! : service.priceCents,
-      finalDuration: isMaintenance ? service.maintenanceDurationMinutes! : service.duration
+      finalPrice: isMaintenance ? Number(service.maintenancePriceCents ?? 0) : service.priceCents,
+      finalDuration: isMaintenance ? Number(service.maintenanceDurationMinutes ?? 0) : service.duration
     }]);
   };
 
@@ -237,7 +229,7 @@ export default function BookingPage() {
           </div>
         ) : (
           <>
-            <section ref={stepsContainerRef} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
+            <section ref={stepsContainerRef as any} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
               <StepBadge step={1} title="Serviços" active={currentStep === 1} done={currentStep > 1} onClick={() => setCurrentStep(1)} />
               <StepBadge step={2} title="Profissional" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
               <StepBadge step={3} title="Data" active={currentStep === 3} done={currentStep > 3} onClick={() => setCurrentStep(3)} />
@@ -248,19 +240,19 @@ export default function BookingPage() {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 
-                {/* PASSO 1: BUSCA E CARRINHO */}
+                {/* PASSO 1: BUSCA E SELEÇÃO DE PROCEDIMENTO/MANUTENÇÃO */}
                 {currentStep === 1 && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
                     <div>
                       <h2 className="text-xl font-semibold text-foreground">Monte seu atendimento</h2>
-                      <p className="text-sm text-muted-foreground mt-1">Adicione os procedimentos desejados.</p>
+                      <p className="text-sm text-muted-foreground mt-1">Busque os procedimentos e selecione a opção desejada.</p>
                     </div>
 
-                    {/* 🌟 O NOVO CARRINHO VISÍVEL (MOBILE E DESKTOP) */}
+                    {/* Carrinho de Cima */}
                     {cart.length > 0 && (
                       <div className="p-4 rounded-xl border border-primary/30 bg-primary/5">
                         <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" /> Serviços Selecionados
+                          <Check className="h-4 w-4 text-primary" /> Selecionados para o Agendamento
                         </h3>
                         <div className="space-y-2">
                           {cart.map((item, index) => (
@@ -268,7 +260,11 @@ export default function BookingPage() {
                               <div>
                                 <p className="text-sm font-medium">
                                   {item.service.name} 
-                                  {item.isMaintenance && <span className="text-primary text-[10px] font-bold uppercase ml-2 px-2 py-0.5 bg-primary/10 rounded-full">Manutenção</span>}
+                                  {item.isMaintenance && (
+                                    <span className="text-emerald-500 text-[10px] font-bold uppercase ml-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                      Manutenção
+                                    </span>
+                                  )}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
                               </div>
@@ -276,7 +272,7 @@ export default function BookingPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => handleRemoveService(index)} 
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -286,6 +282,7 @@ export default function BookingPage() {
                       </div>
                     )}
 
+                    {/* Barra de Busca */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <input
@@ -297,55 +294,73 @@ export default function BookingPage() {
                       />
                     </div>
 
+                    {/* Listagem de Serviços com Seleção Transparente */}
                     <div className="grid gap-3 max-h-100 overflow-y-auto pr-2">
                       {filteredServices.length === 0 ? (
                         <p className="text-center text-muted-foreground py-8">Nenhum serviço encontrado.</p>
                       ) : (
-                        filteredServices.map((service) => (
-                          <div key={service.id} className="p-4 rounded-xl border border-border bg-background flex flex-col sm:flex-row gap-4 justify-between sm:items-center hover:border-primary/30 transition-colors">
-                            <div>
-                              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                                {service.name}
-                              </h3>
-                              <p className="text-sm text-muted-foreground mt-1">{service.duration} min • {formatPrice(service.priceCents)}</p>
-                            </div>
+                        filteredServices.map((service) => {
+                          const hasMaintenanceOption = !!service.hasMaintenance;
 
-                            {/* 🌟 ESCOLHA DE PROCEDIMENTO NORMAL VS MANUTENÇÃO AQUI */}
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => handleAddService(service, false)}
-                                className="whitespace-nowrap"
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Procedimento
-                              </Button>
+                          return (
+                            <div key={service.id} className="p-4 rounded-xl border border-border bg-background flex flex-col md:flex-row gap-4 justify-between md:items-center hover:border-primary/20 transition-colors">
+                              <div className="space-y-1">
+                                <h3 className="font-semibold text-foreground">{service.name}</h3>
+                                {!hasMaintenanceOption && (
+                                  <p className="text-sm text-muted-foreground">{service.duration} min • {formatPrice(service.priceCents)}</p>
+                                )}
+                              </div>
 
-                              {service.hasMaintenance && (
-                                <Button 
-                                  variant="secondary" 
-                                  size="sm" 
-                                  onClick={() => handleAddService(service, true)}
-                                  className="whitespace-nowrap bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/20"
-                                >
-                                  <Wrench className="h-4 w-4 mr-1" /> Manutenção
-                                </Button>
-                              )}
+                              {/* ÁREA DE SELEÇÃO EXPLICITA DE TIPO */}
+                              <div className="flex flex-wrap gap-2 items-center">
+                                {hasMaintenanceOption ? (
+                                  <>
+                                    {/* Opção Procedimento Comum */}
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleAddService(service, false)}
+                                      className="flex flex-col items-start p-2.5 px-4 rounded-xl border border-border bg-card hover:border-primary/40 text-left transition-all text-xs"
+                                    >
+                                      <span className="font-medium flex items-center gap-1 text-foreground"><Sparkles className="h-3 w-3 text-primary" /> Normal</span>
+                                      <span className="text-muted-foreground mt-0.5">{service.duration}min • {formatPrice(service.priceCents)}</span>
+                                    </button>
+
+                                    {/* Opção Manutenção */}
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleAddService(service, true)}
+                                      className="flex flex-col items-start p-2.5 px-4 rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/60 text-left transition-all text-xs"
+                                    >
+                                      <span className="font-bold flex items-center gap-1 text-emerald-600"><Wrench className="h-3 w-3" /> Manutenção</span>
+                                      <span className="text-muted-foreground mt-0.5">{service.maintenanceDurationMinutes}min • {formatPrice(service.maintenancePriceCents ?? 0)}</span>
+                                    </button>
+                                  </>
+                                ) : (
+                                  /* Se não tiver manutenção, exibe botão clássico de adicionar direto */
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleAddService(service, false)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Selecionar
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
 
                     <div className="pt-4 border-t border-border flex items-center justify-between">
                       <p className="text-sm font-medium">
-                        {cart.length} serviço(s) na lista
+                        {cart.length} procedimento(s) na lista
                       </p>
                       <Button 
                         disabled={cart.length === 0} 
                         onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
                       >
-                        Avançar
+                        Avançar para Profissional
                       </Button>
                     </div>
                   </section>
@@ -358,9 +373,7 @@ export default function BookingPage() {
                       <button onClick={() => setCurrentStep(1)} className="p-2 hover:bg-muted rounded-full transition-colors shrink-0">
                         <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                       </button>
-                      <div>
-                        <h2 className="text-xl font-semibold text-foreground">Escolha o profissional</h2>
-                      </div>
+                      <h2 className="text-xl font-semibold text-foreground">Escolha o profissional</h2>
                     </div>
                     
                     <div className="space-y-3">
