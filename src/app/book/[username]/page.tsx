@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft, Check, Wrench, Search, Plus, Trash2, Scissors, Calendar as CalendarIcon, Sparkles } from "lucide-react";
+import { ChevronLeft, Check, Wrench, Search, Plus, Trash2, Scissors, Calendar as CalendarIcon, Sparkles, UserX } from "lucide-react";
 import { useBookingProfile } from "@/features/public-booking/hooks/use-booking-profile";
 import { useBookingAvailability } from "@/features/public-booking/hooks/use-booking-availability";
 import { useCreatePublicAppointment } from "@/features/public-booking/hooks/use-create-public-appointment";
@@ -167,6 +167,23 @@ export default function BookingPage() {
     setCart(cart.filter((_, i) => i !== index));
   };
 
+  // 🌟 INTERSEÇÃO INTELIGENTE: Filtra profissionais que atendem a TODOS os serviços selecionados
+  const availableProfessionals = React.useMemo(() => {
+    if (cart.length === 0) return [];
+    
+    // Começa com a lista de profissionais do primeiro serviço
+    let intersection = cart[0].service.professionals || [];
+    
+    // Cruza com a lista dos próximos serviços do carrinho
+    for (let i = 1; i < cart.length; i++) {
+      const nextServiceProfs = cart[i].service.professionals || [];
+      const nextIds = new Set(nextServiceProfs.map(p => p.id));
+      intersection = intersection.filter(p => nextIds.has(p.id));
+    }
+    
+    return intersection;
+  }, [cart]);
+
   const availabilityQuery = useBookingAvailability({
     username,
     cartItems: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), 
@@ -207,7 +224,6 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  const availableProfessionals = cart.length > 0 ? (cart[0].service.professionals || []) : [];
   const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
 
   return (
@@ -240,7 +256,7 @@ export default function BookingPage() {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 
-                {/* PASSO 1: BUSCA E SELEÇÃO DE PROCEDIMENTO/MANUTENÇÃO */}
+                {/* PASSO 1: BUSCA E SELEÇÃO */}
                 {currentStep === 1 && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
                     <div>
@@ -294,7 +310,7 @@ export default function BookingPage() {
                       />
                     </div>
 
-                    {/* Listagem de Serviços com Seleção Transparente */}
+                    {/* Listagem de Serviços */}
                     <div className="grid gap-3 max-h-100 overflow-y-auto pr-2">
                       {filteredServices.length === 0 ? (
                         <p className="text-center text-muted-foreground py-8">Nenhum serviço encontrado.</p>
@@ -311,11 +327,9 @@ export default function BookingPage() {
                                 )}
                               </div>
 
-                              {/* ÁREA DE SELEÇÃO EXPLICITA DE TIPO */}
                               <div className="flex flex-wrap gap-2 items-center">
                                 {hasMaintenanceOption ? (
                                   <>
-                                    {/* Opção Procedimento Comum */}
                                     <button 
                                       type="button"
                                       onClick={() => handleAddService(service, false)}
@@ -325,7 +339,6 @@ export default function BookingPage() {
                                       <span className="text-muted-foreground mt-0.5">{service.duration}min • {formatPrice(service.priceCents)}</span>
                                     </button>
 
-                                    {/* Opção Manutenção */}
                                     <button 
                                       type="button"
                                       onClick={() => handleAddService(service, true)}
@@ -336,7 +349,6 @@ export default function BookingPage() {
                                     </button>
                                   </>
                                 ) : (
-                                  /* Se não tiver manutenção, exibe botão clássico de adicionar direto */
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
@@ -366,7 +378,7 @@ export default function BookingPage() {
                   </section>
                 )}
 
-                {/* PASSO 2: PROFISSIONAL */}
+                {/* PASSO 2: PROFISSIONAL COM FILTRO DE INTERSEÇÃO */}
                 {currentStep === 2 && cart.length > 0 && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="mb-6 flex items-center gap-3">
@@ -377,9 +389,19 @@ export default function BookingPage() {
                     </div>
                     
                     <div className="space-y-3">
+                      {/* 🌟 VALIDAÇÃO: Se nenhum profissional souber fazer o combo inteiro */}
                       {availableProfessionals.length === 0 ? (
-                        <div className="p-4 text-center border rounded-2xl bg-muted/30">
-                          <p className="text-sm text-muted-foreground">Nenhum profissional disponível.</p>
+                        <div className="p-6 text-center border border-dashed rounded-2xl bg-muted/40 flex flex-col items-center justify-center">
+                          <UserX className="h-8 w-8 text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium text-foreground">
+                            Os serviços selecionados não podem ser realizados pela mesma pessoa.
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 max-w-md">
+                            A equipa não possui nenhum membro que realize todos estes procedimentos em conjunto. Por favor, remova algum item do carrinho ou faça agendamentos separados.
+                          </p>
+                          <Button variant="outline" size="sm" className="mt-4" onClick={() => setCurrentStep(1)}>
+                            Voltar e Ajustar Carrinho
+                          </Button>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
