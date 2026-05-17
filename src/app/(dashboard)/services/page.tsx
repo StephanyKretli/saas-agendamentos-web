@@ -112,7 +112,7 @@ export default function ServicesPage() {
               </div>
               
               <ServiceForm 
-                initialValues={editingService} 
+                initialData={editingService} 
                 onSuccess={() => {
                   handleCloseModal();
                   refetch();
