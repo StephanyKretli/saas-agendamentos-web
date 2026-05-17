@@ -19,7 +19,6 @@ import type {
 } from "@/features/public-booking/types/public-booking.types";
 import type { PublicBookingFormValues } from "@/features/public-booking/schemas/public-booking.schema";
 
-// --- TIPAGEM DO CARRINHO ---
 export interface CartItem {
   service: PublicService;
   isMaintenance: boolean;
@@ -75,8 +74,8 @@ function StepBadge({ step, title, active, done, onClick }: any) {
   );
 }
 
-// 🌟 RESUMO LATERAL ATUALIZADO PARA MÚLTIPLOS SERVIÇOS
-function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime }: any) {
+// Resumo Lateral (Desktop)
+function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime, onRemove }: any) {
   const totalDuration = cart.reduce((acc: number, item: CartItem) => acc + item.finalDuration, 0);
   const totalPrice = cart.reduce((acc: number, item: CartItem) => acc + item.finalPrice, 0);
 
@@ -93,9 +92,14 @@ function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTi
           ) : (
             <div className="space-y-2">
               {cart.map((item: CartItem, idx: number) => (
-                <div key={idx} className="bg-muted/40 p-2 rounded-lg text-sm">
-                  <p className="font-medium">{item.service.name} {item.isMaintenance && <span className="text-primary text-xs">(Manutenção)</span>}</p>
-                  <p className="text-xs text-muted-foreground">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
+                <div key={idx} className="bg-muted/40 p-2 rounded-lg text-sm flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{item.service.name} {item.isMaintenance && <span className="text-primary text-xs">(Manutenção)</span>}</p>
+                    <p className="text-xs text-muted-foreground">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
+                  </div>
+                  <button onClick={() => onRemove(idx)} className="text-muted-foreground hover:text-destructive p-1 transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
               <div className="flex justify-between font-bold text-sm pt-2 border-t mt-2">
@@ -133,7 +137,6 @@ export default function BookingPage() {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState("");
   
-  // 🌟 ESTADO DO CARRINHO (Substitui o selectedService singular)
   const [cart, setCart] = React.useState<CartItem[]>([]);
   
   const [selectedProfessional, setSelectedProfessional] = React.useState<any | null>(null);
@@ -152,13 +155,11 @@ export default function BookingPage() {
     }
   }, [currentStep]);
 
-  // Filtra serviços baseado na busca
   const filteredServices = React.useMemo(() => {
     if (!data?.services) return [];
     return data.services.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [data?.services, searchTerm]);
 
-  // Lógica para adicionar ao carrinho
   const handleAddService = (service: PublicService, isMaintenance: boolean) => {
     if (cart.some(item => item.service.id === service.id && item.isMaintenance === isMaintenance)) return;
     
@@ -174,11 +175,9 @@ export default function BookingPage() {
     setCart(cart.filter((_, i) => i !== index));
   };
 
-  // ⚠️ ATENÇÃO: A query do backend precisará ser ajustada para receber arrays no futuro.
-  // Por enquanto, enviamos um payload modificado.
   const availabilityQuery = useBookingAvailability({
     username,
-    cartItems: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), // Adaptar no backend
+    cartItems: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), 
     date: selectedDate ? formatToYYYYMMDD(selectedDate) : null,
     professionalId: selectedProfessional?.id ?? null,
   });
@@ -197,7 +196,7 @@ export default function BookingPage() {
     const response = await createAppointmentMutation.mutateAsync({
       username,
       payload: {
-        services: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), // Adaptar DTO no backend
+        services: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), 
         date: `${dateString}T${selectedTime}:00`,
         professionalId: selectedProfessional.id,
         clientName: values.clientName,
@@ -216,9 +215,7 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  // Cruza os profissionais que fazem TODOS os serviços selecionados (ou simplifica para os profissionais do 1º serviço no MVP)
   const availableProfessionals = cart.length > 0 ? (cart[0].service.professionals || []) : [];
-
   const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
 
   return (
@@ -251,15 +248,44 @@ export default function BookingPage() {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 
-                {/* PASSO 1: BUSCA, CARRINHO E ESCOLHA DE MANUTENÇÃO */}
+                {/* PASSO 1: BUSCA E CARRINHO */}
                 {currentStep === 1 && (
                   <section className="rounded-3xl border border-border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
                     <div>
                       <h2 className="text-xl font-semibold text-foreground">Monte seu atendimento</h2>
-                      <p className="text-sm text-muted-foreground mt-1">Busque e adicione os procedimentos que deseja.</p>
+                      <p className="text-sm text-muted-foreground mt-1">Adicione os procedimentos desejados.</p>
                     </div>
 
-                    {/* Barra de Busca */}
+                    {/* 🌟 O NOVO CARRINHO VISÍVEL (MOBILE E DESKTOP) */}
+                    {cart.length > 0 && (
+                      <div className="p-4 rounded-xl border border-primary/30 bg-primary/5">
+                        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Check className="h-4 w-4 text-primary" /> Serviços Selecionados
+                        </h3>
+                        <div className="space-y-2">
+                          {cart.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between bg-card p-3 rounded-lg border border-border shadow-sm">
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {item.service.name} 
+                                  {item.isMaintenance && <span className="text-primary text-[10px] font-bold uppercase ml-2 px-2 py-0.5 bg-primary/10 rounded-full">Manutenção</span>}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{item.finalDuration} min • {formatPrice(item.finalPrice)}</p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleRemoveService(index)} 
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <input
@@ -271,8 +297,7 @@ export default function BookingPage() {
                       />
                     </div>
 
-                    {/* Lista Dinâmica com Manutenção */}
-                    <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2">
+                    <div className="grid gap-3 max-h-100 overflow-y-auto pr-2">
                       {filteredServices.length === 0 ? (
                         <p className="text-center text-muted-foreground py-8">Nenhum serviço encontrado.</p>
                       ) : (
@@ -285,6 +310,7 @@ export default function BookingPage() {
                               <p className="text-sm text-muted-foreground mt-1">{service.duration} min • {formatPrice(service.priceCents)}</p>
                             </div>
 
+                            {/* 🌟 ESCOLHA DE PROCEDIMENTO NORMAL VS MANUTENÇÃO AQUI */}
                             <div className="flex flex-col sm:flex-row gap-2">
                               <Button 
                                 variant="outline" 
@@ -292,7 +318,7 @@ export default function BookingPage() {
                                 onClick={() => handleAddService(service, false)}
                                 className="whitespace-nowrap"
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Adicionar
+                                <Plus className="h-4 w-4 mr-1" /> Procedimento
                               </Button>
 
                               {service.hasMaintenance && (
@@ -300,7 +326,7 @@ export default function BookingPage() {
                                   variant="secondary" 
                                   size="sm" 
                                   onClick={() => handleAddService(service, true)}
-                                  className="whitespace-nowrap bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                                  className="whitespace-nowrap bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/20"
                                 >
                                   <Wrench className="h-4 w-4 mr-1" /> Manutenção
                                 </Button>
@@ -311,16 +337,15 @@ export default function BookingPage() {
                       )}
                     </div>
 
-                    {/* Footer do Passo 1 (Avançar) */}
                     <div className="pt-4 border-t border-border flex items-center justify-between">
                       <p className="text-sm font-medium">
-                        {cart.length} serviço(s) selecionado(s)
+                        {cart.length} serviço(s) na lista
                       </p>
                       <Button 
                         disabled={cart.length === 0} 
                         onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
                       >
-                        Avançar para Profissional
+                        Avançar
                       </Button>
                     </div>
                   </section>
@@ -420,6 +445,7 @@ export default function BookingPage() {
                   selectedProfessional={selectedProfessional} 
                   selectedDate={selectedDate} 
                   selectedTime={selectedTime} 
+                  onRemove={handleRemoveService}
                 />
               </div>
             </div>
