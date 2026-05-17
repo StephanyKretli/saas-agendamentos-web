@@ -4,9 +4,9 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Scissors, Clock, DollarSign, Wrench, User, Check } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
-// 🌟 CORREÇÃO: Importação oficial do useTeam
 import { useTeam } from "@/features/team/hooks/use-team"; 
-import { createService } from "../services/services.api"; 
+// 🌟 CORREÇÃO 1: Importamos a função de atualizar (updateService)
+import { createService, updateService } from "../services/services.api"; 
 
 interface ServiceFormProps {
   initialData?: any; 
@@ -31,7 +31,6 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🌟 CORREÇÃO: Utilizando o useTeam e mapeando os dados reais da equipe
   const { data: teamData } = useTeam();
   const professionals = Array.isArray(teamData) 
     ? teamData 
@@ -67,9 +66,17 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
         icon: initialData?.icon || "scissors", 
       };
 
-      await createService(payload);
+      // 🌟 CORREÇÃO 2: A bifurcação inteligente!
+      if (initialData && initialData.id) {
+        // Se existir initialData com ID, é uma EDIÇÃO. Chama o updateService.
+        await updateService(initialData.id, payload);
+        toast.success("Serviço atualizado com sucesso!");
+      } else {
+        // Se não tiver ID, é um serviço NOVO. Chama o createService.
+        await createService(payload);
+        toast.success("Serviço salvo com sucesso!");
+      }
       
-      toast.success("Serviço salvo com sucesso!");
       onSuccess?.();
     } catch (error: any) {
       toast.error(error.message || "Erro ao salvar o serviço");

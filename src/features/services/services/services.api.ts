@@ -17,3 +17,10 @@ export async function createService(payload: CreateServicePayload): Promise<Serv
     headers: getAuthHeaders()
   }) as Promise<Service>;
 }
+
+// 🌟 FUNÇÃO NOVA PARA ATUALIZAR O SERVIÇO
+export async function updateService(id: string, payload: Partial<CreateServicePayload>): Promise<Service> {
+  return api.patch(`/services/${id}`, payload, {
+    headers: getAuthHeaders()
+  }) as Promise<Service>;
+}
