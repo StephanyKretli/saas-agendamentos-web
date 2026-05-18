@@ -74,7 +74,7 @@ function StepBadge({ step, title, active, done, onClick }: any) {
   );
 }
 
-function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime, onRemove }: any) {
+function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTime, onRemove, currentStep, onNextStep }: any) {
   const totalDuration = cart.reduce((acc: number, item: CartItem) => acc + item.finalDuration, 0);
   const totalPrice = cart.reduce((acc: number, item: CartItem) => acc + item.finalPrice, 0);
 
@@ -105,6 +105,16 @@ function SelectionSummary({ cart, selectedProfessional, selectedDate, selectedTi
                 <span>Total ({totalDuration} min)</span>
                 <span>{formatPrice(totalPrice)}</span>
               </div>
+              
+              {/* 🌟 NOVO BOTÃO DE AVANÇAR NO RESUMO */}
+              {currentStep === 1 && (
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={onNextStep}
+                >
+                  Avançar para Profissional
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -481,6 +491,8 @@ export default function BookingPage() {
                   selectedDate={selectedDate} 
                   selectedTime={selectedTime} 
                   onRemove={handleRemoveService}
+                  currentStep={currentStep}
+                  onNextStep={() => { setSelectedProfessional(null); setCurrentStep(2); }}
                 />
               </div>
             </div>
