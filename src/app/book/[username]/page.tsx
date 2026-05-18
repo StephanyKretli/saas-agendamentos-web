@@ -305,6 +305,16 @@ export default function BookingPage() {
                             </div>
                           ))}
                         </div>
+                        
+                        {/* 🌟 NOVO BOTÃO DE AVANÇAR NO MOBILE */}
+                        <div className="mt-4 pt-4 border-t border-primary/20 md:hidden">
+                          <Button 
+                            className="w-full"
+                            onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
+                          >
+                            Avançar para Profissional
+                          </Button>
+                        </div>
                       </div>
                     )}
 
