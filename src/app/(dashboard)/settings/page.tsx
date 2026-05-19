@@ -168,25 +168,33 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!isDirty) return;
 
-    // 🔴 Se estiver na aba segurança, dispara a troca de senha
     if (activeTab === "seguranca") {
       handlePasswordSubmit(e);
       return;
-  }
+    }
 
+    // 🌟 Removemos os campos do PIX das configurações gerais
     const settingsPayload = {
-      name: formData.name, username: formData.username, phone: formData.phone,
-      document: formData.document.replace(/\D/g, ''), bio: formData.bio, requirePixDeposit: formData.requirePixDeposit,
-      pixDepositPercentage: formData.pixDepositPercentage, mercadoPagoAccessToken: formData.mercadoPagoAccessToken,
+      name: formData.name, 
+      username: formData.username, 
+      phone: formData.phone,
+      document: formData.document.replace(/\D/g, ''), 
+      bio: formData.bio, 
       centralizePayments: formData.centralizePayments,
     };
+    
+    // 🌟 E colocamos aqui, no pacote que vai para a rota financeira!
     const financialPayload = {
-      absorbPixFee: formData.absorbPixFee, commissionType: formData.commissionType,
+      absorbPixFee: formData.absorbPixFee, 
+      commissionType: formData.commissionType,
       defaultCommissionRate: formData.defaultCommissionRate === "" ? 0 : Number(formData.defaultCommissionRate),
+      requirePixDeposit: formData.requirePixDeposit,
+      pixDepositPercentage: formData.pixDepositPercentage,
+      mercadoPagoAccessToken: formData.mercadoPagoAccessToken,
     };
 
     try {

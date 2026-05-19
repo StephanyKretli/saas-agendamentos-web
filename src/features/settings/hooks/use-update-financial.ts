@@ -9,6 +9,9 @@ interface UpdateFinancialData {
   absorbPixFee?: boolean;
   defaultCommissionRate?: number;
   commissionType?: "PERCENTAGE" | "FIXED";
+  requirePixDeposit?: boolean;
+  pixDepositPercentage?: number;
+  mercadoPagoAccessToken?: string;
 }
 
 export function useUpdateFinancial() {
