@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { Scissors, Clock, DollarSign, Wrench, User, Check } from "lucide-react"; 
+import { Scissors, Clock, DollarSign, Wrench, User, Check, Zap } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { useTeam } from "@/features/team/hooks/use-team"; 
-// 🌟 CORREÇÃO 1: Importamos a função de atualizar (updateService)
 import { createService, updateService } from "../services/services.api"; 
 
 interface ServiceFormProps {
@@ -22,6 +21,9 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
   const [selectedProfessionalIds, setSelectedProfessionalIds] = useState<string[]>(
     initialData?.professionalIds || []
   );
+
+  // 🌟 ESTADO DO ENCAIXE INTELIGENTE
+  const [optimizeSlots, setOptimizeSlots] = useState(initialData?.optimizeSlots || false);
 
   const [hasMaintenance, setHasMaintenance] = useState(initialData?.hasMaintenance || false);
   const [maintenanceDuration, setMaintenanceDuration] = useState(initialData?.maintenanceDurationMinutes || "");
@@ -64,15 +66,13 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
         maintenancePriceCents: hasMaintenance ? Math.round(Number(maintenancePrice) * 100) : null,
         professionalIds: selectedProfessionalIds, 
         icon: initialData?.icon || "scissors", 
+        optimizeSlots, // 🌟 ENVIANDO PARA O BACKEND
       };
 
-      // 🌟 CORREÇÃO 2: A bifurcação inteligente!
       if (initialData && initialData.id) {
-        // Se existir initialData com ID, é uma EDIÇÃO. Chama o updateService.
         await updateService(initialData.id, payload);
         toast.success("Serviço atualizado com sucesso!");
       } else {
-        // Se não tiver ID, é um serviço NOVO. Chama o createService.
         await createService(payload);
         toast.success("Serviço salvo com sucesso!");
       }
@@ -105,7 +105,7 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
           />
         </div>
 
-        {/* SELEÇÃO MÚLTIPLA DE PROFISSIONAIS REAIS (EQUIPE) */}
+        {/* SELEÇÃO MÚLTIPLA DE PROFISSIONAIS */}
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <User className="h-4 w-4 text-muted-foreground" />
@@ -179,8 +179,35 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
           </div>
         </div>
 
+        {/* 🌟 NOVO: TOGGLE DE OTIMIZAÇÃO (ENCAIXE INTELIGENTE) */}
+        <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-xl mt-6">
+          <div className="flex gap-3 items-center">
+            <div className="p-2 bg-background border border-border rounded-lg text-primary shadow-sm">
+              <Zap className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col pr-4">
+              <span className="text-sm font-semibold text-foreground">
+                Otimizar horários (Encaixe Inteligente)
+              </span>
+              <span className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Ideal para serviços rápidos. Força os clientes a agendarem em horários adjacentes para evitar buracos na sua agenda.
+              </span>
+            </div>
+          </div>
+          
+          <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+            <input 
+              type="checkbox" 
+              className="sr-only peer"
+              checked={optimizeSlots}
+              onChange={(e) => setOptimizeSlots(e.target.checked)}
+            />
+            <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
         {/* DIVISOR / TOGGLE DE MANUTENÇÃO NATIVA */}
-        <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-xl mt-6">
+        <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-xl mt-4">
           <div className="flex gap-3 items-center">
             <div className="p-2 bg-background border border-border rounded-lg text-foreground shadow-sm">
               <Wrench className="h-4 w-4" />
@@ -195,7 +222,7 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
             </div>
           </div>
           
-          <label className="relative inline-flex items-center cursor-pointer select-none">
+          <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
             <input 
               type="checkbox" 
               className="sr-only peer"
