@@ -16,6 +16,10 @@ export type DashboardMetrics = {
   netRevenueFormatted?: string;
   pixFeesCents?: number;
   pixFeesFormatted?: string;
+  
+  // 🌟 Novas variáveis adicionadas para a comissão individual da equipa
+  individualCommissionCents?: number;
+  individualCommissionFormatted?: string;
 };
 
 export type TodayAppointment = {
@@ -24,6 +28,5 @@ export type TodayAppointment = {
   serviceName: string;
   startTime: string; 
   endTime: string;
-  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELED";
+  status: "PENDING" | "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELED"; // Adicionei 'SCHEDULED' aqui também para garantir compatibilidade com o seu statusMap!
 };
-
