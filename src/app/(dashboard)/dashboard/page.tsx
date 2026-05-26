@@ -113,6 +113,13 @@ export default function DashboardPage() {
     );
   }
 
+  // Ajuste do Grid baseado no tipo de usuário para o layout não quebrar
+  const getGridCols = () => {
+    if (metrics?.isRootOwner) return 'lg:grid-cols-3';
+    if (metrics?.isOwner) return 'sm:grid-cols-2 lg:grid-cols-2';
+    return 'sm:grid-cols-2 lg:grid-cols-3'; // Para o membro da equipa (ocupa menos espaço)
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8 pb-10 max-w-6xl mx-auto">
       
@@ -137,28 +144,32 @@ export default function DashboardPage() {
       {/* 🌟 SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES BLINDADA */}
       <motion.div 
         variants={statsContainerVariants} initial="hidden" animate="visible"
-        className={`grid grid-cols-1 gap-4 ${metrics?.isOwner ? 'lg:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-3'}`}
+        className={`grid grid-cols-1 gap-4 ${getGridCols()}`}
       >
         
         {/* ========================================= */}
-        {/* CARDS EXCLUSIVOS DA CONTA DONA (ADMINISTRADOR) */}
+        {/* CARD DO FATURAMENTO (DONA E CO-ADMIN) */}
         {/* ========================================= */}
         {metrics?.isOwner && (
-          <>
-            {/* Card 1: Faturamento Bruto */}
-            <motion.div id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
-              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Faturamento Bruto</p>
-                  <p className="text-2xl font-black text-foreground">{metrics?.realizedRevenueFormatted || "R$ 0,00"}</p>
-                </div>
+          <motion.div id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <DollarSign className="h-6 w-6" />
               </div>
-            </motion.div>
+              <div>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Faturamento Bruto</p>
+                <p className="text-2xl font-black text-foreground">{metrics?.realizedRevenueFormatted || "R$ 0,00"}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
+        {/* ========================================= */}
+        {/* CARDS ADMINISTRATIVOS (SÓ A DONA VÊ) 👑 */}
+        {/* ========================================= */}
+        {metrics?.isRootOwner && (
+          <>
             {/* Card 2: A Pagar (Equipe) */}
             <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
               <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
@@ -214,9 +225,10 @@ export default function DashboardPage() {
         )}
 
         {/* ========================================= */}
-        {/* CARD EXCLUSIVO DA EQUIPE (NÃO DONO) */}
+        {/* CARD EXCLUSIVO DA EQUIPA & CO-ADMINS */}
         {/* ========================================= */}
-        {!metrics?.isOwner && (
+        {/* Só mostra a comissão individual se a pessoa NÃO for a Root Owner */}
+        {!metrics?.isRootOwner && (
           <motion.div id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden lg:col-span-1">
             <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-green-500/5 blur-2xl" />
             <div className="flex items-center gap-4">
