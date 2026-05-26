@@ -28,7 +28,11 @@ import { motion, Variants } from "framer-motion";
 function formatTime(dateString: string) {
   if (!dateString) return "--:--";
   if (dateString.length <= 5) return dateString; 
-  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(dateString));
+  return new Intl.DateTimeFormat("pt-BR", { 
+    hour: "2-digit", 
+    minute: "2-digit",
+    timeZone: "UTC" // 🌟 CORREÇÃO: Obriga o navegador a não subtrair as 3 horas do fuso do Brasil
+  }).format(new Date(dateString));
 }
 
 function formatMonthYear(monthStr?: string) {
