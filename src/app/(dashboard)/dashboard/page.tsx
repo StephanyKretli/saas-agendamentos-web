@@ -5,13 +5,12 @@ import { useEffect } from "react";
 import { useDashboardMetrics } from "@/features/dashboard/hooks/use-dashboard-metrics";
 import { useDashboardToday } from "@/features/dashboard/hooks/use-dashboard-today";
 import { useSettings } from "@/features/settings/hooks/use-settings";
-import { useProductTour } from "@/hooks/use-product-tour"; // 🌟 Importamos o Hook do Tour
+import { useProductTour } from "@/hooks/use-product-tour"; 
 import { 
   DollarSign, 
   Calendar as CalendarIcon, 
   XCircle, 
   Award, 
-  CheckCircle, 
   Clock, 
   User, 
   Scissors,
@@ -82,7 +81,6 @@ export default function DashboardPage() {
   const { data: todayAgenda, isLoading: loadingToday } = useDashboardToday();
   const { data: profile } = useSettings();
   
-  // 🌟 Inicializamos o Tour
   const { startTour } = useProductTour();
 
   const appointments: TodayAppointment[] = Array.isArray(todayAgenda) 
@@ -92,16 +90,14 @@ export default function DashboardPage() {
   const firstName = profile?.name?.split(" ")[0] || "";
   const greeting = `${getGreeting()}${firstName ? `, ${firstName}` : "!"}`;
 
-  // 🌟 Dispara o Tour no primeiro acesso
   useEffect(() => {
     const hasSeenTour = localStorage.getItem("saas_onboarding_v1");
     
-    // Só inicia se as métricas já carregaram, para o tour não focar em blocos vazios
     if (!hasSeenTour && metrics && !loadingMetrics) {
       const timer = setTimeout(() => {
         startTour();
         localStorage.setItem("saas_onboarding_v1", "true");
-      }, 1000); // 1 segundo de delay para as animações Framer Motion terminarem
+      }, 1000); 
       
       return () => clearTimeout(timer);
     }
@@ -138,86 +134,106 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* 🌟 NOVA SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES BLINDADA */}
+      {/* 🌟 SECÇÃO: SAÚDE FINANCEIRA E COMISSÕES BLINDADA */}
       <motion.div 
         variants={statsContainerVariants} initial="hidden" animate="visible"
-        className={`grid grid-cols-1 gap-4 ${metrics?.isOwner ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
+        className={`grid grid-cols-1 gap-4 ${metrics?.isOwner ? 'lg:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-3'}`}
       >
-        {/* Card 1: Faturamento (Admin) / Produção (equipe) */}
-        <motion.div 
-          id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                {metrics?.isOwner ? "Faturamento Bruto" : "Minha Produção"}
-              </p>
-              <p className="text-2xl font-black text-foreground">{metrics?.realizedRevenueFormatted || "R$ 0,00"}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Card 2: A Pagar (Admin) / A Receber (equipe) */}
-        <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
-            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl" />
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  {metrics?.isOwner ? "A Pagar (Equipe)" : "Minha Comissão"}
-                </p>
-                <p className="text-2xl font-black text-foreground">{metrics?.teamCommissionsFormatted || "R$ 0,00"}</p>
-              </div>
-            </div>
-          </div>
-          {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
-          {!metrics?.isPro && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
-              <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
-                <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
-              </span>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Card 3: Lucro Líquido e Taxas (APENAS A DONA VÊ) 👑 */}
+        
+        {/* ========================================= */}
+        {/* CARDS EXCLUSIVOS DA CONTA DONA (ADMINISTRADOR) */}
+        {/* ========================================= */}
         {metrics?.isOwner && (
-          <motion.div variants={statItemVariants} className="rounded-3xl border border-primary/30 bg-primary/5 p-6 shadow-sm relative overflow-hidden">          
-            <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
-              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+          <>
+            {/* Card 1: Faturamento Bruto */}
+            <motion.div id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/5 blur-2xl" />
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
-                  <PiggyBank className="h-6 w-6" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                  <DollarSign className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
-                  <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Faturamento Bruto</p>
+                  <p className="text-2xl font-black text-foreground">{metrics?.realizedRevenueFormatted || "R$ 0,00"}</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
-                <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
-                <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
+            </motion.div>
+
+            {/* Card 2: A Pagar (Equipe) */}
+            <motion.div variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
+              <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/5 blur-2xl" />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">A Pagar (Equipe)</p>
+                    <p className="text-2xl font-black text-foreground">{metrics?.teamCommissionsFormatted || "R$ 0,00"}</p>
+                  </div>
+                </div>
+              </div>
+              {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
+              {!metrics?.isPro && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
+                  <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
+                    <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
+                  </span>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Card 3: Lucro Líquido e Taxas */}
+            <motion.div variants={statItemVariants} className="rounded-3xl border border-primary/30 bg-primary/5 p-6 shadow-sm relative overflow-hidden">         
+              <div className={`transition-all duration-300 ${!metrics?.isPro ? 'blur-xs opacity-40 select-none' : ''}`}>
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30">
+                    <PiggyBank className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-primary/80 uppercase tracking-wider">Lucro Líquido</p>
+                    <p className="text-2xl font-black text-primary">{metrics?.netRevenueFormatted || "R$ 0,00"}</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-medium text-primary/70">
+                  <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Taxas Mercado Pago:</span>
+                  <span>{metrics?.pixFeesFormatted || "R$ 0,00"}</span>
+                </div>
+              </div>
+              {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
+              {!metrics?.isPro && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
+                  <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
+                    <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+
+        {/* ========================================= */}
+        {/* CARD EXCLUSIVO DA EQUIPE (NÃO DONO) */}
+        {/* ========================================= */}
+        {!metrics?.isOwner && (
+          <motion.div id="tour-stats" variants={statItemVariants} className="rounded-3xl border border-border bg-card p-6 shadow-sm relative overflow-hidden lg:col-span-1">
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-green-500/5 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-500 border border-green-500/20">
+                <DollarSign className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">A Sua Comissão</p>
+                <p className="text-2xl font-black text-foreground">{metrics?.individualCommissionFormatted || "R$ 0,00"}</p>
               </div>
             </div>
-            {/* 🔒 OVERLAY DE BLOQUEIO PRO */}
-            {!metrics?.isPro && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-background/10">
-                <span className="flex items-center gap-1.5 text-xs font-black bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg">
-                  <Lock className="h-3.5 w-3.5" /> Exclusivo PRO
-                </span>
-              </div>
-            )}
           </motion.div>
         )}
+
       </motion.div>
 
-      {/* CARDS DE MÉTRICAS SECUNDÁRIAS (Cancelamentos e Destaque) */}
+      {/* CARDS DE MÉTRICAS SECUNDÁRIAS (Cancelamentos e Destaque - Visíveis para todos) */}
       <motion.div 
         variants={statsContainerVariants} initial="hidden" animate="visible"
         className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2"
@@ -257,7 +273,7 @@ export default function DashboardPage() {
 
       {/* SECÇÃO: AGENDA DE HOJE */}
       <motion.div 
-        id="tour-today-agenda" // 🌟 ID do Tour adicionado aqui!
+        id="tour-today-agenda"
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
         className="mt-8 sm:mt-10 rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
       >
@@ -269,7 +285,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link 
-            id="tour-link-agenda" // 🌟 ID do Tour adicionado aqui!
+            id="tour-link-agenda"
             href="/agenda" 
             className="hidden sm:flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 py-2 px-3 rounded-xl hover:bg-primary/10 active:scale-95"
           >
