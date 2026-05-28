@@ -4,15 +4,7 @@ import * as React from "react";
 import { useCreateBlockedSlot } from "../hooks/use-create-blocked-slot";
 
 function combineDateTime(date: string, time: string) {
-  // 1. Separamos as partes exatas da data e hora
-  const [year, month, day] = date.split('-').map(Number);
-  const [hour, minute] = time.split(':').map(Number);
-  
-  // 2. Criamos o objeto Date forçando o fuso horário local do navegador
-  const localDate = new Date(year, month - 1, day, hour, minute);
-  
-  // 3. Convertamos para o padrão universal (UTC) que o banco de dados entende perfeitamente
-  return localDate.toISOString();
+  return `${date}T${time}:00`;
 }
 
 // 🌟 Tipagem adicionada
