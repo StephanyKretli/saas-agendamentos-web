@@ -6,10 +6,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
-import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
+// 🌟 Ícone Phone adicionado aqui:
+import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff, Phone } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage"; 
-import { signIn } from "next-auth/react"; // 👈 A pulseira VIP do Segurança
+import { signIn } from "next-auth/react";
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -19,9 +20,11 @@ function RegisterContent() {
   const registerMutation = useRegister();
   const [isBillingLoading, setIsBillingLoading] = useState(false);
 
+  // 🌟 Campo phone adicionado ao estado
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     username: "",
     password: "",
     confirmPassword: "", 
@@ -36,6 +39,22 @@ function RegisterContent() {
     setFormData({ ...formData, username: slug });
   };
 
+  // 🌟 MÁSCARA VISUAL: Formata para (XX) XXXXX-XXXX enquanto digita
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); // Remove tudo o que não for número
+    if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos
+
+    let formatted = value;
+    if (value.length > 2) {
+      formatted = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+    if (value.length > 7) {
+      formatted = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    }
+    
+    setFormData({ ...formData, phone: formatted });
+  };
+
   const handleGoogleLogin = () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.meusyncro.com.br';
     const googleAuthUrl = planoEscolhido 
@@ -48,7 +67,8 @@ function RegisterContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.username || !formData.password || !formData.confirmPassword) {
+    // 🌟 Validação garantindo que o telefone foi preenchido
+    if (!formData.name || !formData.email || !formData.phone || !formData.username || !formData.password || !formData.confirmPassword) {
       toast.error("Por favor, preencha todos os campos.");
       return;
     }
@@ -58,9 +78,17 @@ function RegisterContent() {
       return;
     }
 
+    // 🌟 LIMPEZA: Remove os parênteses e traços para enviar apenas números à API
+    const cleanPhone = formData.phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      toast.error("Por favor, insira um número de telefone válido com DDD.");
+      return;
+    }
+
     try {
-      const { confirmPassword, ...dadosDoUsuario } = formData;
-      const dataToSend = { ...dadosDoUsuario, plan: planoEscolhido || 'PRO' };
+      const { confirmPassword, phone, ...dadosDoUsuario } = formData;
+      // 🌟 Injeta o telefone limpo no payload final
+      const dataToSend = { ...dadosDoUsuario, phone: cleanPhone, plan: planoEscolhido || 'PRO' };
 
       console.log("PASSO 1: A criar conta na API...");
       await registerMutation.mutateAsync(dataToSend);
@@ -143,6 +171,18 @@ function RegisterContent() {
             <div className="space-y-1 relative">
               <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <input type="email" placeholder="E-mail de acesso" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={inputStyle} />
+            </div>
+
+            {/* 🌟 NOVO INPUT DE TELEFONE COM MÁSCARA */}
+            <div className="space-y-1 relative">
+              <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+              <input 
+                type="tel" 
+                placeholder="WhatsApp (ex: 11 99999-9999)" 
+                value={formData.phone} 
+                onChange={handlePhoneChange} 
+                className={inputStyle} 
+              />
             </div>
 
             <div className="space-y-1 relative">
