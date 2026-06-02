@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useClients } from "@/features/clients/hooks/use-clients";
 import { ClientList } from "@/features/clients/components/client-list";
 import { ClientForm } from "@/features/clients/components/client-form";
@@ -9,41 +9,32 @@ import { Input } from "@/components/ui/input";
 import { ClientHistoryList } from "@/features/clients/components/client-history-list";
 import { ClientsSkeleton } from "@/features/clients/components/clients-skeleton"; 
 import { EmptyState } from "@/components/ui/empty-state";
-import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
+import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Users, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, refetch } = useClients(page);
+  // 🌟 EFEITO DE DEBOUNCE: Aguarda 500ms após o utilizador parar de digitar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1); // Retorna à primeira página sempre que uma nova pesquisa é feita
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 🌟 Buscamos os dados passando a página e a pesquisa finalizada para a API
+  const { data, isLoading, refetch } = useClients(page, debouncedSearch);
   
   const clientsList = data?.items ?? [];
   const totalPages = data?.totalPages ?? 1;
-
-  const filteredClients = clientsList.filter((client) => {
-    if (!searchQuery) return true;
-
-    const normalizedQuery = searchQuery.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-    const queryNumbersOnly = searchQuery.replace(/\D/g, "");
-
-    const clientName = (client.name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const clientEmail = (client.email || "").toLowerCase();
-    
-    const clientPhoneOnlyNumbers = (client.phone || "").replace(/\D/g, ""); 
-    const originalPhone = (client.phone || "").toLowerCase();
-
-    const nameMatch = clientName.includes(normalizedQuery);
-    const emailMatch = clientEmail.includes(normalizedQuery);
-    
-    const phoneMatch = (queryNumbersOnly.length > 0 && clientPhoneOnlyNumbers.includes(queryNumbersOnly)) 
-                    || originalPhone.includes(normalizedQuery);
-
-    return nameMatch || emailMatch || phoneMatch;
-  });
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-10 max-w-6xl mx-auto">
@@ -74,7 +65,7 @@ export default function ClientsPage() {
       </motion.div>
 
       {/* 🌟 BARRA DE BUSCA PREMIUM */}
-      {!isLoading && clientsList.length > 0 && (
+      {(!isLoading || clientsList.length > 0 || searchQuery) && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
           className="relative group"
@@ -112,21 +103,11 @@ export default function ClientsPage() {
         ) : clientsList.length === 0 ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <EmptyState
-              icon={Users}
-              title="Nenhum cliente cadastrado"
-              description="Comece por adicionar os seus clientes para gerenciar agendamentos e históricos."
-              actionLabel="Cadastrar primeiro cliente"
-              onAction={() => setIsFormOpen(true)}
-            />
-          </motion.div>
-        ) : filteredClients.length === 0 ? (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <EmptyState
-              icon={Search}
-              title="Nenhum resultado encontrado"
-              description={`Não encontrámos nenhum cliente correspondente a "${searchQuery}".`}
-              actionLabel="Limpar busca"
-              onAction={() => setSearchQuery("")}
+              icon={searchQuery ? Search : Users}
+              title={searchQuery ? "Nenhum resultado encontrado" : "Nenhum cliente cadastrado"}
+              description={searchQuery ? `Não encontrámos nenhum cliente correspondente a "${searchQuery}".` : "Comece por adicionar os seus clientes para gerenciar agendamentos e históricos."}
+              actionLabel={searchQuery ? "Limpar busca" : "Cadastrar primeiro cliente"}
+              onAction={() => searchQuery ? setSearchQuery("") : setIsFormOpen(true)}
             />
           </motion.div>
         ) : (
@@ -135,17 +116,7 @@ export default function ClientsPage() {
             className="rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
           >
             <ClientList 
-              clients={filteredClients} 
-              onViewHistory={(id) => setSelectedClientId(id)} 
-              onDeleteSuccess={() => refetch()} 
-
-              ) : (
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
-            className="rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
-          >
-            <ClientList 
-              clients={filteredClients} 
+              clients={clientsList} 
               onViewHistory={(id) => setSelectedClientId(id)} 
               onDeleteSuccess={() => refetch()} 
             />
@@ -180,9 +151,6 @@ export default function ClientsPage() {
                 </Button>
               </div>
             )}
-          </motion.div>
-        )}
-            />
           </motion.div>
         )}
       </div>
