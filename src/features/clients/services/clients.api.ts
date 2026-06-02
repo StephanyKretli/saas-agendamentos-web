@@ -5,8 +5,16 @@ import type {
   ClientsListResponse,
 } from "../types/clients.types";
 
-export async function getClients(page: number = 1) {
-  const response = await api.get(`/clients?page=${page}&limit=10`);
+export async function getClients(page: number = 1, search: string = "") {
+  const params = new URLSearchParams();
+  params.append("page", page.toString());
+  params.append("limit", "10");
+  
+  if (search) {
+    params.append("search", search);
+  }
+
+  const response = await api.get(`/clients?${params.toString()}`);
   return response.data;
 }
 
