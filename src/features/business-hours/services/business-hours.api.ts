@@ -11,18 +11,23 @@ function getQuery(professionalId?: string) {
 }
 
 export async function getBusinessHours(professionalId?: string): Promise<BusinessHour[]> {
-  return api.get(`/business-hours${getQuery(professionalId)}`, {
+  const response: any = await api.get(`/business-hours${getQuery(professionalId)}`, {
     headers: getAuthHeaders(),
-  }) as Promise<BusinessHour[]>;
+  });
+  
+  // 🛡️ Desempacota o array de horários
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function createBusinessHour(
   payload: CreateBusinessHourPayload,
   professionalId?: string
 ): Promise<BusinessHour> {
-  return api.post(`/business-hours${getQuery(professionalId)}`, payload, {
+  const response: any = await api.post(`/business-hours${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
-  }) as Promise<BusinessHour>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function updateBusinessHour(
@@ -30,22 +35,28 @@ export async function updateBusinessHour(
   payload: UpdateBusinessHourPayload,
   professionalId?: string
 ): Promise<BusinessHour> {
-  return api.patch(`/business-hours/${id}${getQuery(professionalId)}`, payload, {
+  const response: any = await api.patch(`/business-hours/${id}${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
-  }) as Promise<BusinessHour>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function deleteBusinessHour(id: string, professionalId?: string): Promise<void> {
-  return api.delete(`/business-hours/${id}${getQuery(professionalId)}`, {
+  const response: any = await api.delete(`/business-hours/${id}${getQuery(professionalId)}`, {
     headers: getAuthHeaders(),
-  }) as Promise<void>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function applyBusinessHoursTemplate(
   payload: { sourceWeekday: number; targetWeekdays: number[]; replace?: boolean; },
   professionalId?: string
 ): Promise<void> {
-  return api.post(`/business-hours/apply-template${getQuery(professionalId)}`, payload, {
+  const response: any = await api.post(`/business-hours/apply-template${getQuery(professionalId)}`, payload, {
     headers: getAuthHeaders(),
-  }) as Promise<void>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
