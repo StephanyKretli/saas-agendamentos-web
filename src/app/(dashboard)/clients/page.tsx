@@ -6,21 +6,24 @@ import { ClientList } from "@/features/clients/components/client-list";
 import { ClientForm } from "@/features/clients/components/client-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Users, X, Search } from "lucide-react"; 
 import { ClientHistoryList } from "@/features/clients/components/client-history-list";
 import { ClientsSkeleton } from "@/features/clients/components/clients-skeleton"; 
 import { EmptyState } from "@/components/ui/empty-state";
 import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
+import { Plus, Users, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, refetch } = useClients();
-  const clientsList = Array.isArray(data) ? data : (data?.items ?? []);
+  const { data, isLoading, refetch } = useClients(page);
+  
+  const clientsList = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
-  // LÓGICA DE BUSCA (Mantida intacta)
   const filteredClients = clientsList.filter((client) => {
     if (!searchQuery) return true;
 
@@ -135,6 +138,50 @@ export default function ClientsPage() {
               clients={filteredClients} 
               onViewHistory={(id) => setSelectedClientId(id)} 
               onDeleteSuccess={() => refetch()} 
+
+              ) : (
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+            className="rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
+          >
+            <ClientList 
+              clients={filteredClients} 
+              onViewHistory={(id) => setSelectedClientId(id)} 
+              onDeleteSuccess={() => refetch()} 
+            />
+            
+            {/* 🌟 CONTROLES DE PAGINAÇÃO */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="font-semibold shadow-sm"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                
+                <span className="text-sm font-medium text-muted-foreground">
+                  Página <strong className="text-foreground">{page}</strong> de {totalPages}
+                </span>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="font-semibold shadow-sm"
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        )}
             />
           </motion.div>
         )}
