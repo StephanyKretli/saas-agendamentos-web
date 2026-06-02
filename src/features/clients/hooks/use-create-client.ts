@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "../services/clients.api";
+import { createClient } from "@/features/clients/services/clients.api";
 import { toast } from "react-hot-toast"; 
 import { extractErrorMessage } from "@/lib/error-utils";
 
