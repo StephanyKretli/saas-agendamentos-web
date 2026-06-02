@@ -19,13 +19,9 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    if (response.data && response.data.data !== undefined) {
-      return response.data.data;
-    }
-    return response.data;
+    return response;
   },
   (error) => {
-    // 🛑 O NOSSO PORTEIRO VIP
     if (error.response && error.response.status === 402) {
       if (typeof window !== 'undefined') {
         if (window.location.pathname !== '/billing') {
@@ -35,7 +31,6 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 🛠️ O resto do tratamento de erros
     if (error.response && error.response.data) {
       const { message } = error.response.data;
       return Promise.reject(new Error(message || 'Ocorreu um erro inesperado.'));
