@@ -3,24 +3,31 @@ import { getAuthHeaders } from "@/lib/auth-headers";
 import type { UserSettings, UpdateSettingsPayload } from "../types/settings.types";
 
 export async function getSettings(): Promise<UserSettings> {
-  return api.get("/settings", {
+  const response: any = await api.get("/settings", {
     headers: getAuthHeaders(),
-  }) as Promise<UserSettings>;
+  });
+  
+  // 🛡️ Desempacota o objeto não importa como o backend/Axios entregue
+  return response?.data?.user ?? response?.data ?? response?.user ?? response;
 }
 
 export async function updateSettings(payload: UpdateSettingsPayload): Promise<UserSettings> {
-  return api.patch("/settings", payload, {
+  const response: any = await api.patch("/settings", payload, {
     headers: getAuthHeaders(),
-  }) as Promise<UserSettings>;
+  });
+  
+  return response?.data?.user ?? response?.data ?? response?.user ?? response;
 }
 
 export async function uploadAvatar(file: File): Promise<UserSettings> {
   const formData = new FormData();
   formData.append("file", file);
 
-  return api.patch("/settings/avatar", formData, {
+  const response: any = await api.patch("/settings/avatar", formData, {
     headers: {
       ...getAuthHeaders(),
     },
-  }) as Promise<UserSettings>;
+  });
+  
+  return response?.data?.user ?? response?.data ?? response?.user ?? response;
 }
