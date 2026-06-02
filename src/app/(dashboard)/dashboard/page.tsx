@@ -87,9 +87,19 @@ export default function DashboardPage() {
   
   const { startTour } = useProductTour();
 
-  const appointments: TodayAppointment[] = Array.isArray(todayAgenda) 
-    ? todayAgenda 
-    : (todayAgenda as any)?.items ?? (todayAgenda as any)?.data ?? [];
+  // 🛡️ Função para forçar a extração de um array válido
+  const getSafeAppointments = (data: any): TodayAppointment[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    // Caso o backend tenha retornado dentro da chave appointments
+    if (Array.isArray(data?.appointments)) return data.appointments; 
+    
+    return [];
+  };
+  
+  const appointments = getSafeAppointments(todayAgenda);
 
   const firstName = profile?.name?.split(" ")[0] || "";
   const greeting = `${getGreeting()}${firstName ? `, ${firstName}` : "!"}`;
@@ -326,7 +336,7 @@ export default function DashboardPage() {
           ) : (
             <motion.div variants={agendaContainerVariants} initial="hidden" animate="visible" className="grid gap-3 sm:gap-4 relative">
               <div className="absolute left-9 sm:left-11 top-4 bottom-4 w-0.5 bg-border/40 rounded-full hidden sm:block" />              
-              {appointments.map((apt) => {
+              {(Array.isArray(appointments) ? appointments : []).map((apt) => {
                 const status = statusMap[apt.status] || { label: apt.status, color: "bg-muted text-muted-foreground border-border" };
                 return (
                   <motion.div key={apt.id} variants={agendaItemVariants} className="group flex flex-col gap-3 sm:gap-4 rounded-2xl border border-border bg-background p-3 sm:p-4 hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between relative z-10">
