@@ -25,7 +25,7 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   const [isMaintenanceBooking, setIsMaintenanceBooking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: clientsData } = useClients();
+  const { data: clientsData } = useClients(1, "");
   const { data: servicesData } = useServices();
 
   const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.items ?? []);
