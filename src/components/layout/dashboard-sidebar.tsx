@@ -39,7 +39,13 @@ const itemVariants = {
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data } = useSettings(); 
+  
+  // 1. Puxamos error e isLoading também
+  const { data, error, isLoading } = useSettings(); 
+  
+  // 2. ADICIONE ESTA LINHA EXATAMENTE AQUI:
+  console.log("🕵️ RAIO-X DO PERFIL:", { data, error, isLoading });
+  
   const { theme, setTheme } = useTheme();
   
   const [isOpen, setIsOpen] = React.useState(false);
