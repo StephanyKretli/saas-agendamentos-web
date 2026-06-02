@@ -20,29 +20,42 @@ export default function ClientsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  // 🌟 EFEITO DE DEBOUNCE: Aguarda 500ms após o utilizador parar de digitar
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setPage(1); // Retorna à primeira página sempre que uma nova pesquisa é feita
+      setPage(1); 
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 🌟 Buscamos os dados passando a página e a pesquisa finalizada para a API
   const { data, isLoading, refetch } = useClients(page, debouncedSearch);
   
-  // 🌟 A MÁGICA: Blindagem dupla com TypeScript pacificado
-  const payload = (data as any)?.data ? (data as any).data : data;
+  // 🌟 A MÁGICA DEFINITIVA: Extratores à prova de falhas
+  // Procuram as propriedades independentemente da profundidade do encapsulamento da rede
+  const getItems = (raw: any): any[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.items)) return raw.items;
+    if (Array.isArray(raw.data?.items)) return raw.data.items;
+    if (Array.isArray(raw.data?.data?.items)) return raw.data.data.items;
+    return [];
+  };
 
-  const clientsList = payload?.items ?? [];
-  const totalPages = payload?.totalPages ?? 1;
+  const getTotalPages = (raw: any): number => {
+    if (!raw) return 1;
+    if (raw.totalPages !== undefined) return raw.totalPages;
+    if (raw.data?.totalPages !== undefined) return raw.data.totalPages;
+    if (raw.data?.data?.totalPages !== undefined) return raw.data.data.totalPages;
+    return 1;
+  };
+
+  const clientsList = getItems(data);
+  const totalPages = getTotalPages(data);
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-10 max-w-6xl mx-auto">
       
-      {/* 🌟 CABEÇALHO PADRONIZADO */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
@@ -67,7 +80,6 @@ export default function ClientsPage() {
         </motion.div>
       </motion.div>
 
-      {/* 🌟 BARRA DE BUSCA PREMIUM */}
       {(!isLoading || clientsList.length > 0 || searchQuery) && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
@@ -99,7 +111,6 @@ export default function ClientsPage() {
         </motion.div>
       )}
 
-      {/* CONTEÚDO PRINCIPAL COM TRANSIÇÕES */}
       <div className="relative">
         {isLoading ? (
           <ClientsSkeleton />
@@ -124,7 +135,6 @@ export default function ClientsPage() {
               onDeleteSuccess={() => refetch()} 
             />
             
-            {/* 🌟 CONTROLES DE PAGINAÇÃO */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
                 <Button 
@@ -158,7 +168,6 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* 🌟 MODAL DE CADASTRO COM FRAMER MOTION */}
       <AnimatePresence>
         {isFormOpen && (
           <motion.div 
@@ -194,7 +203,6 @@ export default function ClientsPage() {
         )}
       </AnimatePresence>
 
-      {/* 🌟 DRAWER LATERAL (HISTÓRICO) COM FRAMER MOTION */}
       <AnimatePresence>
         {selectedClientId && (
           <motion.div 
