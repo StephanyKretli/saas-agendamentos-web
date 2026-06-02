@@ -7,20 +7,27 @@ import type {
 } from "../types/services.types";
 
 export async function getServices(): Promise<ServicesListResponse> {
-  return api.get("/services/me", {
+  const response: any = await api.get("/services/me", {
     headers: getAuthHeaders()
-  }) as Promise<ServicesListResponse>;
+  });
+  
+  // 🛡️ O segredo: desempacotando a lista de serviços!
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function createService(payload: CreateServicePayload): Promise<Service> {
-  return api.post("/services", payload, {
+  const response: any = await api.post("/services", payload, {
     headers: getAuthHeaders()
-  }) as Promise<Service>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
 
-// 🌟 FUNÇÃO NOVA PARA ATUALIZAR O SERVIÇO
+// 🌟 FUNÇÃO PARA ATUALIZAR O SERVIÇO BLINDADA
 export async function updateService(id: string, payload: Partial<CreateServicePayload>): Promise<Service> {
-  return api.patch(`/services/${id}`, payload, {
+  const response: any = await api.patch(`/services/${id}`, payload, {
     headers: getAuthHeaders()
-  }) as Promise<Service>;
+  });
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
