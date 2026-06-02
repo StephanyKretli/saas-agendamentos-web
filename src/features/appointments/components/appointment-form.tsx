@@ -28,8 +28,13 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   const { data: clientsData } = useClients(1, "");
   const { data: servicesData } = useServices();
 
-  const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.items ?? []);
-  const services = Array.isArray(servicesData) ? servicesData : (servicesData?.items ?? []);
+  // 🌟 A MÁGICA: Desembrulhamos os dados caso a API do NestJS tenha colocado o wrapper "data"
+  const payloadClients = clientsData?.data ? clientsData.data : clientsData;
+  const payloadServices = servicesData?.data ? servicesData.data : servicesData;
+
+  // Agora sim pegamos a lista com segurança!
+  const clients = Array.isArray(payloadClients) ? payloadClients : (payloadClients?.items ?? []);
+  const services = Array.isArray(payloadServices) ? payloadServices : (payloadServices?.items ?? []);
 
   // 🌟 2. Encontra os detalhes do serviço que a pessoa selecionou no select
   const selectedServiceDetails = services.find((s: any) => s.id === serviceId);
