@@ -8,12 +8,11 @@ export type UpdateServiceInput = {
   priceCents?: number
 }
 
-export async function updateService({
-  id,
-  ...data
-}: UpdateServiceInput) {
-  return api.patch(`/services/${id}`, {
+export async function updateService({ id, ...data }: UpdateServiceInput) {
+  // CORREÇÃO: Removido o 'body: JSON.stringify(data)'. O Axios já faz isso sozinho.
+  const response: any = await api.patch(`/services/${id}`, data, {
     headers: getAuthHeaders(),
-    body: JSON.stringify(data),
   })
+  
+  return response?.data?.data ?? response?.data ?? response;
 }
