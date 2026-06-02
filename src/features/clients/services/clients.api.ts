@@ -14,16 +14,22 @@ export async function getClients(page: number = 1, search: string = "") {
     params.append("search", search);
   }
 
-  const response = await api.get(`/clients?${params.toString()}`);
+  // 🌟 ADICIONADO: Headers de autenticação (igual ao seu getClientHistory)
+  const response = await api.get(`/clients?${params.toString()}`, {
+    headers: getAuthHeaders(),
+  });
+  
+  // 🌟 Garantia de que estamos a retornar o dado correto
   return response.data;
 }
 
 export async function getClientHistory(
   clientId: string,
 ): Promise<ClientHistoryResponse> {
-  return api.get(`/clients/${clientId}/history`, {
+  const response = await api.get(`/clients/${clientId}/history`, {
     headers: getAuthHeaders(),
-  }) as Promise<ClientHistoryResponse>;
+  });
+  return response.data;
 }
 
 export async function createClient(payload: {
@@ -32,10 +38,15 @@ export async function createClient(payload: {
   email?: string;
   notes?: string;
 }) {
-  return api.post("/clients", payload);
+  const response = await api.post("/clients", payload, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
 }
 
 export async function deleteClient(id: string) {
-  const response = await api.delete(`/clients/${id}`); 
+  const response = await api.delete(`/clients/${id}`, {
+    headers: getAuthHeaders(),
+  }); 
   return response.data;
 }
