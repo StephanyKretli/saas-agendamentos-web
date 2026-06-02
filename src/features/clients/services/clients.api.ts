@@ -5,10 +5,9 @@ import type {
   ClientsListResponse,
 } from "../types/clients.types";
 
-export async function getClients(): Promise<ClientsListResponse> {
-  return api.get("/clients", {
-    headers: getAuthHeaders(),
-  }) as Promise<ClientsListResponse>;
+export async function getClients(page: number = 1) {
+  const response = await api.get(`/clients?page=${page}&limit=10`);
+  return response.data;
 }
 
 export async function getClientHistory(
