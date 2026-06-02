@@ -5,15 +5,13 @@ import type {
   ClientsListResponse,
 } from "../types/clients.types";
 
-export async function getClients(page: number = 1, search: string = ""): Promise<ClientsListResponse> {
-  // Passamos os parâmetros corretamente para o Axios
-  const { data } = await api.get("/clients", {
+export async function getClients(page: number = 1, search: string = "") {
+  // O response aqui é um objeto Axios padrão
+  const response = await api.get("/clients", {
+    params: { page, limit: 10, search },
     headers: getAuthHeaders(),
-    params: { page, limit: 10, search }
   });
-  
-  // Retornamos apenas o JSON com { items, page, ... }
-  return data;
+  return response.data.data; 
 }
 
 // ... (mantenha os outros exports igual, mas aplique o { data } = await se necessário)
