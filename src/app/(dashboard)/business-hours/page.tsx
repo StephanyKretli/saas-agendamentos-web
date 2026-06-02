@@ -29,7 +29,6 @@ const WEEKDAYS = [
   { value: 0, label: "Domingo" },
 ];
 
-// 🌟 Variáveis de animação para a lista de dias
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -43,7 +42,6 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-// --- COMPONENTE FILHO PARA EDIÇÃO AUTOMÁTICA ---
 function TimeSlotRow({ 
   slot, 
   onUpdate, 
@@ -98,7 +96,6 @@ function TimeSlotRow({
   );
 }
 
-// --- PÁGINA PRINCIPAL ---
 export default function BusinessHoursPage() {
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("");
 
@@ -111,7 +108,10 @@ export default function BusinessHoursPage() {
   });
 
   const targetId = selectedProfessionalId || undefined;
-  const { data: hours = [] } = useBusinessHours(targetId);
+  const { data: rawHours } = useBusinessHours(targetId);
+  
+  // 🛡️ A VACINA: Forçamos o fallback seguro para um array vazio se o dado não vier corretamente
+  const safeHours = Array.isArray(rawHours) ? rawHours : [];
   
   const createMutation = useCreateBusinessHour(targetId);
   const updateMutation = useUpdateBusinessHour(targetId);
@@ -119,12 +119,14 @@ export default function BusinessHoursPage() {
 
   const hoursByDay = WEEKDAYS.map(day => ({
     ...day,
-    slots: hours.filter(h => h.weekday === day.value).sort((a, b) => a.start.localeCompare(b.start))
+    // 🛡️ Usamos o safeHours aqui para impedir a tela de quebrar
+    slots: safeHours.filter(h => h.weekday === day.value).sort((a, b) => a.start.localeCompare(b.start))
   }));
 
   const activeProfessional = useMemo(() => {
     if (!selectedProfessionalId) return { id: "", name: "A Minha Agenda (Admin)" };
-    return team.find(m => String(m.id) === String(selectedProfessionalId)) || { id: "", name: "A carregar..." };
+    const safeTeam = Array.isArray(team) ? team : [];
+    return safeTeam.find(m => String(m.id) === String(selectedProfessionalId)) || { id: "", name: "A carregar..." };
   }, [selectedProfessionalId, team]);
 
   const handleUpdateSlot = (id: string, weekday: number, start: string, end: string) => {
@@ -154,7 +156,6 @@ export default function BusinessHoursPage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-10 max-w-5xl">
       
-      {/* 🌟 HEADER PADRONIZADO (Igual à Agenda) */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"      >
@@ -170,7 +171,6 @@ export default function BusinessHoursPage() {
           </div>
         </div>
 
-        {/* 🌟 DROPDOWN DE SELEÇÃO DA equipe */}
         <div className="flex w-full sm:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -207,7 +207,7 @@ export default function BusinessHoursPage() {
                 <span className="flex-1 truncate text-sm">A Minha Agenda (Admin)</span>
               </DropdownMenuItem>
 
-              {team.map((member) => (
+              {(Array.isArray(team) ? team : []).map((member) => (
                 <DropdownMenuItem
                   key={member.id}
                   onClick={() => setSelectedProfessionalId(member.id)}
@@ -232,7 +232,6 @@ export default function BusinessHoursPage() {
         </div>
       </motion.div>
 
-      {/* 🌟 LISTA DE DIAS EM CASCATA */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
@@ -246,7 +245,7 @@ export default function BusinessHoursPage() {
             <motion.div 
               key={day.value} 
               variants={itemVariants}
-              whileHover={{ x: isActive ? 4 : 0 }} // Pequeno movimento no hover se estiver ativo
+              whileHover={{ x: isActive ? 4 : 0 }}
               className={`flex flex-col md:flex-row md:items-start gap-4 p-5 sm:p-6 rounded-3xl border transition-all duration-300 shadow-sm ${
                 isActive 
                   ? "bg-card border-primary/20 hover:border-primary/40" 
@@ -254,7 +253,6 @@ export default function BusinessHoursPage() {
               }`}
             >
               
-              {/* Lado Esquerdo: Switch e Nome do Dia */}
               <div className="w-full md:w-56 flex items-center gap-4 shrink-0">
                 <Switch 
                   checked={isActive} 
@@ -272,7 +270,6 @@ export default function BusinessHoursPage() {
                 </span>
               </div>
 
-              {/* Lado Direito: Horários */}
               <div className="flex-1 min-w-0">
                 {!isActive ? (
                   <div className="flex items-center h-full pt-1">
