@@ -19,6 +19,10 @@ interface ClientListProps {
 }
 
 export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientListProps) {
+  // LOG DE DEBUG PARA SABER SE OS DADOS CHEGARAM AQUI
+  console.log("DEBUG ClientList - Quantidade de clientes recebidos:", clients?.length);
+  console.log("DEBUG ClientList - Dados completos:", clients);
+
   const { mutate: deleteClient, isPending } = useDeleteClient();
 
   const handleDelete = (id: string, name: string) => {
@@ -35,6 +39,11 @@ export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientLi
     }
   };
 
+  // Se não houver clientes, mostra um log visual para sabermos que o componente foi montado
+  if (!clients || clients.length === 0) {
+    return <div className="p-4 border-2 border-dashed border-red-500 text-red-500">Nenhum cliente foi passado para o componente ClientList.</div>;
+  }
+
   return (
     <div className="grid gap-4">
       {clients.map((client) => (
@@ -42,54 +51,36 @@ export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientLi
           key={client.id} 
           className="group relative rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/20"
         >
+          {/* ... resto do seu código igual ... */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            
-            {/* INFORMAÇÕES DO CLIENTE */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/5 text-primary">
-                <User className="h-6 w-6" />
-              </div>
-              
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg leading-none">{client.name}</h3>
-                
-                <div className="flex flex-col gap-1.5 pt-1 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5" />
-                    <span>{client.phone || "Sem telefone"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5" />
-                    <span className="truncate max-w-50 sm:max-w-none">
-                      {client.email || "Sem e-mail"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AÇÕES */}
-            <div className="flex items-center gap-2 sm:ml-auto">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => onViewHistory(client.id)}
-                className="rounded-xl h-10 px-4 hover:bg-primary hover:text-primary-foreground transition-all"
-              >
-                <History className="mr-2 h-4 w-4" />
-                Ver Histórico
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                disabled={isPending}
-                onClick={() => handleDelete(client.id, client.name)}
-                className="rounded-xl h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+             <div className="flex items-start gap-4">
+               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/5 text-primary">
+                 <User className="h-6 w-6" />
+               </div>
+               <div className="space-y-1">
+                 <h3 className="font-semibold text-lg leading-none">{client.name}</h3>
+                 <div className="flex flex-col gap-1.5 pt-1 text-sm text-muted-foreground">
+                   <div className="flex items-center gap-2">
+                     <Phone className="h-3.5 w-3.5" />
+                     <span>{client.phone || "Sem telefone"}</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <Mail className="h-3.5 w-3.5" />
+                     <span className="truncate max-w-50 sm:max-w-none">
+                       {client.email || "Sem e-mail"}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+             </div>
+             <div className="flex items-center gap-2 sm:ml-auto">
+               <Button variant="outline" size="sm" onClick={() => onViewHistory(client.id)}>
+                 <History className="mr-2 h-4 w-4" /> Ver Histórico
+               </Button>
+               <Button variant="ghost" size="icon" disabled={isPending} onClick={() => handleDelete(client.id, client.name)}>
+                 <Trash2 className="h-4 w-4" />
+               </Button>
+             </div>
           </div>
         </div>
       ))}
