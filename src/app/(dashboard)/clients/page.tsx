@@ -33,8 +33,11 @@ export default function ClientsPage() {
   // 🌟 Buscamos os dados passando a página e a pesquisa finalizada para a API
   const { data, isLoading, refetch } = useClients(page, debouncedSearch);
   
-  const clientsList = data?.items ?? [];
-  const totalPages = data?.totalPages ?? 1;
+  // 🌟 A MÁGICA: Blindagem dupla com TypeScript pacificado
+  const payload = (data as any)?.data ? (data as any).data : data;
+
+  const clientsList = payload?.items ?? [];
+  const totalPages = payload?.totalPages ?? 1;
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-10 max-w-6xl mx-auto">
