@@ -111,7 +111,12 @@ export default function ClientsPage() {
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
             className="rounded-3xl border border-border bg-card shadow-sm overflow-hidden"
           >
-            <pre>{JSON.stringify(clientsList, null, 2)}</pre>
+            <ClientList 
+              clients={clientsList} 
+              onViewHistory={(id) => setSelectedClientId(id)} 
+              onDeleteSuccess={() => refetch()} 
+            />
+
             
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
