@@ -10,7 +10,8 @@ export async function getClients(page: number = 1, search: string = "") {
     params: { page, limit: 10, search },
     headers: getAuthHeaders(),
   });
-  return response.data?.data ? response.data.data : response.data;
+  
+  return response.data;
 }
 
 export async function getClientHistory(clientId: string): Promise<ClientHistoryResponse> {
