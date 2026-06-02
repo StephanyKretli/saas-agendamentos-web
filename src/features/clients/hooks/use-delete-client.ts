@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteClient } from "../services/clients.api"; // Verifique se o caminho da sua API está correto
+import { deleteClient } from "@/features/clients/services/clients.api";
 import { toast } from "react-hot-toast";
 import { extractErrorMessage } from "@/lib/error-utils";
 
