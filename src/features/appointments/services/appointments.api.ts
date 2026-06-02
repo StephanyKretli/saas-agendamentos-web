@@ -1,34 +1,40 @@
 import { api } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/auth-headers";
 import type { PaginatedAppointmentsResponse } from "../types/appointments.types";
-import { useState } from 'react';
 
 export async function getMyAppointments(): Promise<PaginatedAppointmentsResponse> {
-  return api.get("/appointments/me", {
+  const response = await api.get("/appointments/me", {
     headers: getAuthHeaders(),
-  }) as Promise<PaginatedAppointmentsResponse>;
+  });
+  return response.data?.data || response.data;
 }
 
 export async function completeAppointment(id: string) {
-  return api.patch(`/appointments/${id}/complete`, {}, {
+  const response = await api.patch(`/appointments/${id}/complete`, {}, {
     headers: getAuthHeaders(),
   });
+  return response.data?.data || response.data;
 }
 
 export async function cancelAppointment(id: string) {
-  return api.patch(`/appointments/${id}/cancel`, {}, {
+  const response = await api.patch(`/appointments/${id}/cancel`, {}, {
     headers: getAuthHeaders(),
   });
+  return response.data?.data || response.data;
 }
 
 export async function createAppointment(data: CreateAppointmentPayload) {
-  return api.post('/appointments', data, {
+  const response = await api.post('/appointments', data, {
     headers: getAuthHeaders(),
   });
+  return response.data?.data || response.data;
 }
 
 export async function rescheduleAppointment(id: string, date: string) {
-  return api.patch(`/appointments/${id}/reschedule`, { date });
+  const response = await api.patch(`/appointments/${id}/reschedule`, { date }, {
+    headers: getAuthHeaders(),
+  });
+  return response.data?.data || response.data;
 }
 
 export interface CreateAppointmentPayload {
@@ -39,4 +45,3 @@ export interface CreateAppointmentPayload {
   professionalId?: string; 
   isMaintenance?: boolean;
 }
-

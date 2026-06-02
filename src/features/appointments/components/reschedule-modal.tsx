@@ -69,11 +69,14 @@ export function RescheduleModal({
         // 🌟 Monta a URL garantindo que o profId é válido
         const url = `/availability?serviceId=${appointment.service.id}&date=${date}${profId ? `&professionalId=${profId}` : ''}&step=30`;
 
-        const data = await api.get(url, {
+        const response = await api.get(url, {
           headers: getAuthHeaders(),
-        }) as AvailabilityResponse;
+        });
+        
+        // Extrai os dados corretamente
+        const responseData = (response.data?.data || response.data) as AvailabilityResponse;
 
-        setSlots(data.slots ?? []);
+        setSlots(responseData?.slots ?? []);
       } catch (error) {
         console.error("Erro ao carregar horários:", error);
         setSlots([]);
