@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query"; // 👈 Importação adicionada
 import { useCreateClient } from "../hooks/use-create-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,9 @@ interface ClientFormProps {
 }
 
 export function ClientForm({ onSuccess, onCancel }: ClientFormProps) {
+  const queryClient = useQueryClient(); // 👈 Inicializa o controle de cache
   const createClient = useCreateClient();
 
-  // Estados dos campos do formulário
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -22,8 +23,6 @@ export function ClientForm({ onSuccess, onCancel }: ClientFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Tratamos campos opcionais enviando 'undefined' se estiverem vazios,
-    // assim o backend (NestJS) ignora e não salva strings vazias no banco.
     const payload = {
       name: name.trim(),
       phone: phone.trim(),
@@ -32,9 +31,13 @@ export function ClientForm({ onSuccess, onCancel }: ClientFormProps) {
     };
 
     try {
+      // 1. Espera a API salvar no banco de dados
       await createClient.mutateAsync(payload);
       
-      // Se deu sucesso (201), avisa a página para fechar o modal
+      // 2. Destrói o cache local e obriga a lista a buscar os dados novos
+      await queryClient.invalidateQueries({ queryKey: ["clients"] });
+      
+      // 3. Fecha o modal
       onSuccess?.();
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
