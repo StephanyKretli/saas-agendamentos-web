@@ -7,8 +7,8 @@ export async function getSettings(): Promise<UserSettings> {
     headers: getAuthHeaders(),
   });
   
-  // 🛡️ Desempacota o objeto não importa como o backend/Axios entregue
-  return response?.data?.user ?? response?.data ?? response?.user ?? response;
+  // 🛡️ O segredo: desempacota o .data do Axios E o .data do seu backend
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function updateSettings(payload: UpdateSettingsPayload): Promise<UserSettings> {
@@ -16,7 +16,7 @@ export async function updateSettings(payload: UpdateSettingsPayload): Promise<Us
     headers: getAuthHeaders(),
   });
   
-  return response?.data?.user ?? response?.data ?? response?.user ?? response;
+  return response?.data?.data ?? response?.data ?? response;
 }
 
 export async function uploadAvatar(file: File): Promise<UserSettings> {
@@ -29,5 +29,5 @@ export async function uploadAvatar(file: File): Promise<UserSettings> {
     },
   });
   
-  return response?.data?.user ?? response?.data ?? response?.user ?? response;
+  return response?.data?.data ?? response?.data ?? response;
 }
