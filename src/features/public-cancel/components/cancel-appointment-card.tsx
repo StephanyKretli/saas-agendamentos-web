@@ -9,16 +9,25 @@ type Props = {
 };
 
 // 🌟 CORREÇÃO 1: Função blindada contra quebra de tela por data inválida
-function formatDateTime(value: string | undefined | null) {
+// 🌟 CORREÇÃO DEFINITIVA: Validando a data antes de o Intl tentar formatar
+function formatDateTime(value: any) {
   if (!value) return "Data não disponível";
+  
+  const date = new Date(value);
+  
+  // Se a conversão resultar numa data inválida, paramos por aqui!
+  if (isNaN(date.getTime())) {
+    return "Data/Hora a confirmar";
+  }
+
   try {
     return new Intl.DateTimeFormat("pt-BR", {
       timeZone: "America/Sao_Paulo",
       dateStyle: "full",
       timeStyle: "short",
-    }).format(new Date(value));
+    }).format(date);
   } catch (error) {
-    return "Data inválida";
+    return "Erro ao ler a data";
   }
 }
 
