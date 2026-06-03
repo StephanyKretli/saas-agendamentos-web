@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
-import { Calendar, Clock, User, Scissors, XCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Calendar, Clock, User, XCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function PublicManageAppointmentPage() {
@@ -17,12 +17,15 @@ export default function PublicManageAppointmentPage() {
   const [appointment, setAppointment] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Busca os dados do agendamento mal a página carrega
+  // 1. Busca os dados e usa o Extrator Inteligente
   useEffect(() => {
     if (token) {
       api.get(`/appointments/public/${token}`)
         .then((res: any) => {
-          setAppointment(res.data || res);
+          // 🌟 EXTRATOR INTELIGENTE: Procura o agendamento seja qual for a camada em que o NestJS o enviou
+          const rawBody = res.data || res;
+          const actualData = rawBody.appointment || rawBody.data || rawBody;
+          setAppointment(actualData);
         })
         .catch((err) => {
           setError(err.response?.data?.message || "Agendamento não encontrado ou link expirado.");
@@ -33,7 +36,6 @@ export default function PublicManageAppointmentPage() {
     }
   }, [token]);
 
-  // 2. Função de cancelar o agendamento
   const handleCancel = async () => {
     if (!confirm("Tem a certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.")) return;
 
@@ -41,8 +43,6 @@ export default function PublicManageAppointmentPage() {
     try {
       await api.post(`/appointments/public/${token}/cancel`);
       toast.success("Agendamento cancelado com sucesso!");
-      
-      // Atualiza a tela para mostrar que foi cancelado
       setAppointment((prev: any) => ({ ...prev, status: "CANCELED" }));
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Não foi possível cancelar o agendamento.");
@@ -73,42 +73,49 @@ export default function PublicManageAppointmentPage() {
 
   const isCanceled = appointment.status === "CANCELED";
   
-  // 🌟 CORREÇÃO 1: Blindagem Absoluta das Datas
+  // 🌟 EXTRAÇÃO BLINDADA DAS VARIÁVEIS DO AGENDAMENTO
+  const targetDate = appointment.date || appointment.appointmentDate;
+  
+  // Compatibilidade com o sistema antigo e com o novo Carrinho de Serviços
+  const serviceName = appointment.service?.name || appointment.serviceName || appointment.services?.[0]?.service?.name || "Serviço não informado";
+  
+  const safePriceCents = appointment.services 
+    ? appointment.services.reduce((acc: number, s: any) => acc + (s.priceCents || 0), 0)
+    : (appointment.service?.priceCents || appointment.priceCents || 0);
+
+  const safeDuration = appointment.services
+    ? appointment.services.reduce((acc: number, s: any) => acc + (s.duration || 0), 0)
+    : (appointment.service?.duration || appointment.duration || 0);
+
+  const professionalName = appointment.professional?.name || appointment.professionalName || "Equipe";
+  const salonName = appointment.user?.name || appointment.salonName || "Salão de Beleza";
+
+  // Formatação segura da Data
   let formattedDate = "Data a confirmar";
   let formattedTime = "--:--";
 
   try {
-    if (appointment?.date) {
-      const dateObj = new Date(appointment.date);
+    if (targetDate) {
+      const dateObj = new Date(targetDate);
       if (!isNaN(dateObj.getTime())) {
         formattedDate = new Intl.DateTimeFormat("pt-BR", { 
-          weekday: "long", 
-          day: "2-digit", 
-          month: "long", 
-          timeZone: "UTC" 
+          weekday: "long", day: "2-digit", month: "long", timeZone: "UTC" 
         }).format(dateObj);
         
         formattedTime = new Intl.DateTimeFormat("pt-BR", { 
-          hour: "2-digit", 
-          minute: "2-digit", 
-          timeZone: "UTC" 
+          hour: "2-digit", minute: "2-digit", timeZone: "UTC" 
         }).format(dateObj);
       }
     }
   } catch (err) {
-    console.error("Erro ao formatar a data:", err);
+    console.error("Erro ao formatar data:", err);
   }
-
-  // 🌟 CORREÇÃO 2: Blindagem do Preço
-  const safePriceCents = appointment.service?.priceCents || 0;
-  const safeDuration = appointment.service?.duration || 0;
 
   return (
     <div className="min-h-screen bg-muted/20 py-12 px-4 sm:px-6 flex justify-center">
       <div className="max-w-md w-full space-y-6">
         
         <div className="text-center space-y-2">
-          {/* Mostra o nome do salão (user) que é o dono do agendamento */}
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mb-2 shadow-sm border border-primary/20">
             {isCanceled ? <XCircle className="h-8 w-8 text-destructive" /> : <CheckCircle2 className="h-8 w-8" />}
           </div>
@@ -116,13 +123,12 @@ export default function PublicManageAppointmentPage() {
             {isCanceled ? "Agendamento Cancelado" : "Detalhes do Horário"}
           </h1>
           <p className="text-sm text-muted-foreground font-medium">
-            {appointment.user?.name || "Salão de Beleza"}
+            {salonName}
           </p>
         </div>
 
         <Card className={`rounded-3xl p-6 shadow-xl border overflow-hidden relative ${isCanceled ? "border-destructive/20 opacity-80" : "border-primary/10"}`}>
           
-          {/* Se estiver cancelado, coloca uma faixa vermelha */}
           {isCanceled && (
              <div className="absolute top-0 left-0 right-0 bg-destructive/10 text-destructive text-xs font-bold text-center py-1.5 uppercase tracking-wider">
                Horário Cancelado
@@ -131,7 +137,7 @@ export default function PublicManageAppointmentPage() {
 
           <div className={`space-y-6 ${isCanceled ? "mt-4" : ""}`}>
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-foreground">{appointment.service?.name || "Serviço Indisponível"}</h3>
+              <h3 className="text-lg font-black text-foreground">{serviceName}</h3>
               <div className="flex items-center text-sm font-bold text-primary">
                 R$ {(safePriceCents / 100).toFixed(2).replace(".", ",")} 
                 <span className="text-muted-foreground font-medium ml-2 text-xs">
@@ -153,7 +159,7 @@ export default function PublicManageAppointmentPage() {
               </li>
               <li className="flex items-center gap-3 text-sm font-medium text-foreground">
                 <div className="bg-muted p-2 rounded-xl text-muted-foreground"><User className="h-4 w-4" /></div>
-                <span>Com {appointment.professional?.name || "Equipe"}</span>
+                <span>Com {professionalName}</span>
               </li>
             </ul>
 
