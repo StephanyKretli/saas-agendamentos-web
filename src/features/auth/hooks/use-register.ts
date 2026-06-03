@@ -8,7 +8,9 @@ export function useRegister() {
     mutationFn: async (data: any) => {
       // Faz a chamada POST para a rota de registo do seu NestJS
       const response = await api.post('/auth/register', data);
-      return response;
+      
+      // 🌟 Correção: Extraindo os dados da resposta bruta do Axios
+      return response.data?.data || response.data;
     },
   });
 }

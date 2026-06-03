@@ -9,17 +9,18 @@ export function useClientHistory(clientId: string | null, from?: string, to?: st
     queryFn: async () => {
       if (!clientId) return null;
       
-      // Monta os parâmetros de URL caso as datas existam
       const params = new URLSearchParams();
       if (from) params.append("from", from);
       if (to) params.append("to", to);
       
       const queryString = params.toString() ? `?${params.toString()}` : "";
       
-      const response = await api.get(`/clients/${clientId}/history${queryString}`, {
+      const response: any = await api.get(`/clients/${clientId}/history${queryString}`, {
         headers: getAuthHeaders(),
       });
-      return response as unknown as ClientHistoryResponse;
+      
+      // 🌟 Vacina anti-crash aplicada!
+      return response?.data?.data || response?.data || response;
     },
     enabled: !!clientId,
   });

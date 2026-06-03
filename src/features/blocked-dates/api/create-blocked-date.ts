@@ -6,10 +6,12 @@ export async function createBlockedDate(
   data: CreateBlockedDateInput,
   professionalId?: string 
 ): Promise<BlockedDate> {
-  // 🌟 O mesmo aqui: junta tudo no mesmo pacote (payload)
   const payload = professionalId ? { ...data, professionalId } : data;
 
-  return api.post("/blocked-dates", payload, {
+  const response = await api.post("/blocked-dates", payload, {
     headers: getAuthHeaders(),
-  }) as Promise<BlockedDate>;
+  });
+  
+  // 🌟 Extrai os dados em vez de devolver o objeto do Axios
+  return response.data?.data || response.data;
 }

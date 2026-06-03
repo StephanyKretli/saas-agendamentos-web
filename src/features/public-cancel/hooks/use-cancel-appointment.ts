@@ -1,26 +1,20 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth-headers";
-import { queryKeys } from "@/lib/query-keys";
+// 🌟 CORRIGIDO: Importa a rota pública (sem auth headers)
+import { cancelAppointmentByToken } from "../api/cancel-appointment";
 
-export function useCancelAppointment(date: string) {
+export function useCancelAppointment(token: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (appointmentId: string) => {
-      return api.patch(`/appointments/${appointmentId}/cancel`, {
-        headers: getAuthHeaders(),
-      });
+    mutationFn: (tokenToCancel: string) => {
+      return cancelAppointmentByToken(tokenToCancel);
     },
     onSuccess: async () => {
+      // 🌟 Atualiza o card de preview para o estado "Cancelado"
       await queryClient.invalidateQueries({
-        queryKey: queryKeys.dayTimeline(date),
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["public-booking-availability"],
+        queryKey: ["public-cancel-preview", token],
       });
     },
   });

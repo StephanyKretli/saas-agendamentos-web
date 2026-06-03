@@ -19,9 +19,6 @@ interface ClientListProps {
 }
 
 export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientListProps) {
-  // LOG DE DEBUG PARA SABER SE OS DADOS CHEGARAM AQUI
-  console.log("DEBUG ClientList - Quantidade de clientes recebidos:", clients?.length);
-  console.log("DEBUG ClientList - Dados completos:", clients);
 
   const { mutate: deleteClient, isPending } = useDeleteClient();
 
@@ -39,11 +36,6 @@ export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientLi
     }
   };
 
-  // Se não houver clientes, mostra um log visual para sabermos que o componente foi montado
-  if (!clients || clients.length === 0) {
-    return <div className="p-4 border-2 border-dashed border-red-500 text-red-500">Nenhum cliente foi passado para o componente ClientList.</div>;
-  }
-
   return (
     <div className="grid gap-4">
       {clients.map((client) => (
@@ -51,7 +43,6 @@ export function ClientList({ clients, onViewHistory, onDeleteSuccess }: ClientLi
           key={client.id} 
           className="group relative rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/20"
         >
-          {/* ... resto do seu código igual ... */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
              <div className="flex items-start gap-4">
                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/5 text-primary">

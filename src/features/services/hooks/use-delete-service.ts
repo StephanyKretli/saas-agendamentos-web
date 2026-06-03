@@ -1,10 +1,9 @@
 "use client"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteService } from "../api/delete-service"
-import { toast } from "react-hot-toast"; 
-import { extractErrorMessage } from "@/lib/error-utils";
-
+// 🌟 Caminho relativo aqui também!
+import { deleteService } from "../services/services.api";
+import { toast } from "react-hot-toast";
 
 export function useDeleteService() {
   const queryClient = useQueryClient()
@@ -12,14 +11,12 @@ export function useDeleteService() {
   return useMutation({
     mutationFn: (id: string) => deleteService(id),
     onSuccess: () => {
-      // Invalida o cache para a lista de serviços atualizar sozinha
       queryClient.invalidateQueries({ queryKey: ["services"] });
-      
-      toast.success("Serviço deletado com sucesso!"); //
+      queryClient.invalidateQueries({ queryKey: ["public-booking-availability"] });
+      toast.success("Serviço apagado com sucesso!");
     },
-    onError: (error: unknown) => {
-              const errorMessage = extractErrorMessage(error, "Erro ao deletar serviço");
-              toast.error(errorMessage);
-            },
+    onError: () => {
+      toast.error("Erro ao apagar o serviço.");
+    },
   });
 }

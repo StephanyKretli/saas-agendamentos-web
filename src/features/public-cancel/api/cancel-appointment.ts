@@ -4,5 +4,6 @@ import type { CancelAppointmentResponse } from "../types/public-cancel.types";
 export async function cancelAppointmentByToken(
   token: string,
 ): Promise<CancelAppointmentResponse> {
-  return api.patch(`/public/book/cancel/${token}`);
+  const response: any = await api.patch(`/public/book/cancel/${token}`);
+  return response?.data?.data || response?.data || response;
 }

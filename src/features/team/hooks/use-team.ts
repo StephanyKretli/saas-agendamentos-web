@@ -1,5 +1,8 @@
+"use client";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api"; 
+import { getAuthHeaders } from "@/lib/auth-headers"; // 🌟 NOVO: Garante que você tem permissão
 import { toast } from "sonner"; 
 import { extractErrorMessage } from "@/lib/error-utils";
 
@@ -7,12 +10,11 @@ export function useTeam() {
   return useQuery({
     queryKey: ["team"],
     queryFn: async () => {
-      const response = await api.get("/team");
+      const response: any = await api.get("/team", {
+        headers: getAuthHeaders(),
+      });
       
-      // Procura a lista de usuários no envelopamento do Axios e do NestJS
-      const payload = response?.data?.data || response?.data || response || [];
-      
-      // Se por acaso não for um array, retorna um array vazio para não quebrar o .map()
+      const payload = response?.data?.data ?? response?.data ?? response ?? [];
       return Array.isArray(payload) ? payload : [];
     },
   });
@@ -23,16 +25,16 @@ export function useCreateMember() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await api.post("/team", data);
-      return response.data;
+      const response: any = await api.post("/team", data, {
+        headers: getAuthHeaders(),
+      });
+      // 🌟 Nossa extração blindada
+      return response?.data?.data ?? response?.data ?? response;
     },
     onSuccess: () => {
       toast.success("Profissional adicionado com sucesso!");
-      // Atualiza a lista na hora
       queryClient.invalidateQueries({ queryKey: ["team"] });
     },
-    // 🌟 AQUI! Usamos a função para puxar o motivo exato.
-    // Troquei de 'any' para 'unknown' para o TypeScript ficar feliz
     onError: (error: unknown) => {
       const errorMessage = extractErrorMessage(error, "Erro ao adicionar profissional.");
       toast.error(errorMessage);
@@ -45,10 +47,13 @@ export function useUpdateMember() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await api.patch(`/team/${id}`, data);
-      return response.data;
+      const response: any = await api.patch(`/team/${id}`, data, {
+        headers: getAuthHeaders(),
+      });
+      return response?.data?.data ?? response?.data ?? response;
     },
     onSuccess: () => {
+      toast.success("Profissional atualizado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["team"] });
     },
     onError: (error: unknown) => {
@@ -63,19 +68,18 @@ export function useRemoveMember() {
 
   return useMutation({
     mutationFn: async (memberId: string) => {
-      const response = await api.delete(`/team/${memberId}`);
-      return response.data;
+      const response: any = await api.delete(`/team/${memberId}`, {
+        headers: getAuthHeaders(),
+      });
+      return response?.data?.data ?? response?.data ?? response;
     },
     onSuccess: () => {
-      toast.success("Profissional removido com sucesso!"); // 🌟 Adicionado um feedback de sucesso aqui também!
+      toast.success("Profissional removido com sucesso!"); 
       queryClient.invalidateQueries({ queryKey: ['team'] }); 
     },
-    // 🌟 AQUI! Tratamento de erro adicionado para a remoção
     onError: (error: unknown) => {
       const errorMessage = extractErrorMessage(error, "Erro ao remover profissional.");
       toast.error(errorMessage);
     },
   });
-
-  
 }

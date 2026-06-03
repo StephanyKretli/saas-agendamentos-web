@@ -1,9 +1,10 @@
+"use client";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-// Ajuste o import da sua instância do Axios/Fetch
-import { api } from "@/lib/api"; 
+import { api } from "@/lib/api";
+import { getAuthHeaders } from "@/lib/auth-headers"; // 🌟 Adicionado para garantir autenticação
 import { extractErrorMessage } from "@/lib/error-utils";
-
 
 interface UpdateFinancialData {
   absorbPixFee?: boolean;
@@ -19,9 +20,11 @@ export function useUpdateFinancial() {
 
   return useMutation({
     mutationFn: async (data: UpdateFinancialData) => {
-      // Bate exatamente na rota PATCH que acabamos de criar no NestJS
-      const response = await api.patch("/settings/financial", data);
-      return response.data;
+      // 🌟 Requisição blindada com Headers e extração correta de dados!
+      const response: any = await api.patch("/settings/financial", data, {
+        headers: getAuthHeaders(),
+      });
+      return response?.data?.data ?? response?.data ?? response;
     },
     onSuccess: () => {
       toast.success("Regras financeiras atualizadas com sucesso!");
@@ -29,7 +32,7 @@ export function useUpdateFinancial() {
       queryClient.invalidateQueries({ queryKey: ["settings"] }); 
     },
     onError: (error: unknown) => {
-      const errorMessage = extractErrorMessage(error, "Erro ao salvar as configurações. Tente novamente.");
+      const errorMessage = extractErrorMessage(error, "Erro ao salvar as configurações.");
       toast.error(errorMessage);
     },
   });

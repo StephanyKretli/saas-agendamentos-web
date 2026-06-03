@@ -3,13 +3,19 @@ import { getAuthHeaders } from "@/lib/auth-headers";
 import type { DashboardMetrics, TodayAppointment } from "../types/dashboard.types";
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  return api.get("/dashboard/metrics", {
+  const response: any = await api.get("/dashboard/metrics", {
     headers: getAuthHeaders(),
-  }) as Promise<DashboardMetrics>;
+  });
+  
+  // 🌟 Extrai os dados reais da métrica (desempacota o Axios)
+  return response?.data?.data || response?.data || response;
 }
 
 export async function getDashboardToday(): Promise<TodayAppointment[]> {
-  return api.get("/dashboard/today", {
+  const response: any = await api.get("/dashboard/today", {
     headers: getAuthHeaders(),
-  }) as Promise<TodayAppointment[]>;
+  });
+  
+  // 🌟 Extrai o array de agendamentos do dia
+  return response?.data?.data || response?.data || response;
 }

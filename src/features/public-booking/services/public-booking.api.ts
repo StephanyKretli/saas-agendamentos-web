@@ -9,13 +9,16 @@ import type {
 export async function getBookingProfile(
   username: string,
 ): Promise<PublicBookingProfileResponse> {
-  return api.get(`/public/book/${username}`, {
+  const response: any = await api.get(`/public/book/${username}`, {
     headers: {
       "Cache-Control": "no-cache",
       "Pragma": "no-cache",
       "Expires": "0",
     },
-  }) as Promise<PublicBookingProfileResponse>;
+  });
+  
+  // 🌟 Garante que o perfil do salão e os serviços carregam
+  return response?.data?.data || response?.data || response;
 }
 
 export async function getBookingAvailability(params: {
@@ -45,7 +48,7 @@ export async function getBookingAvailability(params: {
     searchParams.append("cartItems", JSON.stringify(params.cartItems));
   }
 
-  return api.get(
+  const response: any = await api.get(
     `/public/book/${params.username}/availability?${searchParams.toString()}`,
     {
       headers: {
@@ -54,15 +57,21 @@ export async function getBookingAvailability(params: {
         "Expires": "0",
       },
     }
-  ) as Promise<PublicAvailabilityResponse>;
+  );
+  
+  // 🌟 Garante que os horários aparecem
+  return response?.data?.data || response?.data || response;
 }
 
 export async function createPublicAppointment(params: {
   username: string;
   payload: CreatePublicAppointmentPayload;
 }): Promise<CreatePublicAppointmentResponse> {
-  return api.post(
+  const response: any = await api.post(
     `/public/book/${params.username}/appointments`,
     params.payload
-  ) as Promise<CreatePublicAppointmentResponse>;
+  );
+  
+  // 🌟 Garante que o agendamento (e o PIX, se houver) é retornado corretamente para a tela de sucesso
+  return response?.data?.data || response?.data || response;
 }
