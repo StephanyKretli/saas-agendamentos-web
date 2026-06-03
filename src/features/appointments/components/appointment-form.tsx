@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { Calendar, Clock, User, Scissors, AlignLeft } from "lucide-react";
+import { Calendar, Clock, User, Scissors, AlignLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClients } from "@/features/clients/hooks/use-clients";
 import { useServices } from "@/features/services/hooks/use-services"; 
@@ -17,6 +17,13 @@ interface AppointmentFormProps {
 
 export function AppointmentForm({ initialDate, professionalId, onSuccess, onCancel }: AppointmentFormProps) {
   const [clientId, setClientId] = useState("");
+  
+  // 🌟 NOVOS ESTADOS PARA A BUSCA INTELIGENTE
+  const [clientSearch, setClientSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState(initialDate || "");
   const [time, setTime] = useState("");
@@ -24,10 +31,29 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   const [isMaintenanceBooking, setIsMaintenanceBooking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: clientsData } = useClients(1, "");
+  // 🌟 DEBOUNCE: Espera 300ms depois que você parar de digitar para buscar na API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(clientSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [clientSearch]);
+
+  // Fecha o dropdown se clicar fora dele
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Busca os clientes passando o texto da pesquisa!
+  const { data: clientsData, isLoading: isSearchingClients } = useClients(1, debouncedSearch);
   const { data: servicesData } = useServices();
 
-  // 🌟 A MÁGICA: Usamos "as any" para evitar que o TypeScript bloqueie o build
   const payloadClients = (clientsData as any)?.data ? (clientsData as any).data : clientsData;
   const payloadServices = (servicesData as any)?.data ? (servicesData as any).data : servicesData;
 
@@ -38,6 +64,12 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!clientId) {
+      toast.error("Por favor, selecione um cliente da lista.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -65,23 +97,59 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-4">
-        {/* CLIENTE */}
-        <div className="space-y-2">
+        
+        {/* 🌟 CLIENTE - COMBOBOX DE PESQUISA */}
+        <div className="space-y-2" ref={wrapperRef}>
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <User className="h-4 w-4 text-muted-foreground" />
             Cliente
           </label>
-          <select 
-            required
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="" disabled>Selecione um cliente...</option>
-            {clients.map((client: any) => (
-              <option key={client.id} value={client.id}>{client.name}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <div className="relative">
+              <input 
+                type="text"
+                required={!clientId} 
+                value={clientSearch}
+                onChange={(e) => {
+                  setClientSearch(e.target.value);
+                  setIsDropdownOpen(true);
+                  if (clientId) setClientId(""); // Limpa o ID se você alterar o texto
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
+                placeholder="Digite para buscar pelo nome ou telefone..."
+                className="w-full rounded-xl border border-input bg-background pl-3 pr-10 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
+            </div>
+
+            {/* O Dropdown flutuante com os resultados */}
+            {isDropdownOpen && (
+              <div className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto rounded-xl border border-border bg-card shadow-lg py-1 custom-scrollbar">
+                {isSearchingClients ? (
+                  <div className="p-3 text-sm text-center text-muted-foreground animate-pulse">Buscando...</div>
+                ) : clients.length === 0 ? (
+                  <div className="p-3 text-sm text-center text-muted-foreground">Nenhum cliente encontrado.</div>
+                ) : (
+                  clients.map((client: any) => (
+                    <button
+                      key={client.id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Impede que o input perca o foco antes do clique
+                        setClientId(client.id);
+                        setClientSearch(client.name);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex flex-col items-start px-3 py-2 hover:bg-muted transition-colors text-left"
+                    >
+                      <span className="text-sm font-medium text-foreground">{client.name}</span>
+                      {client.phone && <span className="text-xs text-muted-foreground mt-0.5">{client.phone}</span>}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SERVIÇO */}
