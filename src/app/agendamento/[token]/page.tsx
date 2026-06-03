@@ -72,9 +72,36 @@ export default function PublicManageAppointmentPage() {
   }
 
   const isCanceled = appointment.status === "CANCELED";
-  const dateObj = new Date(appointment.date);
-  const formattedDate = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", timeZone: "UTC" }).format(dateObj);
-  const formattedTime = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(dateObj);
+  
+  // 🌟 CORREÇÃO 1: Blindagem Absoluta das Datas
+  let formattedDate = "Data a confirmar";
+  let formattedTime = "--:--";
+
+  try {
+    if (appointment?.date) {
+      const dateObj = new Date(appointment.date);
+      if (!isNaN(dateObj.getTime())) {
+        formattedDate = new Intl.DateTimeFormat("pt-BR", { 
+          weekday: "long", 
+          day: "2-digit", 
+          month: "long", 
+          timeZone: "UTC" 
+        }).format(dateObj);
+        
+        formattedTime = new Intl.DateTimeFormat("pt-BR", { 
+          hour: "2-digit", 
+          minute: "2-digit", 
+          timeZone: "UTC" 
+        }).format(dateObj);
+      }
+    }
+  } catch (err) {
+    console.error("Erro ao formatar a data:", err);
+  }
+
+  // 🌟 CORREÇÃO 2: Blindagem do Preço
+  const safePriceCents = appointment.service?.priceCents || 0;
+  const safeDuration = appointment.service?.duration || 0;
 
   return (
     <div className="min-h-screen bg-muted/20 py-12 px-4 sm:px-6 flex justify-center">
@@ -104,11 +131,11 @@ export default function PublicManageAppointmentPage() {
 
           <div className={`space-y-6 ${isCanceled ? "mt-4" : ""}`}>
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-foreground">{appointment.service?.name}</h3>
+              <h3 className="text-lg font-black text-foreground">{appointment.service?.name || "Serviço Indisponível"}</h3>
               <div className="flex items-center text-sm font-bold text-primary">
-                R$ {(appointment.service?.priceCents / 100).toFixed(2).replace(".", ",")} 
+                R$ {(safePriceCents / 100).toFixed(2).replace(".", ",")} 
                 <span className="text-muted-foreground font-medium ml-2 text-xs">
-                  • {appointment.service?.duration} min
+                  • {safeDuration} min
                 </span>
               </div>
             </div>
