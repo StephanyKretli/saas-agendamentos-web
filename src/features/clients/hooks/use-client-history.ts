@@ -9,6 +9,7 @@ export function useClientHistory(clientId: string | null, from?: string, to?: st
     queryFn: async () => {
       if (!clientId) return null;
       
+      // Monta os parâmetros de URL caso as datas existam
       const params = new URLSearchParams();
       if (from) params.append("from", from);
       if (to) params.append("to", to);
@@ -19,7 +20,7 @@ export function useClientHistory(clientId: string | null, from?: string, to?: st
         headers: getAuthHeaders(),
       });
       
-      // 🌟 Vacina anti-crash aplicada!
+      // 🌟 AQUI ESTÁ A CORREÇÃO: Extraindo os dados do Axios corretamente!
       return response?.data?.data || response?.data || response;
     },
     enabled: !!clientId,
