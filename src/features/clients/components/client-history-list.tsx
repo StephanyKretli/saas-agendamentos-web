@@ -34,7 +34,7 @@ export function ClientHistoryList({ clientId }: ClientHistoryListProps) {
     setActiveToDate(undefined);
   };
 
-  if (isLoading && !isFetching) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="h-[120px] animate-pulse rounded-2xl bg-muted" />
