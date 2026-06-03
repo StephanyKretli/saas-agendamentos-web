@@ -8,15 +8,21 @@ type Props = {
   token: string;
 };
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    dateStyle: "full",
-    timeStyle: "short",
-  }).format(new Date(value));
+// 🌟 CORREÇÃO 1: Função blindada contra quebra de tela por data inválida
+function formatDateTime(value: string | undefined | null) {
+  if (!value) return "Data não disponível";
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      dateStyle: "full",
+      timeStyle: "short",
+    }).format(new Date(value));
+  } catch (error) {
+    return "Data inválida";
+  }
 }
 
-function getStatusLabel(status: string) {
+function getStatusLabel(status: string | undefined | null) {
   switch (status) {
     case "SCHEDULED":
       return "Agendado";
@@ -25,7 +31,7 @@ function getStatusLabel(status: string) {
     case "COMPLETED":
       return "Concluído";
     default:
-      return status;
+      return status || "Desconhecido";
   }
 }
 
@@ -61,20 +67,22 @@ export function CancelAppointmentCard({ token }: Props) {
     );
   }
 
-  const appointment = previewQuery.data;
+  // 🌟 CORREÇÃO 2: Garante que os dados são extraídos mesmo se o NestJS retornar dentro de um objeto
+  const rawData = previewQuery.data as any;
+  const appointment = rawData?.appointment || rawData?.data || rawData;
 
-    if (!appointment) {
+  if (!appointment) {
     return (
-        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 shadow-sm">
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 shadow-sm">
         <h1 className="text-lg font-semibold text-foreground">
-            Não foi possível carregar o agendamento
+          Não foi possível carregar o agendamento
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-            Os dados do agendamento não estão disponíveis no momento.
+          Os dados do agendamento não estão disponíveis no momento.
         </p>
-        </div>
+      </div>
     );
-    }
+  }
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -92,7 +100,7 @@ export function CancelAppointmentCard({ token }: Props) {
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Serviço
           </p>
-          <p className="text-sm text-foreground">{appointment.serviceName}</p>
+          <p className="text-sm text-foreground">{appointment.serviceName || "Serviço não informado"}</p>
         </div>
 
         <div>
@@ -140,14 +148,15 @@ export function CancelAppointmentCard({ token }: Props) {
       <div className="mt-5">
         <button
           type="button"
-          disabled={cancelMutation.isPending || !appointment.canCancel}
+          // 🌟 CORREÇÃO 3: Trava o botão para impedir bugs se já estiver cancelado
+          disabled={cancelMutation.isPending || appointment.canCancel === false || appointment.status === "CANCELED"}
           onClick={() => cancelMutation.mutate(token)}
           className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-60 transition-opacity"
         >
           {cancelMutation.isPending ? "Cancelando..." : "Cancelar agendamento"}
         </button>
 
-        {!appointment.canCancel ? (
+        {appointment.canCancel === false || appointment.status === "CANCELED" ? (
           <p className="mt-2 text-sm text-muted-foreground">
             Este agendamento não pode mais ser cancelado.
           </p>
