@@ -5,6 +5,7 @@ import { useClientHistory } from "../hooks/use-client-history";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, DollarSign, Clock, Scissors, Ban, RefreshCw, CalendarDays, Filter } from "lucide-react";
+import type { ClientHistoryItem } from "../types/clients.types";
 
 interface ClientHistoryListProps {
   clientId: string;
@@ -152,7 +153,7 @@ export function ClientHistoryList({ clientId }: ClientHistoryListProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map((apt) => {
+            {items.map((apt: ClientHistoryItem) => {
               const aptDate = new Date(apt.date);
               
               // Definindo cores baseadas no status
