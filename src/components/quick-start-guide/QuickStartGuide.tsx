@@ -15,12 +15,14 @@ export function QuickStartGuide() {
   const [hasBusinessHours, setHasBusinessHours] = useState(false);
   const [hasServices, setHasServices] = useState(false);
   const [hasWhatsappConnected, setHasWhatsappConnected] = useState(false);
+  const [hasTested, setHasTested] = useState(false);
 
   // Lê a memória sempre que a tela carrega OU a rota (pathname) muda
   useEffect(() => {
     setHasBusinessHours(localStorage.getItem("syncro_step_hours") === "true");
     setHasServices(localStorage.getItem("syncro_step_services") === "true");
     setHasWhatsappConnected(localStorage.getItem("syncro_step_wpp") === "true");
+    setHasTested(localStorage.getItem("syncro_step_test") === "true"); 
   }, [pathname]);
 
   const completeStepAndNavigate = (stepKey: string, setter: any, route: string) => {
@@ -31,7 +33,7 @@ export function QuickStartGuide() {
 
   const isTestUnlocked = hasBusinessHours && hasServices && hasWhatsappConnected;
   
-  const steps = [hasBusinessHours, hasServices, hasWhatsappConnected, false];
+  const steps = [hasBusinessHours, hasServices, hasWhatsappConnected, hasTested];
   const completedSteps = steps.filter(Boolean).length;
   const progress = (completedSteps / 4) * 100;
 
@@ -138,8 +140,12 @@ export function QuickStartGuide() {
               {isTestUnlocked && (
                 <button 
                   onClick={() => {
+                    // 🌟 1. Grava no navegador que a jornada acabou!
+                    localStorage.setItem("syncro_step_test", "true");
+                    setHasTested(true);
+
+                    // 2. Abre a aba da vitrine
                     const username = (profile as any)?.username || "";
-                    // Abre a vitrine dela em uma nova aba
                     window.open(`https://meusyncro.com.br/book/${username}`, "_blank");
                   }} 
                   className="flex items-center gap-1 rounded bg-primary px-2.5 py-1 text-[10px] font-bold text-primary-foreground hover:opacity-90"
