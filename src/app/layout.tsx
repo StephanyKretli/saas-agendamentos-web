@@ -5,6 +5,7 @@ import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider"; 
 import "./globals.css";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import Script from 'next/script';
 
 
 const geistSans = Geist({
@@ -59,6 +60,11 @@ export default function RootLayout({
               style: { background: '#EF4444' }, 
             },
           }} 
+        />
+
+        <Script 
+          src="https://d335luupugsy2.cloudfront.net/js/loader-scripts/07f7a314-b4bc-4663-a260-43741fc8a45d-loader.js"
+          strategy="afterInteractive"
         />
       </body>
 
