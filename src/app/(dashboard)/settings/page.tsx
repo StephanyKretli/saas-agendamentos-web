@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useUpdateSettings } from "@/features/settings/hooks/use-update-settings";
 import { useUpdateFinancial } from "@/features/settings/hooks/use-update-financial";
-import { useQueryClient } from "@tanstack/react-query"; // 🔴 Adicionado para re-fetch sem reload
+import { useQueryClient } from "@tanstack/react-query"; 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,13 +17,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"; // 🔴 Adicionado para substituir window.confirm
+} from "@/components/ui/alert-dialog"; 
 import { toast } from "react-hot-toast";
 import { 
   User, CheckCircle2, Copy, Camera, Trash2, ShieldCheck, 
   Settings as SettingsIcon, DollarSign, Percent, 
   CreditCard, AlertCircle, Sparkles, MessageCircle, Store, Lock, Zap,
-  Eye, EyeOff // 🔴 Ícones de visibilidade adicionados
+  Eye, EyeOff 
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion"; 
 import { api } from "@/lib/api";
@@ -56,6 +56,28 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("perfil");
   const tabsWithSave = ["perfil", "vitrine", "seguranca", "pagamentos"];
   const showSaveBar = tabsWithSave.includes(activeTab);
+
+  // 🚀 O "CÉREBRO" DO DEEP LINKING (Lê o bilhete do Guia Rápido)
+  useEffect(() => {
+    const checkAndChangeTab = () => {
+      const targetTab = localStorage.getItem("syncro_target_tab");
+      if (targetTab === "whatsapp") {
+        setActiveTab("whatsapp");
+        localStorage.removeItem("syncro_target_tab"); // Apaga o bilhete
+      }
+    };
+
+    // 1. Roda se o usuário vier de outra página (ex: Dashboard)
+    checkAndChangeTab();
+
+    // 2. Fica escutando caso o usuário clique no guia estando JÁ DENTRO das configurações
+    window.addEventListener("force_tab_change", checkAndChangeTab);
+    
+    // Limpa a escuta quando sair da tela
+    return () => {
+      window.removeEventListener("force_tab_change", checkAndChangeTab);
+    };
+  }, []);
 
   // 🔴 UX 4: Toggle de visibilidade do token
   const [showToken, setShowToken] = useState(false);
@@ -136,7 +158,6 @@ export default function SettingsPage() {
 
   const handleCopyLink = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // 🌟 Fixamos o domínio oficial da vitrine para evitar erros com o localhost ou subdomínios (app.)
     const link = `https://meusyncro.com.br/book/${formData.username}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado com sucesso!");
@@ -177,7 +198,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       return;
     }
 
-    // 🌟 Removemos os campos do PIX das configurações gerais
     const settingsPayload = {
       name: formData.name, 
       username: formData.username, 
@@ -187,7 +207,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       centralizePayments: formData.centralizePayments,
     };
     
-    // 🌟 E colocamos aqui, no pacote que vai para a rota financeira!
     const financialPayload = {
       absorbPixFee: formData.absorbPixFee, 
       commissionType: formData.commissionType,
@@ -209,7 +228,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     }
   };
 
-  // 🔴 UX 10: Handler separado para senha
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (passwordData.newPassword.length < 6) {
@@ -247,14 +265,13 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     }
   };
 
-  // 🔴 UX 9: InvalidateQueries em vez de reload
   const executePlanChange = async () => {
     const newPlan = dialogConfig.payload;
     try {
       setIsChangingPlan(true);
       await api.post('/billing/plan', { plan: newPlan });
       toast.success(`Plano atualizado para ${newPlan} com sucesso!`);
-      queryClient.invalidateQueries({ queryKey: ["settings"] }); // Re-fetch silencioso
+      queryClient.invalidateQueries({ queryKey: ["settings"] }); 
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Erro ao alterar o plano.");
     } finally {
@@ -312,7 +329,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               </TabsTrigger>
               <TabsTrigger value="pagamentos" className="flex-1 sm:flex-none sm:min-w-30 rounded-xl py-2.5 px-5 text-sm font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all text-amber-600/70 data-[state=active]:text-amber-600 flex items-center gap-2">
                 <DollarSign className="h-4 w-4" /> Financeiro 
-                {/* 🔴 UX 3: Badge PRO visível na aba */}
                 {!isProPlan && <span className="ml-1 text-[9px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PRO</span>}
                 {activeTab === "pagamentos" && isDirty && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
               </TabsTrigger>
@@ -328,7 +344,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </div>
         </div>
 
-        {/* 🔴 Formulário principal engloba apenas as abas gerenciáveis */}
         <form onSubmit={handleSubmit}>
           <TabsContent value="perfil" className="outline-none">
             <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="grid gap-6 lg:grid-cols-[300px_1fr]">
@@ -346,7 +361,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 </div>
                 {formData.avatarUrl && (
                   <Button type="button" variant="ghost" size="sm" className="text-destructive text-xs hover:bg-destructive/10 font-bold mt-1" 
-                    onClick={() => setDialogConfig({ isOpen: true, type: 'photo' })}> {/* 🔴 UX 6 */}
+                    onClick={() => setDialogConfig({ isOpen: true, type: 'photo' })}> 
                     <Trash2 className="h-3 w-3 mr-2" /> Remover Foto
                   </Button>
                 )}
@@ -365,13 +380,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                     </div>
                     <div className="space-y-2.5">
                       <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">CPF ou CNPJ</label>
-                      {/* 🔴 UX 8: Máscara aplicada */}
                       <input value={formData.document} onChange={handleDocumentChange} className={`w-full ${inputStyle}`} placeholder="000.000.000-00" maxLength={18} />
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Bio / Descrição</label>
-                    {/* 🔴 UX 7: Contador de Bio */}
                     <textarea value={formData.bio} maxLength={300} onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`w-full min-h-[120px] resize-none ${inputStyle}`} placeholder="Conte para os seus clientes o que o seu espaço oferece de melhor..." />
                     <p className="text-xs text-right text-muted-foreground font-medium">{formData.bio.length}/300 caracteres</p>
                   </div>
@@ -395,7 +408,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 <span className="absolute left-4 top-3.5 text-sm text-muted-foreground opacity-60 font-medium">
                   meusyncro.com.br/book/
                 </span>
-                {/* 🌟 Ajustado de pl-[110px] para pl-[200px] para o texto não sobrepor */}
                 <input 
                   value={formData.username} 
                   onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '-')})} 
@@ -413,263 +425,255 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </TabsContent>
 
           <TabsContent value="pagamentos" className="outline-none">
-  <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
-    
-    {/* ALERTA PARA NÃO-PROPRIETÁRIOS */}
-    {!isSalonOwner && adminCentralizedPayments && (
-      <Card className="rounded-3xl border border-border/50 bg-muted/20 shadow-sm p-10 flex flex-col items-center justify-center text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-5 shadow-inner">
-          <ShieldCheck className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-black text-foreground">Gestão Centralizada</h3>
-        <p className="text-sm text-muted-foreground mt-2 max-w-md font-medium leading-relaxed">
-          As regras financeiras e a cobrança de PIX são geridas exclusivamente pela administração do salão.
-        </p>
-      </Card>
-    )}
+            <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="space-y-6 max-w-3xl">
+              
+              {!isSalonOwner && adminCentralizedPayments && (
+                <Card className="rounded-3xl border border-border/50 bg-muted/20 shadow-sm p-10 flex flex-col items-center justify-center text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-5 shadow-inner">
+                    <ShieldCheck className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl font-black text-foreground">Gestão Centralizada</h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-md font-medium leading-relaxed">
+                    As regras financeiras e a cobrança de PIX são geridas exclusivamente pela administração do salão.
+                  </p>
+                </Card>
+              )}
 
-    {/* PROTEÇÃO CONTRA FALTAS (SINAL) */}
-    {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
-      <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-amber-500/20 ring-1 ring-amber-500/10 hover:shadow-xl' : 'border-border/50'}`}>
-        <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/10' : 'bg-muted/30 border-border/50'}`}>
-          <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Proteção Contra Faltas</h2>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX.</p>
-            </div>
-            {!isProPlan && (
-              <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
-                <Lock className="h-3 w-3" /> PRO
-              </span>
-            )}
-          </div>
-        </div>
-        
-        <div className={`p-6 sm:p-8 space-y-6 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
-            <div className="max-w-md">
-              <label className="text-base font-bold text-foreground">Cobrar PIX Antecipado (Sinal)</label>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Exija um pagamento parcial no momento do agendamento online.</p>
-            </div>
-            <label className="relative inline-flex items-center shrink-0 cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="peer sr-only" 
-                checked={formData.requirePixDeposit} 
-                onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})} 
-              />
-              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:border-amber-500 peer-checked:after:translate-x-full"></div>
-            </label>
-          </div>
-
-          <AnimatePresence>
-            {formData.requirePixDeposit && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                <div className="space-y-8 p-6 mt-2 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-inner">
+              {(isSalonOwner || (!isSalonOwner && !adminCentralizedPayments)) && (
+                <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-amber-500/20 ring-1 ring-amber-500/10 hover:shadow-xl' : 'border-border/50'}`}>
+                  <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-amber-500/10 to-amber-500/5 border-amber-500/10' : 'bg-muted/30 border-border/50'}`}>
+                    <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Proteção Contra Faltas</h2>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Configure a cobrança de um sinal via PIX.</p>
+                      </div>
+                      {!isProPlan && (
+                        <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                          <Lock className="h-3 w-3" /> PRO
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   
-                  {/* PERCENTUAL DO SINAL */}
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-foreground">Percentagem do Sinal</label>
-                      <span className="text-4xl font-black text-amber-600">{formData.pixDepositPercentage}%</span>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="5" 
-                      max="100" 
-                      step="5" 
-                      value={formData.pixDepositPercentage} 
-                      onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})} 
-                      className="w-full h-3 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500" 
-                    />
-                  </div>
-
-                  <hr className="border-amber-500/10" />
-
-                  {/* CAMPO DO TOKEN E PASSO A PASSO */}
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-bold text-foreground">Mercado Pago Access Token</label>
-                        <a 
-                          href="https://www.mercadopago.com.br/developers/pt/panel" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
-                        >
-                          Ir para Painel Developer <Copy className="h-3 w-3" />
-                        </a>
+                  <div className={`p-6 sm:p-8 space-y-6 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
+                      <div className="max-w-md">
+                        <label className="text-base font-bold text-foreground">Cobrar PIX Antecipado (Sinal)</label>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Exija um pagamento parcial no momento do agendamento online.</p>
                       </div>
-                      <div className="relative">
+                      <label className="relative inline-flex items-center shrink-0 cursor-pointer">
                         <input 
-                          type={showToken ? "text" : "password"} 
-                          placeholder="APP_USR-..." 
-                          value={formData.mercadoPagoAccessToken} 
-                          onChange={(e) => setFormData({...formData, mercadoPagoAccessToken: e.target.value})} 
-                          className={`w-full ${inputStyle} pr-12 font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500 focus:ring-amber-500/20`} 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                          checked={formData.requirePixDeposit} 
+                          onChange={(e) => setFormData({...formData, requirePixDeposit: e.target.checked})} 
                         />
-                        <button 
-                          type="button" 
-                          onClick={() => setShowToken(!showToken)} 
-                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-amber-600 transition-colors"
-                        >
-                          {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
+                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:border-amber-500 peer-checked:after:translate-x-full"></div>
+                      </label>
                     </div>
 
-                    {/* GUIA PASSO A PASSO */}
-                    <div className="bg-background/50 rounded-xl p-5 border border-amber-500/10 space-y-3">
-                      <p className="text-xs font-black uppercase tracking-widest text-amber-600 flex items-center gap-2">
-                        <AlertCircle className="h-3.5 w-3.5" /> Como obter seu Token:
-                      </p>
-                      <ul className="space-y-2">
-                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">1</span>
-                          Acesse o Mercado Pago Developers e crie uma aplicação (Checkout Transparente).
-                        </li>
-                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">2</span>
-                          No menu lateral, vá em Credenciais de Produção.
-                        </li>
-                        <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">3</span>
-                          Copie o campo "Access Token" (começa com APP_USR) e cole acima.
-                        </li>
-                      </ul>
+                    <AnimatePresence>
+                      {formData.requirePixDeposit && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                          <div className="space-y-8 p-6 mt-2 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-inner">
+                            
+                            <div className="space-y-5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-foreground">Percentagem do Sinal</label>
+                                <span className="text-4xl font-black text-amber-600">{formData.pixDepositPercentage}%</span>
+                              </div>
+                              <input 
+                                type="range" 
+                                min="5" 
+                                max="100" 
+                                step="5" 
+                                value={formData.pixDepositPercentage} 
+                                onChange={(e) => setFormData({...formData, pixDepositPercentage: Number(e.target.value)})} 
+                                className="w-full h-3 bg-amber-500/20 rounded-lg appearance-none cursor-pointer accent-amber-500" 
+                              />
+                            </div>
+
+                            <hr className="border-amber-500/10" />
+
+                            <div className="space-y-6">
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-sm font-bold text-foreground">Mercado Pago Access Token</label>
+                                  <a 
+                                    href="https://www.mercadopago.com.br/developers/pt/panel" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
+                                  >
+                                    Ir para Painel Developer <Copy className="h-3 w-3" />
+                                  </a>
+                                </div>
+                                <div className="relative">
+                                  <input 
+                                    type={showToken ? "text" : "password"} 
+                                    placeholder="APP_USR-..." 
+                                    value={formData.mercadoPagoAccessToken} 
+                                    onChange={(e) => setFormData({...formData, mercadoPagoAccessToken: e.target.value})} 
+                                    className={`w-full ${inputStyle} pr-12 font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500 focus:ring-amber-500/20`} 
+                                  />
+                                  <button 
+                                    type="button" 
+                                    onClick={() => setShowToken(!showToken)} 
+                                    className="absolute right-3 top-3.5 text-muted-foreground hover:text-amber-600 transition-colors"
+                                  >
+                                    {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="bg-background/50 rounded-xl p-5 border border-amber-500/10 space-y-3">
+                                <p className="text-xs font-black uppercase tracking-widest text-amber-600 flex items-center gap-2">
+                                  <AlertCircle className="h-3.5 w-3.5" /> Como obter seu Token:
+                                </p>
+                                <ul className="space-y-2">
+                                  <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">1</span>
+                                    Acesse o Mercado Pago Developers e crie uma aplicação (Checkout Transparente).
+                                  </li>
+                                  <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">2</span>
+                                    No menu lateral, vá em Credenciais de Produção.
+                                  </li>
+                                  <li className="text-[13px] text-muted-foreground font-medium flex gap-2">
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-600">3</span>
+                                    Copie o campo "Access Token" (começa com APP_USR) e cole acima.
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Card>
+              )}
+
+              {isSalonOwner && (
+                <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-primary/20 ring-1 ring-primary/10 hover:shadow-xl' : 'border-border/50'}`}>
+                  <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/10' : 'bg-muted/30 border-border/50'}`}>
+                    <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                      <DollarSign className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Repasses e Comissões</h2>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Defina as regras financeiras da sua equipe.</p>
+                      </div>
+                      {!isProPlan && (
+                        <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                          <Lock className="h-3 w-3" /> PRO
+                        </span>
+                      )}
                     </div>
                   </div>
+                  
+                  <div className={`p-6 sm:p-8 space-y-8 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
+                      <div className="max-w-md">
+                        <label className="text-base font-bold text-foreground">Centralizar Pagamentos</label>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Se ativo, todo o valor dos agendamentos entra na conta do salão.</p>
+                      </div>
+                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                          checked={formData.centralizePayments} 
+                          onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} 
+                        />
+                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-border/50">
+                      <div className="max-w-md">
+                        <label className="text-base font-bold text-foreground">Absorver Taxa do PIX</label>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Se desativado, a taxa é descontada antes de calcular a comissão.</p>
+                      </div>
+                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                          checked={formData.absorbPixFee} 
+                          onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} 
+                        />
+                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Tipo de Comissão</label>
+                        <div className="flex gap-4 p-1 bg-muted/30 rounded-xl">
+                          <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "PERCENTAGE" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
+                            <input type="radio" name="commissionType" value="PERCENTAGE" checked={formData.commissionType === "PERCENTAGE"} onChange={() => setFormData({...formData, commissionType: "PERCENTAGE"})} className="hidden" />
+                            <Percent className="h-4 w-4" /> Porcentagem
+                          </label>
+                          <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "FIXED" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
+                            <input type="radio" name="commissionType" value="FIXED" checked={formData.commissionType === "FIXED"} onChange={() => setFormData({...formData, commissionType: "FIXED"})} className="hidden" />
+                            <DollarSign className="h-4 w-4" /> Fixo (R$)
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                          {formData.commissionType === "PERCENTAGE" ? "Taxa Base Padrão" : "Valor Base Padrão"}
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            {formData.commissionType === "PERCENTAGE" ? <Percent className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground text-sm font-bold">R$</span>}
+                          </div>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            step={formData.commissionType === "PERCENTAGE" ? "1" : "0.01"} 
+                            placeholder="Ex: 50" 
+                            value={formData.defaultCommissionRate} 
+                            onChange={(e) => setFormData({...formData, defaultCommissionRate: e.target.value ? Number(e.target.value) : ""})} 
+                            className={`w-full pl-12 h-[52px] text-lg font-semibold ${inputStyle}`} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="seguranca" className="outline-none">
+            <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
+              <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
+                <div className="flex items-start gap-4 mb-6 pb-6 border-b border-border/50">
+                  <div className="bg-muted p-3 rounded-2xl text-foreground"><Lock className="h-6 w-6" /></div>
+                  <div>
+                    <h2 className="text-xl font-black text-foreground">Segurança da Conta</h2>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">Atualize a sua senha de acesso ao painel.</p>
+                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </Card>
-    )}
-
-    {/* REPASSES E COMISSÕES */}
-    {isSalonOwner && (
-      <Card className={`rounded-3xl border shadow-lg overflow-hidden transition-all mt-8 ${isProPlan ? 'border-primary/20 ring-1 ring-primary/10 hover:shadow-xl' : 'border-border/50'}`}>
-        <div className={`p-6 border-b flex items-start gap-4 ${isProPlan ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/10' : 'bg-muted/30 border-border/50'}`}>
-          <div className={`p-3 rounded-2xl shrink-0 shadow-inner ${isProPlan ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-            <DollarSign className="h-6 w-6" />
-          </div>
-          <div className="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className={`text-xl font-black ${isProPlan ? 'text-foreground' : 'text-muted-foreground'}`}>Repasses e Comissões</h2>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Defina as regras financeiras da sua equipe.</p>
-            </div>
-            {!isProPlan && (
-              <span className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
-                <Lock className="h-3 w-3" /> PRO
-              </span>
-            )}
-          </div>
-        </div>
-        
-        <div className={`p-6 sm:p-8 space-y-8 bg-card transition-all ${!isProPlan ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
-            <div className="max-w-md">
-              <label className="text-base font-bold text-foreground">Centralizar Pagamentos</label>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Se ativo, todo o valor dos agendamentos entra na conta do salão.</p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center shrink-0">
-              <input 
-                type="checkbox" 
-                className="peer sr-only" 
-                checked={formData.centralizePayments} 
-                onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} 
-              />
-              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
-            </label>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-border/50">
-            <div className="max-w-md">
-              <label className="text-base font-bold text-foreground">Absorver Taxa do PIX</label>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">Se desativado, a taxa é descontada antes de calcular a comissão.</p>
-            </div>
-            <label className="relative inline-flex cursor-pointer items-center shrink-0">
-              <input 
-                type="checkbox" 
-                className="peer sr-only" 
-                checked={formData.absorbPixFee} 
-                onChange={(e) => setFormData({...formData, absorbPixFee: e.target.checked})} 
-              />
-              <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
-            <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Tipo de Comissão</label>
-              <div className="flex gap-4 p-1 bg-muted/30 rounded-xl">
-                <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "PERCENTAGE" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
-                  <input type="radio" name="commissionType" value="PERCENTAGE" checked={formData.commissionType === "PERCENTAGE"} onChange={() => setFormData({...formData, commissionType: "PERCENTAGE"})} className="hidden" />
-                  <Percent className="h-4 w-4" /> Porcentagem
-                </label>
-                <label className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg cursor-pointer transition-all ${formData.commissionType === "FIXED" ? "bg-card shadow-sm ring-1 ring-border text-foreground font-bold" : "text-muted-foreground hover:bg-muted/50 font-medium"}`}>
-                  <input type="radio" name="commissionType" value="FIXED" checked={formData.commissionType === "FIXED"} onChange={() => setFormData({...formData, commissionType: "FIXED"})} className="hidden" />
-                  <DollarSign className="h-4 w-4" /> Fixo (R$)
-                </label>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                {formData.commissionType === "PERCENTAGE" ? "Taxa Base Padrão" : "Valor Base Padrão"}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  {formData.commissionType === "PERCENTAGE" ? <Percent className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground text-sm font-bold">R$</span>}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha Atual</label>
+                    <input type="password" required value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} className={inputStyle} placeholder="••••••••" />
+                  </div>
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nova Senha</label>
+                    <input type="password" required minLength={6} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className={inputStyle} placeholder="Mínimo 6 caracteres" />
+                  </div>
                 </div>
-                <input 
-                  type="number" 
-                  min="0" 
-                  step={formData.commissionType === "PERCENTAGE" ? "1" : "0.01"} 
-                  placeholder="Ex: 50" 
-                  value={formData.defaultCommissionRate} 
-                  onChange={(e) => setFormData({...formData, defaultCommissionRate: e.target.value ? Number(e.target.value) : ""})} 
-                  className={`w-full pl-12 h-[52px] text-lg font-semibold ${inputStyle}`} 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-    )}
-  </motion.div>
-</TabsContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
 
-          {/* 🔴 UX 10: Form de Segurança isolado */}
-        <TabsContent value="seguranca" className="outline-none">
-          <motion.div variants={tabContentVariants} initial="hidden" animate="visible" className="max-w-3xl">
-            <Card className="rounded-3xl border border-border/50 bg-card shadow-sm p-6 sm:p-8 hover:shadow-md transition-all">
-              <div className="flex items-start gap-4 mb-6 pb-6 border-b border-border/50">
-                <div className="bg-muted p-3 rounded-2xl text-foreground"><Lock className="h-6 w-6" /></div>
-                <div>
-                  <h2 className="text-xl font-black text-foreground">Segurança da Conta</h2>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Atualize a sua senha de acesso ao painel.</p>
-                </div>
-              </div>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Senha Atual</label>
-                  <input type="password" required value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} className={inputStyle} placeholder="••••••••" />
-                </div>
-                <div className="space-y-2.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nova Senha</label>
-                  <input type="password" required minLength={6} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className={inputStyle} placeholder="Mínimo 6 caracteres" />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </TabsContent>
-
-          {/* 🔴 UX 1: Renderização condicional da barra de Salvar */}
           {showSaveBar && (
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border/50 sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:pt-10 flex justify-end z-40">
               <motion.div whileHover={isDirty ? { scale: 1.02 } : {}} whileTap={isDirty ? { scale: 0.98 } : {}} className="w-full sm:w-auto shadow-xl sm:shadow-none rounded-2xl">
@@ -728,7 +732,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Mudar de Plano</h3>
                     <div className="grid sm:grid-cols-2 gap-4">
                       
-                      {/* STARTER */}
                       <div className={`relative p-5 rounded-2xl border transition-all ${currentPlan === 'STARTER' ? 'bg-muted/30 border-primary/20 ring-1 ring-primary/20' : 'bg-card border-border hover:border-primary/40'}`}>
                         {currentPlan === 'STARTER' && <div className="absolute top-3 right-4 text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-1 rounded-full">Plano Atual</div>}
                         <h4 className="font-black text-lg">Starter</h4>
@@ -749,7 +752,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                         </Button>
                       </div>
 
-                      {/* PRO */}
                       <div className={`relative p-5 rounded-2xl border transition-all ${currentPlan === 'PRO' ? 'bg-amber-500/5 border-amber-500/30 ring-1 ring-amber-500/20' : 'bg-card border-border hover:border-amber-500/40'}`}>
                         {currentPlan === 'PRO' && <div className="absolute top-3 right-4 text-[10px] font-black uppercase text-amber-600 bg-amber-500/20 px-2 py-1 rounded-full">Plano Atual</div>}
                         <h4 className="font-black text-lg flex items-center gap-2">Pro <Zap className="h-4 w-4 text-amber-500" fill="currentColor" /></h4>
@@ -796,7 +798,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         )}
       </Tabs>
 
-      {/* 🔴 UX 2: Centralização de Diálogos de Confirmação (Estilizado para Dark Mode/Alto Contraste) */}
       <AlertDialog open={dialogConfig.isOpen} onOpenChange={(open) => !open && setDialogConfig({ isOpen: false, type: null })}>
         <AlertDialogContent className="rounded-3xl border border-border/40 bg-[#141415] p-6 sm:p-8 shadow-2xl sm:max-w-[420px]">
           <AlertDialogHeader className="space-y-3">
@@ -811,7 +812,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               {dialogConfig.type === 'photo' && "Esta ação removerá a sua foto atual e voltará a exibir o ícone padrão."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {/* Substituímos o AlertDialogFooter por uma div normal */}
           <div className="mt-6 border-t border-white/5 pt-6 w-full flex flex-col-reverse sm:flex-row items-center justify-center gap-4">
             <AlertDialogCancel className="!m-0 w-full sm:w-[140px] rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 font-bold h-12 transition-all">
               Voltar
