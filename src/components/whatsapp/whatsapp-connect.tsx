@@ -4,16 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { QrCode, Smartphone, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// Importe a sua configuração de API (ajuste o caminho se necessário)
 import { api } from "@/lib/api"; 
 import { toast } from "react-hot-toast";
 
 interface WhatsappConnectProps {
-  salonId: string; // Recebemos o ID do Salão como propriedade
+  salonId: string;
 }
 
 export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
   const [status, setStatus] = useState<"LOADING" | "DISCONNECTED" | "CONNECTED">("LOADING");
+  
   if (!salonId) {
     return (
       <Card className="p-6 max-w-md w-full border-border bg-card shadow-sm flex items-center justify-center">
@@ -21,14 +21,18 @@ export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
       </Card>
     );
   }
+  
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Função para verificar se já está conectado
   const checkStatus = useCallback(async () => {
     try {
       const response = await api.get(`/whatsapp/status/${salonId}`);
-      const currentStatus = (response as any).data?.status || (response as any).status;
+      // Lida com as diferentes camadas de envelopamento da API
+      const responseData = (response as any).data || response;
+      const payload = responseData?.data || responseData;
+      
+      const currentStatus = payload?.status || responseData?.status;
       
       if (currentStatus === 'open') {
         setStatus("CONNECTED");
@@ -40,63 +44,49 @@ export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
     }
   }, [salonId]);
 
-  // Função para pedir um novo QR Code ao NestJS
   const generateQRCode = async () => {
     setIsGenerating(true);
-    setQrCodeBase64(null); // 🌟 NOVO: Apaga o fantasma da tela antes de pedir o novo!
+    setQrCodeBase64(null); 
 
     try {
-      // 1. Criamos um carimbo de tempo para enganar o cache do navegador (304)
       const timestamp = new Date().getTime();
-      
-      // 2. Fazemos o pedido com o ?t=timestamp no final
       const response = await api.get(`/whatsapp/qr-code/${salonId}?t=${timestamp}`);
       
-      // 3. Colocamos um console.log para vermos o que o NestJS enviou
-      console.log("📦 Resposta do NestJS:", response);
+      // 👇 A SOLUÇÃO DA BONECA RUSSA ESTÁ AQUI
+      // Retiramos as camadas extras de "data" criadas pelo NestJS e pelo Axios
+      const responseData = (response as any).data || response;
+      const payload = responseData?.data || responseData; 
 
-      // 4. Mapeamos os dados (A Evolution v2 pode devolver como 'base64' em vez de 'qrCode')
-      const data = (response as any).data || response;
-      const qrCode = data?.qrCode || data?.base64; 
+      // Buscamos a imagem por qualquer um dos nomes que o backend possa enviar
+      const qrCode = payload?.qrCodeBase64 || payload?.qrCode || payload?.base64; 
       
       if (qrCode) {
-        // A API da Evolution já devolve com o prefixo, mas garantimos aqui
         setQrCodeBase64(qrCode.includes('base64') ? qrCode : `data:image/png;base64,${qrCode}`);
       } else {
-        console.error("QR Code vazio na resposta:", data);
         toast.error("O WhatsApp não devolveu a imagem. Tente de novo.");
       }
     } catch (error: any) {
-      console.error("Erro ao gerar QR Code", error);
       toast.error(error.response?.data?.message || "Erro de conexão. Tente novamente.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Efeito 1: Checa o status logo que o componente aparece na tela
   useEffect(() => {
-    // 1. Se o ID estiver vazio, cancela tudo!
     if (!salonId || salonId === 'undefined') {
       return;
     }
-    
-    // 2. Se tiver ID, tira do "carregando" e vai perguntar à API
     checkStatus();
   }, [salonId, checkStatus]);
 
-  // Efeito 2: "Polling" (Fica a perguntar à API a cada 5 segundos se ela já escaneou)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    // Se o QR Code estiver na tela (desconectado), começamos a checar
     if (status === "DISCONNECTED" && qrCodeBase64) {
       interval = setInterval(() => {
         checkStatus();
       }, 5000); 
     }
-
-    console.log("🕵️‍♂️ ID do Salão recebido no componente:", salonId); // 👈 ADICIONE ISTO
 
     return () => {
       if (interval) clearInterval(interval);
