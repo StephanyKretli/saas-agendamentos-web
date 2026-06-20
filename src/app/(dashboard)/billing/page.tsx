@@ -49,29 +49,34 @@ export default function BillingPage() {
   const handleSubscribe = async (plan: string) => {
     setLoadingPlan(plan);
     try {
-      const response = await api.post('/billing/subscribe', { plan });
+      const response: any = await api.post('/billing/subscribe', { plan });
       
-      // Tenta pegar o link de sucesso ou de erro (se vier no corpo)
-      const url = response.data?.checkoutUrl || response.data?.asaasLink;
+      console.log("📦 RESPOSTA BRUTA DA API (SUCESSO):", response);
+
+      // A Mágica: Pega os dados estejam eles dentro de '.data' ou soltos na resposta
+      const payload = response.data ? response.data : response;
       
+      // Procura pelas duas chaves possíveis
+      const url = payload?.checkoutUrl || payload?.asaasLink;
+
       if (url) {
         window.location.href = url;
       } else {
-        throw new Error("Link não encontrado na resposta.");
+        throw new Error("A API respondeu com sucesso, mas não enviou o link.");
       }
       
     } catch (error: any) {
       console.error("🚨 ERRO RAIZ:", error.message);
-      console.log("Detalhes completos do erro:", error);
       
-      // 🚨 A MÁGICA: Extrai o link mesmo se o servidor der erro 402
-      const linkNoErro = error.response?.data?.asaasLink || error.response?.data?.checkoutUrl;
+      // Mesma lógica de blindagem para o cenário de erro (ex: 402)
+      const errorPayload = error.response?.data ? error.response.data : error.response;
+      const linkNoErro = errorPayload?.asaasLink || errorPayload?.checkoutUrl;
 
       if (linkNoErro) {
-        toast.success("Redirecionando para o pagamento...");
+        toast.success("A redirecionar para o pagamento...");
         window.location.href = linkNoErro;
       } else {
-        toast.error(error.response?.data?.message || "Erro ao conectar com o serviço de pagamento.");
+        toast.error(errorPayload?.message || "Erro ao conectar com o serviço de pagamento.");
         setLoadingPlan(null);
       }
     }
