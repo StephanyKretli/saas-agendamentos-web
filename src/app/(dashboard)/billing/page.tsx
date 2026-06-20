@@ -51,32 +51,28 @@ export default function BillingPage() {
     try {
       const response = await api.post('/billing/subscribe', { plan });
       
-      // Sucesso total (200 OK)
-      const checkoutUrl = response.data?.checkoutUrl;
+      // Tenta pegar o link de sucesso ou de erro (se vier no corpo)
+      const url = response.data?.checkoutUrl || response.data?.asaasLink;
       
-      if (checkoutUrl) {
-        toast.success("Redirecionando para o pagamento...");
-        window.location.href = checkoutUrl;
+      if (url) {
+        window.location.href = url;
       } else {
-        throw new Error("Resposta recebida, mas o link de pagamento está vazio.");
+        throw new Error("Link não encontrado na resposta.");
       }
       
     } catch (error: any) {
-      console.error("Erro no Front-end:", error);
+      console.error("Erro completo do servidor:", error.response?.data);
       
-      // 🚨 BLINDAGEM: Se o erro for 402 (Payment Required) ou 400, 
-      // verificamos se o backend enviou um link de recuperação no erro
-      const asaasLink = error.response?.data?.asaasLink || error.response?.data?.checkoutUrl;
+      // 🚨 A MÁGICA: Extrai o link mesmo se o servidor der erro 402
+      const linkNoErro = error.response?.data?.asaasLink || error.response?.data?.checkoutUrl;
 
-      if (asaasLink) {
-        toast.success("Pagamento pendente encontrado. Redirecionando...");
-        window.location.href = asaasLink;
-        return; // Sai da função com sucesso
+      if (linkNoErro) {
+        toast.success("Redirecionando para o pagamento...");
+        window.location.href = linkNoErro;
+      } else {
+        toast.error(error.response?.data?.message || "Erro ao conectar com o serviço de pagamento.");
+        setLoadingPlan(null);
       }
-
-      // Se não for um erro tratável, mostra o erro padrão
-      toast.error(error.response?.data?.message || "Erro ao conectar com o serviço de pagamento.");
-      setLoadingPlan(null); 
     }
   };
 
