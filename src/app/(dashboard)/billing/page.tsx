@@ -51,26 +51,31 @@ export default function BillingPage() {
     try {
       const response: any = await api.post('/billing/subscribe', { plan });
       
-      console.log("📦 RESPOSTA BRUTA DA API (SUCESSO):", response);
-
-      // A Mágica: Pega os dados estejam eles dentro de '.data' ou soltos na resposta
-      const payload = response.data ? response.data : response;
+      // 🚨 O SEGREDO ESTÁ AQUI: Descasca o duplo "data" (o do Axios e o da sua API)
+      const payload = response?.data?.data || response?.data || response;
       
-      // Procura pelas duas chaves possíveis
-      const url = payload?.checkoutUrl || payload?.asaasLink;
+      const url = payload?.checkoutUrl || 
+                  payload?.asaasLink || 
+                  payload?.invoiceUrl || 
+                  payload?.manageUrl;
 
       if (url) {
         window.location.href = url;
       } else {
-        throw new Error("A API respondeu com sucesso, mas não enviou o link.");
+        console.error("Objeto final extraído:", payload);
+        throw new Error("A API gerou a assinatura, mas não conseguimos ler o link.");
       }
       
     } catch (error: any) {
       console.error("🚨 ERRO RAIZ:", error.message);
       
-      // Mesma lógica de blindagem para o cenário de erro (ex: 402)
-      const errorPayload = error.response?.data ? error.response.data : error.response;
-      const linkNoErro = errorPayload?.asaasLink || errorPayload?.checkoutUrl;
+      // A mesma proteção para o erro 402
+      const errorPayload = error.response?.data?.data || error.response?.data || error.response;
+      
+      const linkNoErro = errorPayload?.asaasLink || 
+                         errorPayload?.checkoutUrl || 
+                         errorPayload?.invoiceUrl || 
+                         errorPayload?.manageUrl;
 
       if (linkNoErro) {
         toast.success("A redirecionar para o pagamento...");
