@@ -49,28 +49,33 @@ export default function BillingPage() {
   const handleSubscribe = async (plan: string) => {
     setLoadingPlan(plan);
     try {
-      // 1. Faz o pedido ao NestJS
       const response = await api.post('/billing/subscribe', { plan });
       
-      // 👉 Extrai os dados seja qual for o formato do Axios
-      const responseData = response.data ? response.data : response;
+      // Sucesso total (200 OK)
+      const checkoutUrl = response.data?.checkoutUrl;
       
-      // 2. Avisa que deu tudo certo
-      toast.success("Redirecionando para o pagamento seguro...");
-      
-      // 3. Captura o link mágico e redireciona!
-      const url = responseData.checkoutUrl;
-      
-      if (url) {
-        window.location.href = url;
+      if (checkoutUrl) {
+        toast.success("Redirecionando para o pagamento...");
+        window.location.href = checkoutUrl;
       } else {
-        // Se o back-end não mandou a URL, forçamos um erro para ir para o catch
-        throw new Error("Link do Asaas não encontrado na resposta.");
+        throw new Error("Resposta recebida, mas o link de pagamento está vazio.");
       }
       
     } catch (error: any) {
-      console.error("Erro no Front-end:", error); // 👈 Vai imprimir no F12 caso falhe
-      toast.error(error.response?.data?.message || "Erro ao redirecionar para a fatura.");
+      console.error("Erro no Front-end:", error);
+      
+      // 🚨 BLINDAGEM: Se o erro for 402 (Payment Required) ou 400, 
+      // verificamos se o backend enviou um link de recuperação no erro
+      const asaasLink = error.response?.data?.asaasLink || error.response?.data?.checkoutUrl;
+
+      if (asaasLink) {
+        toast.success("Pagamento pendente encontrado. Redirecionando...");
+        window.location.href = asaasLink;
+        return; // Sai da função com sucesso
+      }
+
+      // Se não for um erro tratável, mostra o erro padrão
+      toast.error(error.response?.data?.message || "Erro ao conectar com o serviço de pagamento.");
       setLoadingPlan(null); 
     }
   };
