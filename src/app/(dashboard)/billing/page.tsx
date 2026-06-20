@@ -61,7 +61,8 @@ export default function BillingPage() {
       }
       
     } catch (error: any) {
-      console.error("Erro completo do servidor:", error.response?.data);
+      console.error("🚨 ERRO RAIZ:", error.message);
+      console.log("Detalhes completos do erro:", error);
       
       // 🚨 A MÁGICA: Extrai o link mesmo se o servidor der erro 402
       const linkNoErro = error.response?.data?.asaasLink || error.response?.data?.checkoutUrl;
