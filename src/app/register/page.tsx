@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
-// 🌟 Ícone Phone adicionado aqui:
 import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff, Phone } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage"; 
@@ -20,7 +19,6 @@ function RegisterContent() {
   const registerMutation = useRegister();
   const [isBillingLoading, setIsBillingLoading] = useState(false);
 
-  // 🌟 Campo phone adicionado ao estado
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -39,10 +37,9 @@ function RegisterContent() {
     setFormData({ ...formData, username: slug });
   };
 
-  // 🌟 MÁSCARA VISUAL: Formata para (XX) XXXXX-XXXX enquanto digita
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove tudo o que não for número
-    if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos
+    let value = e.target.value.replace(/\D/g, ""); 
+    if (value.length > 11) value = value.slice(0, 11); 
 
     let formatted = value;
     if (value.length > 2) {
@@ -67,7 +64,6 @@ function RegisterContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 🌟 Validação garantindo que o telefone foi preenchido
     if (!formData.name || !formData.email || !formData.phone || !formData.username || !formData.password || !formData.confirmPassword) {
       toast.error("Por favor, preencha todos os campos.");
       return;
@@ -78,7 +74,6 @@ function RegisterContent() {
       return;
     }
 
-    // 🌟 LIMPEZA: Remove os parênteses e traços para enviar apenas números à API
     const cleanPhone = formData.phone.replace(/\D/g, "");
     if (cleanPhone.length < 10) {
       toast.error("Por favor, insira um número de telefone válido com DDD.");
@@ -87,11 +82,20 @@ function RegisterContent() {
 
     try {
       const { confirmPassword, phone, ...dadosDoUsuario } = formData;
-      // 🌟 Injeta o telefone limpo no payload final
       const dataToSend = { ...dadosDoUsuario, phone: cleanPhone, plan: planoEscolhido || 'PRO' };
 
       console.log("PASSO 1: A criar conta na API...");
       await registerMutation.mutateAsync(dataToSend);
+      
+      // 🎯 DISPARO DO PIXEL DA META (FRONTEND)
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'CompleteRegistration', {
+          content_name: 'Cadastro Syncro',
+          status: 'success'
+        });
+        console.log("🎯 [Meta Pixel] Evento CompleteRegistration disparado no navegador!");
+      }
+
       toast.success("Conta criada! A preparar o seu ambiente...");
 
       console.log("PASSO 2: A buscar o Token na API NestJS...");
@@ -173,7 +177,6 @@ function RegisterContent() {
               <input type="email" placeholder="E-mail de acesso" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={inputStyle} />
             </div>
 
-            {/* 🌟 NOVO INPUT DE TELEFONE COM MÁSCARA */}
             <div className="space-y-1 relative">
               <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <input 
