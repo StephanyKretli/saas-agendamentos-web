@@ -354,7 +354,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-black text-foreground">R$ 99</span><span className="text-muted-foreground font-bold">,90/mês</span>
                 </div>
                 <Link href="/register?plan=pro">
-                  <Button className="w-full h-12 rounded-xl font-black mb-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg border-0">Testar Grátis por 7 dias</Button>
+                  <Button className="w-full h-12 rounded-xl font-black mb-2 bg-amber-500 hover:bg-amber-600 text-white shadow-lg border-0">Testar Grátis por 14 dias</Button>
                 </Link>
                 <p className="text-center text-xs font-semibold text-muted-foreground mb-6">Acesso total liberado no teste.</p>
                 
