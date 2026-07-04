@@ -30,6 +30,9 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
   const [notes, setNotes] = useState("");
   const [isMaintenanceBooking, setIsMaintenanceBooking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 🌟 ESTADO DO PASSE LIVRE
+  const [ignoreRules, setIgnoreRules] = useState(false);
 
   // 🌟 DEBOUNCE: Espera 300ms depois que você parar de digitar para buscar na API
   useEffect(() => {
@@ -80,6 +83,8 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
         notes,
         professionalId,
         isMaintenance: isMaintenanceBooking,
+        // 🌟 O PASSE LIVRE ENVIADO PARA A API
+        ignoreAvailabilityRules: ignoreRules,
       };
       
       await createAppointment(payload);
@@ -245,6 +250,28 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
           placeholder="Notas importantes sobre o atendimento..."
           className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary"
         />
+      </div>
+
+      {/* 🌟 CHECKBOX DE ENCAIXE VIP */}
+      <div className="flex items-center space-x-3 mt-4 mb-2 p-4 bg-zinc-900/40 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
+        <input
+          type="checkbox"
+          id="ignoreRules"
+          checked={ignoreRules}
+          onChange={(e) => setIgnoreRules(e.target.checked)}
+          className="w-4 h-4 text-zinc-100 bg-zinc-950 border-zinc-700 rounded focus:ring-zinc-800 focus:ring-2 cursor-pointer transition-all"
+        />
+        <div className="flex flex-col">
+          <label htmlFor="ignoreRules" className="text-sm font-medium text-zinc-200 cursor-pointer select-none">
+            Forçar Encaixe VIP
+          </label>
+          <span 
+            className="text-xs text-zinc-500 cursor-pointer select-none" 
+            onClick={() => setIgnoreRules(!ignoreRules)}
+          >
+            Ignorar bloqueios, pausas e horário de funcionamento
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
