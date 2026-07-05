@@ -2,18 +2,19 @@
 
 import { useCancelAppointment } from "@/features/appointments/hooks/use-cancel-appointment";
 import { useCompleteAppointment } from "@/features/appointments/hooks/use-complete-appointment";
-import { Clock, AlertCircle, CheckCircle2 } from "lucide-react"; // Adicionei ícones para feedback visual
+import { Clock, AlertCircle, CheckCircle2, Zap } from "lucide-react"; // 🌟 Importei o Zap (Raio)
 
 type BusyTimelineItem = {
   appointmentId: string;
   start: string;
   end: string;
   status: string;
-  paymentStatus?: string; // 👈 NOVO
-  depositCents?: number | null; // 👈 NOVO
+  paymentStatus?: string; 
+  depositCents?: number | null; 
   notes?: string | null;
   professionalId?: string; 
   userId?: string;
+  isVIP?: boolean; // 🌟 A flag salvadora chegou aqui!
   service: {
     id: string;
     name: string;
@@ -38,11 +39,10 @@ const STATUS_MAP: Record<string, { label: string; container: string; badge: stri
     container: "border-blue-500/20 bg-blue-500/5",
     badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   },
-  // 🌟 NOVO STATUS VISUAL PARA PAGAMENTO PENDENTE
   WAITING_PAYMENT: {
     label: "Aguardando PIX",
-    container: "border-amber-500/30 bg-amber-500/5 border-dashed", // Borda tracejada para dar ideia de "provisório"
-    badge: "bg-amber-500/20 text-amber-700 dark:text-amber-400 animate-pulse", // Pulse suave para chamar atenção
+    container: "border-amber-500/30 bg-amber-500/5 border-dashed", 
+    badge: "bg-amber-500/20 text-amber-700 dark:text-amber-400 animate-pulse", 
   },
   COMPLETED: {
     label: "Concluído",
@@ -67,23 +67,27 @@ export function TimelineBusyItemCard({
   const isPending = cancelMutation.isPending || completeMutation.isPending;
   const isScheduled = item.status === "SCHEDULED";
   
-  // 💰 Identifica se está aguardando o sinal
   const isWaitingPix = item.status === "SCHEDULED" && item.paymentStatus === "PENDING";
 
-  // Escolhe o visual: se estiver aguardando PIX, usa o mapa especial, senão usa o padrão
+  // 🌟 Se for VIP, a cor de fundo e borda sobrepõe os outros estados para chamar a atenção
   const statusKey = isWaitingPix ? "WAITING_PAYMENT" : item.status;
-  const statusInfo = STATUS_MAP[statusKey] || {
+  const defaultStatusInfo = STATUS_MAP[statusKey] || {
     label: item.status,
     container: "border-border bg-muted/20",
     badge: "bg-muted text-muted-foreground",
   };
+
+  // Se o agendamento for VIP, aplicamos as classes douradas/âmbar
+  const finalContainerClass = item.isVIP 
+    ? "bg-zinc-900/80 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.05)]" 
+    : defaultStatusInfo.container;
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
   };
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-sm transition-all ${statusInfo.container}`}>
+    <div className={`rounded-2xl border p-4 shadow-sm transition-all ${finalContainerClass}`}>
       
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -96,15 +100,27 @@ export function TimelineBusyItemCard({
           </p>
         </div>
 
-        <span
-          className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusInfo.badge}`}
-        >
-          {isWaitingPix && <AlertCircle className="h-3 w-3" />}
-          {statusInfo.label}
-        </span>
+        <div className="flex flex-col items-end gap-1.5">
+          <span
+            className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${defaultStatusInfo.badge}`}
+          >
+            {isWaitingPix && <AlertCircle className="h-3 w-3" />}
+            {defaultStatusInfo.label}
+          </span>
+          
+          {/* 🌟 SELO VIP EM DESTAQUE */}
+          {item.isVIP && (
+            <span 
+              title="Encaixe VIP (Forçado fora das regras)" 
+              className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-500 border border-amber-500/20"
+            >
+              <Zap className="h-3 w-3 fill-amber-500/20" />
+              VIP
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* AVISO DE DINHEIRO PENDENTE (Destaque para o profissional) */}
       {isWaitingPix && item.depositCents && (
         <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] font-medium text-amber-700 dark:text-amber-400 border border-amber-500/10">
           <Clock className="h-3.5 w-3.5 shrink-0" />
@@ -112,7 +128,6 @@ export function TimelineBusyItemCard({
         </div>
       )}
 
-      {/* DADOS DO CLIENTE */}
       <div className="mt-4 border-t border-border/50 pt-4">
         <p className="text-sm font-medium text-foreground">
           {item.client?.name ?? "Cliente não informado"}
@@ -128,10 +143,8 @@ export function TimelineBusyItemCard({
         </div>
       </div>
 
-      {/* BOTÕES DE AÇÃO */}
       {isScheduled ? (
         <div className="mt-5 flex flex-wrap gap-2">
-          {/* Se estiver aguardando PIX, o botão de Concluir fica desabilitado ou avisado */}
           <button
             type="button"
             disabled={isPending || isWaitingPix}
