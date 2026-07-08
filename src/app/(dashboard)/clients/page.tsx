@@ -1,21 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useClients } from "@/features/clients/hooks/use-clients";
 import { ClientList } from "@/features/clients/components/client-list";
 import { ClientForm } from "@/features/clients/components/client-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClientHistoryList } from "@/features/clients/components/client-history-list";
-import { ClientsSkeleton } from "@/features/clients/components/clients-skeleton"; 
+import { ClientsSkeleton } from "@/features/clients/components/clients-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Users, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { motion } from "framer-motion";
+import { Plus, Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  
+  const lastSelectedClientIdRef = useRef<string | null>(null);
+  if (selectedClientId) lastSelectedClientIdRef.current = selectedClientId;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -120,40 +123,15 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* MODAL E DRAWER */}
-      <AnimatePresence>
-        {/* MODAL DE NOVO CLIENTE */}
-        {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-lg rounded-3xl bg-card p-6 shadow-2xl border">
-              <ClientForm onSuccess={() => { setIsFormOpen(false); refetch(); }} onCancel={() => setIsFormOpen(false)} />
-            </div>
-          </div>
-        )}
+      {/* MODAL DE NOVO CLIENTE */}
+      <Modal open={isFormOpen} onClose={() => setIsFormOpen(false)} title="Novo cliente">
+        <ClientForm onSuccess={() => { setIsFormOpen(false); refetch(); }} onCancel={() => setIsFormOpen(false)} />
+      </Modal>
 
-        {/* 🌟 CORREÇÃO: MODAL DE HISTÓRICO DO CLIENTE */}
-        {selectedClientId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-card p-6 shadow-2xl border custom-scrollbar">
-              
-              {/* Botão de Fechar */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-4 top-4 h-8 w-8 rounded-full bg-muted/50 hover:bg-muted"
-                onClick={() => setSelectedClientId(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              
-              <div className="mt-2">
-                <ClientHistoryList clientId={selectedClientId} />
-              </div>
-
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* MODAL DE HISTÓRICO DO CLIENTE */}
+      <Modal open={!!selectedClientId} onClose={() => setSelectedClientId(null)} size="lg">
+        <ClientHistoryList clientId={(selectedClientId ?? lastSelectedClientIdRef.current) as string} />
+      </Modal>
     </div>
   );
 }

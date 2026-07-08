@@ -5,11 +5,12 @@ import { useServices } from "@/features/services/hooks/use-services";
 import { ServiceList } from "@/features/services/components/service-list";
 import { ServiceForm } from "@/features/services/components/service-form";
 import { Button } from "@/components/ui/button";
-import { Plus, Scissors, X } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { Plus, Scissors } from "lucide-react";
 import { ServicesSkeleton } from "@/features/services/components/services-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Service } from "@/features/services/types/services.types";
-import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
+import { motion } from "framer-motion";
 
 export default function ServicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -85,44 +86,21 @@ export default function ServicesPage() {
         )}
       </div>
 
-      {/* 🌟 MODAL DE CRIAÇÃO/EDIÇÃO COM FRAMER MOTION */}
-      <AnimatePresence>
-        {isFormOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-sm"
-          >
-            <motion.div 
-              initial={{ opacity: 0, y: 50, scale: 0.95 }} 
-              animate={{ opacity: 1, y: 0, scale: 1 }} 
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card p-6 shadow-2xl border border-border max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-foreground tracking-tight">
-                  {editingService ? "Editar Serviço" : "Cadastrar Serviço"}
-                </h2>
-                <button 
-                  onClick={handleCloseModal} 
-                  className="rounded-full p-2 bg-muted/50 hover:bg-muted text-muted-foreground transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              <ServiceForm 
-                initialData={editingService} 
-                onSuccess={() => {
-                  handleCloseModal();
-                  refetch();
-                }} 
-                onCancel={handleCloseModal}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 🌟 MODAL DE CRIAÇÃO/EDIÇÃO */}
+      <Modal
+        open={isFormOpen}
+        onClose={handleCloseModal}
+        title={editingService ? "Editar Serviço" : "Cadastrar Serviço"}
+      >
+        <ServiceForm
+          initialData={editingService}
+          onSuccess={() => {
+            handleCloseModal();
+            refetch();
+          }}
+          onCancel={handleCloseModal}
+        />
+      </Modal>
     </div>
   );
 }

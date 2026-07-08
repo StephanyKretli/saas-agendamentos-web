@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ptBR } from "date-fns/locale";
 import { format, addDays, subDays } from "date-fns";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 import { DaySummary } from "@/features/appointments/components/day-summary";
 import { RescheduleModal } from "@/features/appointments/components/reschedule-modal";
@@ -18,7 +18,8 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarIcon, ChevronLeft, ChevronRight, X, User, ChevronDown } from "lucide-react"; 
+import { Modal } from "@/components/ui/modal";
+import { Plus, CalendarIcon, ChevronLeft, ChevronRight, User, ChevronDown } from "lucide-react";
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
@@ -190,33 +191,18 @@ export default function AgendaPage() {
         </div>
       </motion.div>
 
-      <AnimatePresence>
-        {isNewAppointmentOpen && (
-            <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-sm"
-            >
-                <motion.div 
-                    initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.95 }}
-                    transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                    className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card p-6 shadow-xl border border-border max-h-[90vh] overflow-y-auto"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-foreground tracking-tight">Novo Agendamento</h2>
-                        <button onClick={() => setIsNewAppointmentOpen(false)} className="rounded-full p-2 bg-muted/50 hover:bg-muted text-muted-foreground transition-colors">
-                            <X className="h-5 w-5" />
-                        </button>
-                    </div>
-                    <AppointmentForm 
-                        initialDate={selectedDate as any}
-                        professionalId={selectedProfessionalId}
-                        onCancel={() => setIsNewAppointmentOpen(false)}
-                        onSuccess={() => setIsNewAppointmentOpen(false)}
-                    />
-                </motion.div>
-            </motion.div>
-        )}
-      </AnimatePresence>
+      <Modal
+        open={isNewAppointmentOpen}
+        onClose={() => setIsNewAppointmentOpen(false)}
+        title="Novo Agendamento"
+      >
+        <AppointmentForm
+          initialDate={selectedDate as any}
+          professionalId={selectedProfessionalId}
+          onCancel={() => setIsNewAppointmentOpen(false)}
+          onSuccess={() => setIsNewAppointmentOpen(false)}
+        />
+      </Modal>
 
       <div className="sticky top-34 sm:top-24 z-20 flex lg:hidden items-center justify-between rounded-full border border-border/50 bg-background/90 backdrop-blur-sm p-1.5 shadow-sm">
         <Button variant="ghost" size="icon" onClick={goToPreviousDay} className="rounded-full hover:bg-muted text-muted-foreground">
@@ -233,40 +219,27 @@ export default function AgendaPage() {
         </Button>
       </div>
 
-      <AnimatePresence>
-        {isMobileCalendarOpen && (
-            <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm lg:hidden"
-            >
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-xl border border-border"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="font-semibold">Escolher data</h2>
-                        <button onClick={() => setIsMobileCalendarOpen(false)} className="rounded-full p-2 hover:bg-muted text-muted-foreground">
-                            <X className="h-5 w-5" />
-                        </button>
-                    </div>
-                    <div className="flex justify-center bg-background p-2 rounded-2xl border border-border/50">
-                        <Calendar
-                            mode="single" locale={ptBR} selected={calendarDate}
-                            onSelect={(newDate) => { 
-                                if (newDate) {
-                                    setSelectedDate(formatDateInput(newDate));
-                                    setIsMobileCalendarOpen(false);
-                                }
-                            }}
-                        />
-                    </div>
-                    <Button onClick={goToToday} variant="outline" className="w-full mt-4 rounded-xl font-bold">
-                        Ir para Hoje
-                    </Button>
-                </motion.div>
-            </motion.div>
-        )}
-      </AnimatePresence>
+      <Modal
+        open={isMobileCalendarOpen}
+        onClose={() => setIsMobileCalendarOpen(false)}
+        title="Escolher data"
+        size="sm"
+      >
+        <div className="flex justify-center bg-background p-2 rounded-2xl border border-border/50">
+          <Calendar
+            mode="single" locale={ptBR} selected={calendarDate}
+            onSelect={(newDate) => {
+              if (newDate) {
+                setSelectedDate(formatDateInput(newDate));
+                setIsMobileCalendarOpen(false);
+              }
+            }}
+          />
+        </div>
+        <Button onClick={goToToday} variant="outline" className="w-full mt-4 rounded-xl font-bold">
+          Ir para Hoje
+        </Button>
+      </Modal>
 
       <div className="grid gap-6 lg:gap-8 lg:grid-cols-[auto_1fr] items-start">
         
