@@ -8,11 +8,94 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: saas_agendamentos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/saas_agendamentos
+      JWT_SECRET: ci_test_secret
+      NEXT_PUBLIC_API_URL: http://localhost:3333
+
     steps:
     - uses: actions/checkout@v4
+
+    - name: Checkout API repo
+      uses: actions/checkout@v4
+      with:
+        repository: StephanyKretli/saas-agendamentos-api
+        path: api-repo
+
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+
+    - name: Install API dependencies
+      working-directory: api-repo
+      run: npm ci
+
+    - name: Generate Prisma client
+      working-directory: api-repo
+      run: npx prisma generate
+
+    - name: Run API migrations
+      working-directory: api-repo
+      run: npx prisma migrate deploy
+
+    - name: Seed E2E test user
+      working-directory: api-repo
+      run: |
+        cat <<'EOF' > seed-e2e.js
+        const { PrismaClient } = require('@prisma/client');
+        const bcrypt = require('bcryptjs');
+
+        const prisma = new PrismaClient();
+
+        async function main() {
+          const email = 'admin@saas.com';
+          const password = await bcrypt.hash('123456', 10);
+
+          await prisma.user.upsert({
+            where: { email },
+            update: {},
+            create: {
+              name: 'Admin E2E',
+              email,
+              password,
+              username: 'admin-e2e',
+              role: 'ADMIN',
+            },
+          });
+        }
+
+        main()
+          .catch((error) => {
+            console.error(error);
+            process.exit(1);
+          })
+          .finally(() => prisma.$disconnect());
+        EOF
+        node seed-e2e.js
+
+    - name: Start API server
+      working-directory: api-repo
+      run: nohup npm run start > api-server.log 2>&1 &
+
+    - name: Wait for API to be ready
+      run: timeout 60 bash -c 'until curl -sf http://localhost:3333/health > /dev/null; do sleep 2; done'
+
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers
