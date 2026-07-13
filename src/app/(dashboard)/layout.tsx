@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/auth-storage";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
-import { QuickStartGuide } from "@/components/quick-start-guide/QuickStartGuide";
+import { OnboardingWizard } from "@/features/onboarding/components/onboarding-wizard";
 
 export default function DashboardLayout({
   children,
@@ -36,8 +36,8 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
       
-      {/* 🚀 GUIA FIXO NO TOPO (Autônomo com LocalStorage) */}
-      <QuickStartGuide />
+      {/* 🚀 Wizard de onboarding: progresso derivado do backend, modal bloqueante até o mínimo viável */}
+      <OnboardingWizard />
 
       {/* CONTAINER ORIGINAL (Sidebar + Conteúdo Principal) */}
       <div className="flex flex-col flex-1 p-4 gap-4 md:flex-row md:p-4 lg:p-6 lg:gap-6">

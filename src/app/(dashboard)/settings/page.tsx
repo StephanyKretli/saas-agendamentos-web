@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useUpdateSettings } from "@/features/settings/hooks/use-update-settings";
 import { useUpdateFinancial } from "@/features/settings/hooks/use-update-financial";
@@ -53,31 +54,32 @@ export default function SettingsPage() {
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   
   // 🔴 UX 1: Controle da aba ativa para exibir/esconder botão Salvar
-  const [activeTab, setActiveTab] = useState("perfil");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const VALID_TABS = ["perfil", "vitrine", "whatsapp", "pagamentos", "seguranca", "assinatura"];
+
+  const [activeTab, setActiveTabState] = useState(() => {
+    const tabFromUrl = searchParams.get("tab");
+    return tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "perfil";
+  });
+
+  // Mantém a aba em sincronia se a URL mudar (ex: navegação vinda do wizard de onboarding)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    setActiveTabState(tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "perfil");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   const tabsWithSave = ["perfil", "vitrine", "seguranca", "pagamentos"];
   const showSaveBar = tabsWithSave.includes(activeTab);
-
-  // 🚀 O "CÉREBRO" DO DEEP LINKING (Lê o bilhete do Guia Rápido)
-  useEffect(() => {
-    const checkAndChangeTab = () => {
-      const targetTab = localStorage.getItem("syncro_target_tab");
-      if (targetTab === "whatsapp") {
-        setActiveTab("whatsapp");
-        localStorage.removeItem("syncro_target_tab"); // Apaga o bilhete
-      }
-    };
-
-    // 1. Roda se o usuário vier de outra página (ex: Dashboard)
-    checkAndChangeTab();
-
-    // 2. Fica escutando caso o usuário clique no guia estando JÁ DENTRO das configurações
-    window.addEventListener("force_tab_change", checkAndChangeTab);
-    
-    // Limpa a escuta quando sair da tela
-    return () => {
-      window.removeEventListener("force_tab_change", checkAndChangeTab);
-    };
-  }, []);
 
   // 🔴 UX 4: Toggle de visibilidade do token
   const [showToken, setShowToken] = useState(false);

@@ -19,6 +19,7 @@ export type UserSettings = {
   pixDepositPercentage?: number | null;
   mercadoPagoAccessToken?: string | null;
   centralizePayments?: boolean;
+  isSoloProfessional?: boolean;
   owner?: {
     centralizePayments: boolean;
   } | null;
@@ -35,6 +36,7 @@ export type UpdateSettingsPayload = {
   pixDepositPercentage?: number;
   mercadoPagoAccessToken?: string;
   centralizePayments?: boolean;
+  isSoloProfessional?: boolean;
 };
 
 // Criando apelidos para evitar erros de importação em outros arquivos
