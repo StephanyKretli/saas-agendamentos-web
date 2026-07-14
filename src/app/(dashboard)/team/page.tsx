@@ -16,9 +16,8 @@ import { toast } from "react-hot-toast";
 import { useTeam, useCreateMember, useRemoveMember, useUpdateMember } from "@/features/team/hooks/use-team";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
-  Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X, Infinity, Sparkles, AlertCircle
+  Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Users, X
 } from "lucide-react";
-import { api } from "@/lib/api";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { GuideLink } from "@/features/guide/components/guide-link";
 
@@ -50,31 +49,6 @@ export default function TeamPage() {
   });
 
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // 👇 ESTADO E FUNÇÃO PARA O UPGRADE (ASAAS) 👇
-  const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
-
-  const handleUpgradeClick = async () => {
-    try {
-      setIsUpgradeLoading(true);
-      const response = await api.get('/billing/manage');
-      const responseData = response as any;
-      const url = responseData.manageUrl || responseData.data?.manageUrl;
-      
-      if (url) {
-        toast.success("A redirecionar para o portal seguro...");
-        window.open(url, '_blank'); 
-      } else {
-        throw new Error("Link do Asaas não encontrado.");
-      }
-    } catch (error: any) {
-      console.error("Erro no redirecionamento para o Asaas:", error);
-      toast.error(error.response?.data?.message || "Erro ao aceder ao portal de pagamento.");
-    } finally {
-      setIsUpgradeLoading(false);
-    }
-  };
-  // 👆 FIM DA LÓGICA DE UPGRADE 👆
 
   // As funções originais que tinham desaparecido:
   const handleSubmit = (e: React.FormEvent) => {
@@ -174,15 +148,6 @@ export default function TeamPage() {
     );
   }
 
-  const currentMembersCount = Array.isArray(team) ? team.filter((m: any) => !m.isOwner).length : 0;  const maxMembers = profile?.maxMembers || 3; 
-  const planName = profile?.plan || "Starter"; 
-  
-  // 🌟 AQUI ESTÁ A CORREÇÃO: Agora o Front-end sabe que o PRO é o Ilimitado
-  const isUnlimitedPlan = planName === 'PRO'; 
-  const isLimitReached = !isUnlimitedPlan && currentMembersCount >= maxMembers;
-  const isOverLimit = !isUnlimitedPlan && currentMembersCount > maxMembers; 
-  const progressPercentage = Math.min((currentMembersCount / maxMembers) * 100, 100);
-
   const inputStyle = "h-12 rounded-xl border border-border bg-card px-4 text-sm shadow-sm transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none";
 
   return (
@@ -201,96 +166,12 @@ export default function TeamPage() {
         </div>
         
         <div className="w-full sm:w-auto">
-          {isLimitReached ? (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <span className="text-xs font-bold text-destructive bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-full shadow-sm">
-                Limite Starter ({currentMembersCount}/{maxMembers})
-              </span>
-              {/* 👇 BOTÃO DE UPGRADE BRILHANTE 👇 */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-                <Button 
-                  onClick={handleUpgradeClick} 
-                  disabled={isUpgradeLoading}
-                  className="rounded-xl w-full sm:w-auto h-12 font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md border-0"
-                >
-                  {isUpgradeLoading ? (
-                    "A abrir portal..."
-                  ) : (
-                    <><Sparkles className="mr-2 h-4 w-4" /> Evoluir para PRO</>
-                  )}
-                </Button>
-              </motion.div>
-            </div>
-          ) : (
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={() => { setIsAdding(true); setEditingMember(null); setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" }); }} className="rounded-xl shadow-sm w-full sm:w-auto h-12 font-bold">
-                <Plus className="mr-2 h-4 w-4" /> Adicionar Profissional
-              </Button>
-            </motion.div>
-          )}
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={() => { setIsAdding(true); setEditingMember(null); setFormData({ name: "", email: "", username: "", password: "", role: "PROFESSIONAL" }); }} className="rounded-xl shadow-sm w-full sm:w-auto h-12 font-bold">
+              <Plus className="mr-2 h-4 w-4" /> Adicionar Profissional
+            </Button>
+          </motion.div>
         </div>
-      </motion.div>
-
-      {/* 🌟 CARD DE PLANO ATUALIZADO */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="rounded-3xl border border-primary/20 bg-primary/5 p-5 sm:p-6 flex flex-col gap-3 shadow-sm relative overflow-hidden">
-        {/* 🌟 CARD DE PLANO E ALERTA DE DOWNGRADE */}
-      <div className="space-y-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className={`rounded-3xl border ${isOverLimit ? 'border-destructive/30 bg-destructive/5' : 'border-primary/20 bg-primary/5'} p-5 sm:p-6 flex flex-col gap-3 shadow-sm relative overflow-hidden`}>
-          <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl pointer-events-none ${isOverLimit ? 'bg-destructive/10' : 'bg-primary/10'}`} />
-          <div className="flex items-center justify-between relative z-10">
-            <p className="text-sm font-bold text-foreground">Utilização do Plano <span className={`capitalize ${isOverLimit ? 'text-destructive' : 'text-primary'}`}>({planName.toLowerCase()})</span></p>
-            
-            {isUnlimitedPlan ? (
-               <p className="text-sm font-black text-amber-500 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20 flex items-center gap-1.5 shadow-sm">
-                 <Infinity className="h-4 w-4" /> Ilimitado
-               </p>
-            ) : (
-              <p className={`text-sm font-black px-3 py-1 rounded-full border ${isOverLimit ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-primary bg-primary/10 border-primary/20'}`}>
-                {currentMembersCount} de {maxMembers}
-              </p>
-            )}
-          </div>
-          
-          {!isUnlimitedPlan && (
-            <div className="h-2.5 w-full bg-muted/80 rounded-full overflow-hidden border border-border/50 relative z-10">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`h-full relative ${isOverLimit ? 'bg-destructive' : (isLimitReached ? 'bg-amber-500' : 'bg-primary')}`}>
-                <div className="absolute inset-0 bg-white/20 w-full h-full" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }} />
-              </motion.div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* 🚨 ALERTA DE EXCESSO DE MEMBROS (DOWNGRADE) 🚨 */}
-        <AnimatePresence>
-          {isOverLimit && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between shadow-inner">
-                <div className="flex items-start gap-3">
-                   <div className="bg-destructive/20 p-2 rounded-xl shrink-0 mt-0.5">
-                     <AlertCircle className="h-5 w-5 text-destructive" />
-                   </div>
-                   <div>
-                     <h3 className="text-sm font-black text-destructive uppercase tracking-wider">Atenção: Limite Excedido</h3>
-                     <p className="text-sm text-destructive/80 font-medium mt-1 leading-relaxed max-w-2xl">
-                       O seu plano atual permite apenas <strong>{maxMembers} profissionais</strong>, mas você tem <strong>{currentMembersCount}</strong> registados. 
-                       Por favor, remova {currentMembersCount - maxMembers} membro(s) da equipe para regularizar a sua conta ou faça upgrade.
-                     </p>
-                   </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-        
-        {/* Barra de progresso some se for ilimitado */}
-        {!isUnlimitedPlan && (
-          <div className="h-2.5 w-full bg-muted/80 rounded-full overflow-hidden border border-border/50 relative z-10">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className={`h-full relative ${isLimitReached ? 'bg-destructive' : 'bg-primary'}`}>
-              <div className="absolute inset-0 bg-white/20 w-full h-full" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }} />
-            </motion.div>
-          </div>
-        )}
       </motion.div>
 
       <AnimatePresence>
@@ -327,20 +208,17 @@ export default function TeamPage() {
                   </>
                 )}
                 
-                {/* 🌟 SELECT DE CARGO (Se for o plano ilimitado) */}
-                {isUnlimitedPlan && (
-                  <div className="space-y-2 col-span-full">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nível de Acesso</label>
-                    <select 
-                      value={formData.role} 
-                      onChange={e => setFormData({...formData, role: e.target.value})} 
-                      className={`w-full ${inputStyle}`}
-                    >
-                      <option value="PROFESSIONAL">Membro da Equipe (Apenas Agenda e Produção)</option>
-                      <option value="ADMIN">Co-Administrador (Acesso Total)</option>
-                    </select>
-                  </div>
-                )}
+                <div className="space-y-2 col-span-full">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Nível de Acesso</label>
+                  <select
+                    value={formData.role}
+                    onChange={e => setFormData({...formData, role: e.target.value})}
+                    className={`w-full ${inputStyle}`}
+                  >
+                    <option value="PROFESSIONAL">Membro da Equipe (Apenas Agenda e Produção)</option>
+                    <option value="ADMIN">Co-Administrador (Acesso Total)</option>
+                  </select>
+                </div>
 
                 <div className="col-span-full pt-4 mt-2 border-t border-border flex gap-3 justify-end">
                   <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="rounded-xl font-bold">Cancelar</Button>
