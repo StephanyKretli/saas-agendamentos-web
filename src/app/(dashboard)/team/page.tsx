@@ -18,8 +18,9 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
   Plus, Mail, Shield, MoreVertical, Edit2, KeyRound, UserMinus, Lock, Users, X, Infinity, Sparkles, AlertCircle
 } from "lucide-react";
-import { api } from "@/lib/api"; 
+import { api } from "@/lib/api";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { GuideLink } from "@/features/guide/components/guide-link";
 
 
 const containerVariants: Variants = {
@@ -195,6 +196,7 @@ export default function TeamPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Equipe</h1>
             <p className="mt-1 text-sm text-muted-foreground font-medium">Faça a gestão dos profissionais do seu espaço.</p>
+            <GuideLink section="equipe" className="mt-2" />
           </div>
         </div>
         

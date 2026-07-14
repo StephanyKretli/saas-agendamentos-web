@@ -26,8 +26,9 @@ import {
   CreditCard, AlertCircle, Sparkles, MessageCircle, Store, Lock, Zap,
   Eye, EyeOff 
 } from "lucide-react";
-import { motion, AnimatePresence, Variants } from "framer-motion"; 
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { api } from "@/lib/api";
+import { GuideLink, type GuideSection } from "@/features/guide/components/guide-link";
 
 import { WhatsappConnect } from "@/components/whatsapp/whatsapp-connect";
 
@@ -301,6 +302,14 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   const inputStyle = "rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm shadow-sm transition-all focus:border-primary/50 focus:bg-card focus:ring-1 focus:ring-primary/20 outline-none hover:border-border";
 
+  const guideSectionForTab: Record<string, GuideSection | undefined> = {
+    perfil: "vitrine",
+    vitrine: "vitrine",
+    whatsapp: "whatsapp",
+    pagamentos: "financeiro",
+  };
+  const activeGuideSection = guideSectionForTab[activeTab];
+
   return (
     <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-12 max-w-6xl mx-auto px-4 sm:px-0">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-4">
@@ -311,6 +320,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">Configurações</h1>
             <p className="mt-1 text-base text-muted-foreground font-medium">Faça a gestão da sua identidade, vitrine pública e integrações.</p>
+            {activeGuideSection && <GuideLink section={activeGuideSection} className="mt-2" />}
           </div>
         </div>
       </motion.div>

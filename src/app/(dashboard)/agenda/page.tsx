@@ -23,6 +23,7 @@ import { Plus, CalendarIcon, ChevronLeft, ChevronRight, User, ChevronDown } from
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
+import { GuideLink } from "@/features/guide/components/guide-link";
 
 import {
   DropdownMenu,
@@ -128,6 +129,7 @@ export default function AgendaPage() {
             <p className="mt-1 text-sm text-muted-foreground font-medium">
               {displayDateCapitalized}
             </p>
+            <GuideLink section="agendamento" className="mt-2" />
           </div>
         </div>
         

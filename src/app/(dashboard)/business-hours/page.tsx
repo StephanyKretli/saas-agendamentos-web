@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Clock, User, ChevronDown } from "lucide-react";
 import { BusinessHour } from "@/features/business-hours/types/business-hours.types";
 import { motion, Variants } from "framer-motion";
+import { GuideLink } from "@/features/guide/components/guide-link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,6 +169,7 @@ export default function BusinessHoursPage() {
             <p className="mt-1 text-sm text-muted-foreground font-medium">
               Configure turnos e intervalos de almoço.
             </p>
+            <GuideLink section="horarios" className="mt-2" />
           </div>
         </div>
 

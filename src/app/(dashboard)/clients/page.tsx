@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { motion } from "framer-motion";
 import { Plus, Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { GuideLink } from "@/features/guide/components/guide-link";
 
 export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -55,6 +56,7 @@ export default function ClientsPage() {
             <p className="mt-1 text-sm text-muted-foreground font-medium">
               Gerencie a sua carteira de clientes, contactos e observações.
             </p>
+            <GuideLink section="clientes" className="mt-2" />
           </div>
         </div>
 

@@ -11,6 +11,7 @@ import { ServicesSkeleton } from "@/features/services/components/services-skelet
 import { EmptyState } from "@/components/ui/empty-state";
 import { Service } from "@/features/services/types/services.types";
 import { motion } from "framer-motion";
+import { GuideLink } from "@/features/guide/components/guide-link";
 
 export default function ServicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function ServicesPage() {
             <p className="mt-1 text-sm text-muted-foreground font-medium">
               Gerencie os serviços oferecidos, duração e os respetivos valores.
             </p>
+            <GuideLink section="servicos" className="mt-2" />
           </div>
         </div>
 

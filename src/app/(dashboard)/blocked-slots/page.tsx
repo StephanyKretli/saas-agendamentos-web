@@ -14,6 +14,7 @@ import { BlockedSlotForm } from "@/features/blocked-slots/components/blocked-slo
 import { BlockedSlotList } from "@/features/blocked-slots/components/blocked-slot-list";
 
 import { Calendar, Clock, ShieldAlert, User, ChevronDown } from "lucide-react";
+import { GuideLink } from "@/features/guide/components/guide-link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +82,7 @@ export default function BlockedDatesPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Gerencie as ausências e intervalos da sua equipe.
           </p>
+          <GuideLink section="bloqueios" className="mt-2" />
         </div>
 
         <div className="flex items-center gap-3">

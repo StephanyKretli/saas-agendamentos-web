@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, Variants } from "framer-motion";
-import { 
-  ChevronLeft, Store, Clock, Users, Scissors, MessageCircle, 
-  CalendarPlus, UserPlus, Ban, Wallet, KeySquare, Zap, BadgeAlert
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import {
+  ChevronLeft, Store, Clock, Users, Scissors, MessageCircle,
+  CalendarPlus, UserPlus, Ban, Wallet, KeySquare, Zap, BadgeAlert, List
 } from "lucide-react";
 
 const fadeUp: Variants = {
@@ -17,9 +18,86 @@ const staggerContainer: Variants = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
+const DRAWER_SPRING = { type: "spring" as const, stiffness: 320, damping: 30 };
+
+const GUIDE_SECTIONS_MOBILE: { title: string; items: { id: string; label: string }[] }[] = [
+  {
+    title: "1. Configuração Inicial",
+    items: [
+      { id: "vitrine", label: "Vitrine & Perfil" },
+      { id: "horarios", label: "Horários de Atendimento" },
+      { id: "equipe", label: "Equipe & Profissionais" },
+      { id: "servicos", label: "Cadastro de Serviços" },
+      { id: "whatsapp", label: "Conexão WhatsApp" },
+    ],
+  },
+  {
+    title: "2. Gestão Diária",
+    items: [
+      { id: "agendamento", label: "Agendamento Manual" },
+      { id: "clientes", label: "Cadastro de Clientes" },
+      { id: "bloqueios", label: "Bloqueios de Horários" },
+    ],
+  },
+  {
+    title: "3. Avançado",
+    items: [{ id: "financeiro", label: "Motor Financeiro & PIX" }],
+  },
+];
+
+const ALL_SECTION_IDS = GUIDE_SECTIONS_MOBILE.flatMap((block) => block.items.map((item) => item.id));
+const SECTION_LABEL_BY_ID = Object.fromEntries(
+  GUIDE_SECTIONS_MOBILE.flatMap((block) => block.items.map((item) => [item.id, item.label]))
+);
+
 export default function GuidePage() {
+  const [activeSectionId, setActiveSectionId] = useState<string>(ALL_SECTION_IDS[0]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length === 0) return;
+        const topMost = visible.reduce((a, b) =>
+          a.boundingClientRect.top < b.boundingClientRect.top ? a : b
+        );
+        setActiveSectionId(topMost.target.id);
+      },
+      { rootMargin: "-96px 0px -60% 0px", threshold: 0 }
+    );
+
+    ALL_SECTION_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
+
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsDrawerOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDrawerOpen]);
+
+  function handleNavigate(id: string) {
+    setIsDrawerOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 selection:bg-amber-500/30 font-sans pb-24 scroll-smooth">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 selection:bg-amber-500/30 font-sans pb-36 lg:pb-24 scroll-smooth">
       
       {/* 🌟 NAVBAR */}
       <nav className="border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
@@ -344,6 +422,76 @@ export default function GuidePage() {
           </motion.div>
         </main>
       </div>
+
+      {/* 🌟 BARRA FIXA MOBILE (índice) */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-zinc-800 bg-zinc-950/90 backdrop-blur-xl">
+        <div className="h-full max-w-7xl mx-auto px-4 flex items-center justify-between gap-3">
+          <span className="text-sm text-zinc-400 font-medium truncate">
+            {SECTION_LABEL_BY_ID[activeSectionId] ?? ""}
+          </span>
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-200 shrink-0"
+          >
+            <List className="w-4 h-4" />
+            Índice
+          </button>
+        </div>
+      </div>
+
+      {/* 🌟 DRAWER MOBILE (bottom-sheet com o índice completo) */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            <motion.div
+              className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={DRAWER_SPRING}
+              onClick={() => setIsDrawerOpen(false)}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              className="lg:hidden fixed inset-x-0 bottom-0 z-50 max-h-[75vh] overflow-y-auto rounded-t-3xl border-t border-zinc-800 bg-zinc-950 p-6 pb-10"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={DRAWER_SPRING}
+            >
+              <div className="mx-auto mb-6 h-1 w-10 rounded-full bg-zinc-700" />
+              <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-5">Índice</h3>
+
+              {GUIDE_SECTIONS_MOBILE.map((block) => (
+                <div key={block.title} className="mb-6 last:mb-0">
+                  <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
+                    {block.title}
+                  </h4>
+                  <ul className="space-y-1 list-none pl-0">
+                    {block.items.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleNavigate(item.id)}
+                          className={`w-full text-left rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                            activeSectionId === item.id
+                              ? "bg-amber-500/10 text-amber-500"
+                              : "text-zinc-300 hover:bg-zinc-900"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
