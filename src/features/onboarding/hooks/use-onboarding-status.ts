@@ -56,7 +56,7 @@ export function useOnboardingStatus(): OnboardingStatus {
   const team = hasRealTeamMembers || (settings as any)?.isSoloProfessional === true;
 
   const shield =
-    Boolean((settings as any)?.mercadoPagoAccessToken) &&
+    Boolean((settings as any)?.mercadoPagoAccessTokenConfigured) &&
     Boolean((settings as any)?.requirePixDeposit) &&
     ((settings as any)?.pixDepositPercentage ?? 0) > 0;
 

@@ -8,6 +8,7 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 import { Moon, Sun, Menu, X } from "lucide-react"; 
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
+import { clearQueryCache } from "@/providers/query-provider";
 
 function getInitial(name?: string | null) {
   return name?.trim()?.charAt(0)?.toUpperCase() || "?";
@@ -52,7 +53,16 @@ export function DashboardSidebar() {
 
   function handleLogout() {
     removeAccessToken();
-    router.push("/login");
+    // Limpa o cache do React Query antes de sair: sem isso os dados do salao
+    // anterior podiam aparecer para a proxima conta no mesmo dispositivo.
+    clearQueryCache();
+    // Reload completo em vez de navegacao SPA — garante que nenhum estado em
+    // memoria sobreviva a troca de sessao.
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    } else {
+      router.push("/login");
+    }
   }
 
   const menuItems = React.useMemo(() => {
