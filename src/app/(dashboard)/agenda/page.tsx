@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ptBR } from "date-fns/locale";
-import { format, addDays, subDays } from "date-fns";
+import { format } from "date-fns";
 import { motion, Variants } from "framer-motion";
 
 import { DaySummary } from "@/features/appointments/components/day-summary";
@@ -20,8 +20,9 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { Plus, CalendarIcon, ChevronLeft, ChevronRight, User, ChevronDown } from "lucide-react";
+import { Plus, CalendarIcon, User, ChevronDown } from "lucide-react";
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
+import { MobileWeekStrip } from "@/features/appointments/components/mobile-week-strip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimelineSkeleton } from "@/features/appointments/components/timeline-skeleton";
 import { GuideLink } from "@/features/guide/components/guide-link";
@@ -107,8 +108,6 @@ function AgendaPageInner() {
 
   const calendarDate = new Date(`${selectedDate}T12:00:00`);
 
-  const goToPreviousDay = () => setSelectedDate(formatDateInput(subDays(calendarDate, 1)));
-  const goToNextDay = () => setSelectedDate(formatDateInput(addDays(calendarDate, 1)));
   const goToToday = () => setSelectedDate(formatDateInput(new Date()));
 
   const displayDate = format(calendarDate, "EEEE, d 'de' MMM", { locale: ptBR });
@@ -218,19 +217,18 @@ function AgendaPageInner() {
         />
       </Modal>
 
-      <div className="sticky top-34 sm:top-24 z-20 flex lg:hidden items-center justify-between rounded-full border border-border/50 bg-background/90 backdrop-blur-sm p-1.5 shadow-sm">
-        <Button variant="ghost" size="icon" onClick={goToPreviousDay} className="rounded-full hover:bg-muted text-muted-foreground">
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        
-        <button onClick={() => setIsMobileCalendarOpen(true)} className="flex items-center gap-2 px-4 py-2 hover:bg-muted/50 rounded-full transition-colors">
-          <CalendarIcon className="h-4 w-4 text-primary" />
+      <div className="sticky top-0 z-20 lg:hidden bg-background/95 backdrop-blur-sm pt-2 pb-2">
+        <div className="mb-2 flex items-center justify-between px-0.5">
           <span className="text-sm font-bold text-foreground">{displayDateCapitalized}</span>
-        </button>
-
-        <Button variant="ghost" size="icon" onClick={goToNextDay} className="rounded-full hover:bg-muted text-muted-foreground">
-          <ChevronRight className="h-5 w-5" />
-        </Button>
+          <button onClick={goToToday} className="text-xs font-bold text-primary hover:underline">
+            Hoje
+          </button>
+        </div>
+        <MobileWeekStrip
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onOpenCalendar={() => setIsMobileCalendarOpen(true)}
+        />
       </div>
 
       <Modal
