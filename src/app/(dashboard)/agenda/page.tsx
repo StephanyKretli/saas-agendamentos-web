@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ptBR } from "date-fns/locale";
 import { format, addDays, subDays } from "date-fns";
 import { motion, Variants } from "framer-motion";
@@ -57,9 +58,20 @@ const itemEntryVariants: Variants = {
   }
 };
 
-export default function AgendaPage() {
+function AgendaPageInner() {
   const [selectedDate, setSelectedDate] = React.useState(formatDateInput(new Date()));
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = React.useState(false);
+
+  // Botao central da barra de navegacao mobile navega para /agenda?novo=1.
+  // Aqui abrimos o modal e limpamos o parametro da URL.
+  const searchParams = useSearchParams();
+  const agendaRouter = useRouter();
+  React.useEffect(() => {
+    if (searchParams.get("novo") === "1") {
+      setIsNewAppointmentOpen(true);
+      agendaRouter.replace("/agenda");
+    }
+  }, [searchParams, agendaRouter]);
   const [isMobileCalendarOpen, setIsMobileCalendarOpen] = React.useState(false); 
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
   const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
@@ -361,5 +373,13 @@ export default function AgendaPage() {
         appointment={selectedAppointment}
       />
     </div>
+  );
+}
+
+export default function AgendaPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <AgendaPageInner />
+    </React.Suspense>
   );
 }
