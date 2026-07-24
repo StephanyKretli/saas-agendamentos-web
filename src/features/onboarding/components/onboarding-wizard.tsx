@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Check, Copy, ExternalLink, Minus, PartyPopper, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -29,6 +29,7 @@ function getBookingBaseUrl(): string {
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const pathname = usePathname();
   const status = useOnboardingStatus();
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
@@ -93,6 +94,10 @@ export function OnboardingWizard() {
     status.shield,
     status.whatsapp,
   ]);
+
+  // Na pagina de cobranca (/billing), o passo a passo nao deve aparecer: ele
+  // competia com a tela de renovacao de plano e nao dava para minimizar direito.
+  if (pathname === "/billing") return null;
 
   if (status.isLoading || status.isFullyOnboarded) return null;
 
