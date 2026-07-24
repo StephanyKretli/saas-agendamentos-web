@@ -17,7 +17,13 @@ export type UserSettings = {
   ownerId: string | null;
   requirePixDeposit?: boolean;
   pixDepositPercentage?: number | null;
-  mercadoPagoAccessToken?: string | null;
+  /**
+   * O access token do Mercado Pago NAO volta mais do backend em texto puro.
+   * O client so recebe se esta configurado e os ultimos digitos (conferencia).
+   * A escrita continua normal: envie o token novo em UpdateFinancialPayload.
+   */
+  mercadoPagoAccessTokenConfigured?: boolean;
+  mercadoPagoAccessTokenPreview?: string | null;
   centralizePayments?: boolean;
   isSoloProfessional?: boolean;
   owner?: {

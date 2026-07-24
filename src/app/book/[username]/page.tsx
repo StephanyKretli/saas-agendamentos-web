@@ -234,7 +234,11 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
-  const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
+  // O valor do sinal vem do backend, que aplica o percentual configurado pelo
+  // salao (5% a 100%). Antes era recalculado aqui com 20% fixo — se a dona
+  // configurasse outro percentual, o valor mostrado nao batia com o cobrado
+  // no QR Code.
+  const totalDepositCents = createdAppointment?.depositCents ?? 0;
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
@@ -460,7 +464,17 @@ export default function BookingPage() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={(newDate) => { setSelectedDate(newDate); if (newDate) setCurrentStep(4); }}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        disabled={(date) => {
+                          const today = new Date(new Date().setHours(0, 0, 0, 0));
+                          if (date < today) return true;
+                          // Respeita o limite de antecedencia configurado pelo salao,
+                          // em vez de deixar a cliente navegar para datas que nunca
+                          // terao horario disponivel.
+                          const maxDays = (data?.user as any)?.maxBookingDays ?? 30;
+                          const maxDate = new Date(today);
+                          maxDate.setDate(maxDate.getDate() + maxDays);
+                          return date > maxDate;
+                        }}
                         className="rounded-md"
                       />
                     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Copy, AlertCircle, QrCode } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import confetti from "canvas-confetti"; // 🌟 1. Importamos a biblioteca de confetes
+import { PixQrCode } from "./pix-qr-code";
 
 type BookingSuccessProps = {
   clientName: string;
@@ -88,8 +89,6 @@ export function BookingSuccess({
 
   // 🌟 ESTADO 1: AGUARDANDO PAGAMENTO DO SINAL
   if (isPendingPayment) {
-    const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixPayload)}`;
-
     return (
       <motion.div 
         variants={containerVariants}
@@ -120,12 +119,7 @@ export function BookingSuccess({
 
           <div className="space-y-5">
             <div className="hidden md:flex flex-col items-center justify-center rounded-2xl bg-white p-4 py-6 border border-border shadow-sm transition-transform hover:scale-[1.02]">
-              <img 
-                src={qrCodeImageUrl} 
-                alt="QR Code PIX" 
-                className="h-44 w-44 rounded-md"
-                draggable={false}
-              />
+              <PixQrCode payload={pixPayload} className="h-44 w-44 rounded-md" />
               <p className="mt-3 text-xs font-medium text-zinc-500 text-center">
                 Escaneie com a câmara do seu banco
               </p>

@@ -132,7 +132,9 @@ export default function SettingsPage() {
         avatarUrl: (profile as any).avatarUrl || "",
         requirePixDeposit: (profile as any).requirePixDeposit ?? false,
         pixDepositPercentage: (profile as any).pixDepositPercentage ?? 20,
-        mercadoPagoAccessToken: (profile as any).mercadoPagoAccessToken || "",
+        // Campo write-only: nunca pre-populado com o token real (o backend
+        // nao devolve mais o valor). Fica vazio; so envia se a dona digitar.
+        mercadoPagoAccessToken: "",
         centralizePayments: (profile as any).centralizePayments ?? true,
         absorbPixFee: (profile as any).absorbPixFee ?? true,
         commissionType: (profile as any).commissionType ?? "PERCENTAGE",
@@ -216,7 +218,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       defaultCommissionRate: formData.defaultCommissionRate === "" ? 0 : Number(formData.defaultCommissionRate),
       requirePixDeposit: formData.requirePixDeposit,
       pixDepositPercentage: formData.pixDepositPercentage,
-      mercadoPagoAccessToken: formData.mercadoPagoAccessToken,
+      // So envia o token quando a dona efetivamente digitou um novo valor —
+      // string vazia significa "manter o que ja esta salvo".
+      ...(formData.mercadoPagoAccessToken.trim() !== ""
+        ? { mercadoPagoAccessToken: formData.mercadoPagoAccessToken.trim() }
+        : {}),
     };
 
     try {
@@ -520,7 +526,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                                 <div className="relative">
                                   <input 
                                     type={showToken ? "text" : "password"} 
-                                    placeholder="APP_USR-..." 
+                                    placeholder={
+                                      (profile as any)?.mercadoPagoAccessTokenConfigured
+                                        ? `Token configurado (${(profile as any)?.mercadoPagoAccessTokenPreview ?? "****"}) — digite um novo para substituir`
+                                        : "APP_USR-..."
+                                    }
                                     value={formData.mercadoPagoAccessToken} 
                                     onChange={(e) => setFormData({...formData, mercadoPagoAccessToken: e.target.value})} 
                                     className={`w-full ${inputStyle} pr-12 font-mono text-sm h-12 border-amber-500/30 focus:border-amber-500 focus:ring-amber-500/20`} 

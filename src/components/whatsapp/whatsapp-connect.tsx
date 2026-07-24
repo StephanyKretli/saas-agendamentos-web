@@ -12,16 +12,12 @@ interface WhatsappConnectProps {
 }
 
 export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
+  // IMPORTANTE: todos os hooks precisam ser chamados ANTES de qualquer return
+  // antecipado. Como `salonId` comeca vazio enquanto o perfil carrega, o
+  // componente renderizava primeiro com 1 hook e depois com 3 — o React
+  // quebrava com "Rendered fewer hooks than expected" e a tela de conexao do
+  // WhatsApp nao abria.
   const [status, setStatus] = useState<"LOADING" | "DISCONNECTED" | "CONNECTED">("LOADING");
-  
-  if (!salonId) {
-    return (
-      <Card className="p-6 max-w-md w-full border-border bg-card shadow-sm flex items-center justify-center">
-        <p className="text-sm text-muted-foreground animate-pulse">A carregar informações do salão...</p>
-      </Card>
-    );
-  }
-  
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -92,6 +88,15 @@ export function WhatsappConnect({ salonId }: WhatsappConnectProps) {
       if (interval) clearInterval(interval);
     };
   }, [status, qrCodeBase64, checkStatus]);
+
+  // Estado de carregamento: agora vem depois de todos os hooks, nao antes.
+  if (!salonId) {
+    return (
+      <Card className="p-6 max-w-md w-full border-border bg-card shadow-sm flex items-center justify-center">
+        <p className="text-sm text-muted-foreground animate-pulse">A carregar informações do salão...</p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 max-w-md w-full border-border bg-card shadow-sm">

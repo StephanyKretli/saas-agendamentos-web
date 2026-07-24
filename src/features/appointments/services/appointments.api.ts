@@ -40,8 +40,15 @@ export async function rescheduleAppointment(id: string, date: string) {
 export interface CreateAppointmentPayload {
   clientId: string;
   serviceId: string;
-  date: string; 
+  date: string;
   notes?: string;
-  professionalId?: string; 
+  professionalId?: string;
   isMaintenance?: boolean;
+  /**
+   * Encaixe VIP: quando true, o backend ignora conflito de horario, expediente,
+   * antecedencia minima e data no passado (flag isVIP no agendamento).
+   * O campo ja era enviado pelo appointment-form, mas nao estava declarado aqui.
+   */
+  ignoreAvailabilityRules?: boolean;
+  services?: { serviceId: string; isMaintenance: boolean }[];
 }

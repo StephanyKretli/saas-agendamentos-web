@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { saveAccessToken } from "@/lib/auth-storage";
+import { clearQueryCache } from "@/providers/query-provider";
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react"; 
 import { GlowingBackground } from "@/components/ui/glowing-background";
@@ -33,8 +34,11 @@ export default function LoginPage() {
         return;
       }
 
+      // Limpa qualquer cache remanescente de uma sessao anterior antes de
+      // entrar (mesmo dispositivo, contas diferentes).
+      clearQueryCache();
       saveAccessToken(token);
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (error) {
       toast.error("Credenciais inválidas.");
       console.error("Falha na tentativa de login:", error);

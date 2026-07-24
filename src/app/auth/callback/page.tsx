@@ -13,11 +13,17 @@ function CallbackContent() {
 
   useEffect(() => {
     if (token) {
-      // Usa a nossa função oficial (que salva no localStorage e nos Cookies)
-      saveAccessToken(token); 
-      router.push("/dashboard"); 
+      // Remove o token da barra de enderecos ANTES de qualquer outra coisa:
+      // evita que ele fique no historico do navegador, no header Referer de
+      // requisicoes seguintes, ou seja capturado por scripts de terceiros.
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", "/auth/callback");
+      }
+
+      saveAccessToken(token);
+      router.replace("/dashboard");
     } else {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [token, router]);
 
@@ -32,7 +38,7 @@ function CallbackContent() {
 
 export default function AuthCallbackPage() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background">
           <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
