@@ -83,7 +83,7 @@ export function BlockedSlotForm({ professionalId }: Props) {
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 min-w-0">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 min-w-0">
           <div className="space-y-2 min-w-0">
             <label className="text-sm font-medium text-foreground">
               Horário inicial
