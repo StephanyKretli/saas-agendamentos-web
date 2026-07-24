@@ -45,7 +45,7 @@ export function BlockedDatesForm({ professionalId }: Props) {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+          className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -56,7 +56,7 @@ export function BlockedDatesForm({ professionalId }: Props) {
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Ex.: férias, feriado, fecho para obras"
-          className="w-full rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+          className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

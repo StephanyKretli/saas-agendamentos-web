@@ -79,12 +79,12 @@ export function BlockedSlotForm({ professionalId }: Props) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-lg border border-input px-3 py-2"
+            className="w-full min-w-0 rounded-lg border border-input px-3 py-2"
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+        <div className="grid gap-4 md:grid-cols-2 min-w-0">
+          <div className="space-y-2 min-w-0">
             <label className="text-sm font-medium text-foreground">
               Horário inicial
             </label>
@@ -92,11 +92,11 @@ export function BlockedSlotForm({ professionalId }: Props) {
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full rounded-lg border border-input px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-input px-3 py-2"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <label className="text-sm font-medium text-foreground">
               Horário final
             </label>
@@ -104,7 +104,7 @@ export function BlockedSlotForm({ professionalId }: Props) {
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full rounded-lg border border-input px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-input px-3 py-2"
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export function BlockedSlotForm({ professionalId }: Props) {
             placeholder="Ex.: almoço, reunião, compromisso pessoal"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full rounded-lg border border-input px-3 py-2"
+            className="w-full min-w-0 rounded-lg border border-input px-3 py-2"
           />
         </div>
 

@@ -229,3 +229,18 @@
     @apply bg-background text-foreground;
   }
 }
+/* Rede de seguranca mobile: inputs nativos (especialmente date/time) tem
+   largura minima intrinseca e estouravam o container em telas estreitas.
+   Isto garante que nenhum controle de formulario ultrapasse a largura do pai. */
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  min-width: 0;
+}
