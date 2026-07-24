@@ -208,7 +208,7 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
       </div>
 
       {/* DATA E HORA */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2 min-w-0">
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />

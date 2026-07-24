@@ -193,7 +193,7 @@ export default function BlockedDatesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.2 }}
-              className="grid gap-8 lg:grid-cols-[380px_1fr]"
+              className="grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr]"
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
                 <h3 className="text-lg font-bold mb-4">Bloquear Dia Inteiro</h3>
@@ -214,7 +214,7 @@ export default function BlockedDatesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.2 }}
-              className="grid gap-8 lg:grid-cols-[380px_1fr]"
+              className="grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr]"
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm h-fit sticky top-24">
                 <h3 className="text-lg font-bold mb-4">Bloquear Horário</h3>
