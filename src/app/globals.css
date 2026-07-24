@@ -229,18 +229,29 @@
     @apply bg-background text-foreground;
   }
 }
-/* Rede de seguranca mobile: inputs nativos (especialmente date/time) tem
-   largura minima intrinseca e estouravam o container em telas estreitas.
-   Isto garante que nenhum controle de formulario ultrapasse a largura do pai. */
+/* Rede de seguranca: nenhum controle de formulario ultrapassa a largura do pai. */
 input,
 select,
 textarea {
   max-width: 100%;
 }
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"] {
-  min-width: 0;
+
+/* No mobile, inputs nativos date/time no WebKit/iOS impoem uma largura
+   intrinseca e ignoram width:100%, estourando o container. Neutralizar o
+   -webkit-appearance faz a largura ser respeitada (o seletor nativo do celular
+   continua abrindo ao tocar). Escopado a < md para o desktop manter o seletor
+   nativo estilizado intacto. */
+@media (max-width: 767px) {
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
 }
