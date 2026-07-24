@@ -258,9 +258,13 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   const handleGerirPagamento = async () => {
     try {
       setIsBillingActionLoading(true);
-      const response = await api.get('/billing/manage');
-      const responseData = response as any;
-      const url = responseData.manageUrl || responseData.data?.manageUrl;
+      const response: any = await api.get('/billing/manage');
+      // A API embrulha toda resposta em { data: ... } (TransformInterceptor global)
+      // e o axios embrulha de novo em response.data — por isso o payload real fica
+      // em response.data.data. O handler antigo lia so um nivel (response.data.manageUrl),
+      // sempre pegava undefined e caia no erro, mesmo com a assinatura ja criada no Asaas.
+      const payload = response?.data?.data || response?.data || response;
+      const url = payload?.manageUrl || payload?.invoiceUrl || payload?.checkoutUrl;
       if (url) {
         toast.success("Redirecionando para o portal seguro...");
         window.open(url, '_blank'); 
