@@ -209,7 +209,7 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
 
       {/* DATA E HORA */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             Data
@@ -219,10 +219,10 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary"
+            className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Clock className="h-4 w-4 text-muted-foreground" />
             Horário
@@ -232,7 +232,7 @@ export function AppointmentForm({ initialDate, professionalId, onSuccess, onCanc
             required
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary"
+            className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary"
           />
         </div>
       </div>
