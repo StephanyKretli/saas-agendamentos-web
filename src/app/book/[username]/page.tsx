@@ -11,6 +11,7 @@ import { ProfessionalHeader } from "@/features/public-booking/components/profess
 import { TimeSlotsGrid } from "@/features/public-booking/components/time-slots-grid";
 import { BookingForm } from "@/features/public-booking/components/booking-form";
 import { BookingSuccess } from "@/features/public-booking/components/booking-success";
+import { BookingReview } from "@/features/public-booking/components/booking-review";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import type {
@@ -154,6 +155,7 @@ export default function BookingPage() {
   
   const [createdAppointment, setCreatedAppointment] = React.useState<CreatePublicAppointmentResponse | null>(null);
   const [lastClientName, setLastClientName] = React.useState("");
+  const [clientData, setClientData] = React.useState<PublicBookingFormValues | null>(null);
 
   const stepsContainerRef = React.useRef<HTMLElement>(null);
 
@@ -207,27 +209,37 @@ export default function BookingPage() {
     setSelectedTime(null);
   }, [cart, selectedProfessional, selectedDate]);
 
-  async function handleSubmitBooking(values: PublicBookingFormValues) {
+  // Passo 5: guarda os dados e leva para a tela de resumo (passo 6). NAO cria
+  // o agendamento ainda — a cliente confirma tudo (e ve o sinal) antes.
+  function handleReviewBooking(values: PublicBookingFormValues) {
     if (cart.length === 0 || !selectedDate || !selectedTime || !selectedProfessional) return;
+    setClientData(values);
+    setCurrentStep(6);
+  }
+
+  // Passo 6: confirma de fato — cria o agendamento e gera o PIX, depois vai
+  // para a tela de sucesso (passo 7).
+  async function handleConfirmBooking() {
+    if (!clientData || cart.length === 0 || !selectedDate || !selectedTime || !selectedProfessional) return;
 
     const dateString = formatToYYYYMMDD(selectedDate);
 
     const response = await createAppointmentMutation.mutateAsync({
       username,
       payload: {
-        services: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })), 
+        services: cart.map(item => ({ serviceId: item.service.id, isMaintenance: item.isMaintenance })),
         date: `${dateString}T${selectedTime}:00`,
         professionalId: selectedProfessional.id,
-        clientName: values.clientName,
-        clientPhone: values.clientPhone,
-        clientEmail: values.clientEmail || undefined,
-        notes: values.notes || undefined,
+        clientName: clientData.clientName,
+        clientPhone: clientData.clientPhone,
+        clientEmail: clientData.clientEmail || undefined,
+        notes: clientData.notes || undefined,
       },
     });
 
-    setLastClientName(values.clientName);
+    setLastClientName(clientData.clientName);
     setCreatedAppointment(response);
-    setCurrentStep(6);
+    setCurrentStep(7);
   }
 
   if (isLoading) return <main className="p-8"><p>Carregando...</p></main>;
@@ -241,7 +253,7 @@ export default function BookingPage() {
       <div className="space-y-8">
         <ProfessionalHeader user={data.user} />
 
-        {currentStep === 6 && createdAppointment ? (
+        {currentStep === 7 && createdAppointment ? (
           <div className="mx-auto max-w-2xl animate-in fade-in zoom-in-95 duration-300">
             <BookingSuccess 
               clientName={lastClientName} 
@@ -255,12 +267,13 @@ export default function BookingPage() {
           </div>
         ) : (
           <>
-            <section ref={stepsContainerRef as any} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
+            <section ref={stepsContainerRef as any} className="flex gap-3 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-2 xl:grid-cols-6 [&::-webkit-scrollbar]:hidden">
               <StepBadge step={1} title="Serviços" active={currentStep === 1} done={currentStep > 1} onClick={() => setCurrentStep(1)} />
               <StepBadge step={2} title="Profissional" active={currentStep === 2} done={currentStep > 2} onClick={() => setCurrentStep(2)} />
               <StepBadge step={3} title="Data" active={currentStep === 3} done={currentStep > 3} onClick={() => setCurrentStep(3)} />
               <StepBadge step={4} title="Horário" active={currentStep === 4} done={currentStep > 4} onClick={() => setCurrentStep(4)} />
-              <StepBadge step={5} title="Seus dados" active={currentStep === 5} done={false} onClick={() => setCurrentStep(5)} />
+              <StepBadge step={5} title="Seus dados" active={currentStep === 5} done={currentStep > 5} onClick={() => setCurrentStep(5)} />
+              <StepBadge step={6} title="Confirmar" active={currentStep === 6} done={false} onClick={() => { if (clientData) setCurrentStep(6); }} />
             </section>
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -489,8 +502,25 @@ export default function BookingPage() {
                       </button>
                       <h2 className="text-xl font-semibold">Quase lá!</h2>
                     </div>
-                    <BookingForm onSubmit={handleSubmitBooking} isSubmitting={createAppointmentMutation.isPending} />
+                    <BookingForm onSubmit={handleReviewBooking} isSubmitting={false} />
                   </section>
+                )}
+
+                {/* PASSO 6: RESUMO E CONFIRMAÇÃO (antes de criar o agendamento) */}
+                {currentStep === 6 && clientData && (
+                  <BookingReview
+                    cart={cart}
+                    professionalName={selectedProfessional?.name}
+                    selectedDate={selectedDate}
+                    selectedTime={selectedTime}
+                    clientName={clientData.clientName}
+                    clientPhone={clientData.clientPhone}
+                    requirePixDeposit={(data.user as any).requirePixDeposit}
+                    pixDepositPercentage={(data.user as any).pixDepositPercentage}
+                    isSubmitting={createAppointmentMutation.isPending}
+                    onConfirm={handleConfirmBooking}
+                    onEdit={(step) => setCurrentStep(step)}
+                  />
                 )}
               </div>
 

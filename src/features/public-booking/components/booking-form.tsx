@@ -124,7 +124,7 @@ export function BookingForm({
         disabled={isDisabled}
         className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSubmitting ? "Confirmando agendamento..." : "Confirmar agendamento"}
+        {isSubmitting ? "Aguarde..." : "Revisar agendamento"}
       </button>
     </form>
   );
