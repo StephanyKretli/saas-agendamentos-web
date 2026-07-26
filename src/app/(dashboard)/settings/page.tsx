@@ -629,6 +629,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                             className={`w-full pl-12 h-[52px] text-lg font-semibold ${inputStyle}`} 
                           />
                         </div>
+                        {formData.commissionType === "FIXED" && (
+                          <p className="text-xs text-muted-foreground ml-1">
+                            Valor pago uma vez por atendimento, independente de quantos serviços a cliente marcar.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
