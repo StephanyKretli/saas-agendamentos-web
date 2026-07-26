@@ -246,6 +246,8 @@ export default function BookingPage() {
   if (isError) return <main className="p-8"><p>Erro ao carregar a página.</p></main>;
   if (!data) return null;
 
+  // Fallback apenas: o valor real do sinal vem do backend (createdAppointment.depositCents),
+  // calculado com o percentual configurado do salao. Este 20% so e usado se faltar aquele.
   const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
   const totalPriceCents = cart.reduce((acc, item) => acc + item.finalPrice, 0);
   const totalMinutes = cart.reduce((acc, item) => acc + item.finalDuration, 0);
@@ -263,7 +265,7 @@ export default function BookingPage() {
               date={formatToYYYYMMDD(selectedDate!)} 
               time={selectedTime!}
               paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
-              depositCents={totalDepositCents}
+              depositCents={createdAppointment.depositCents ?? totalDepositCents}
               pixPayload={createdAppointment.pixData?.qrCodePayload}
             />
           </div>

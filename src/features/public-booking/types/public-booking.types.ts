@@ -67,6 +67,8 @@ export type CreatePublicAppointmentResponse = {
     email?: string | null;
   };
   requirePix?: boolean;
+  /** Valor real do sinal em centavos, calculado pelo backend com o percentual do salao. */
+  depositCents?: number | null;
   pixData?: {
     transactionId: string;
     qrCodePayload: string;
