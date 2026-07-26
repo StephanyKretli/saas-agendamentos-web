@@ -267,6 +267,7 @@ export default function BookingPage() {
               paymentStatus={createdAppointment.requirePix ? "PENDING" : "CONFIRMED"}
               depositCents={createdAppointment.depositCents ?? totalDepositCents}
               pixPayload={createdAppointment.pixData?.qrCodePayload}
+              statusToken={createdAppointment.publicCancelToken}
             />
           </div>
         ) : (

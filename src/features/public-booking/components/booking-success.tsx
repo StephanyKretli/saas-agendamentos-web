@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Copy, AlertCircle, QrCode } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import confetti from "canvas-confetti"; // 🌟 1. Importamos a biblioteca de confetes
+import { api } from "@/lib/api";
 
 type BookingSuccessProps = {
   clientName: string;
@@ -13,6 +14,7 @@ type BookingSuccessProps = {
   paymentStatus?: string;
   depositCents?: number | null;
   pixPayload?: string | null;
+  statusToken?: string | null;
 };
 
 function formatDate(date: string) {
@@ -59,10 +61,39 @@ export function BookingSuccess({
   paymentStatus,
   depositCents,
   pixPayload,
+  statusToken,
 }: BookingSuccessProps) {
   const [copied, setCopied] = useState(false);
+  // Confirmado localmente pelo polling (a tela nao depende so do webhook).
+  const [paidConfirmed, setPaidConfirmed] = useState(false);
 
-  const isPendingPayment = paymentStatus === "PENDING" && pixPayload;
+  const isPendingPayment = paymentStatus === "PENDING" && !!pixPayload && !paidConfirmed;
+
+  // 🔁 Polling: enquanto aguarda o sinal, pergunta ao backend (que verifica no
+  // Mercado Pago) se o pagamento entrou. Ao confirmar, a tela vira "pago".
+  useEffect(() => {
+    if (!isPendingPayment || !statusToken) return;
+
+    let stopped = false;
+    const check = async () => {
+      try {
+        const res: any = await api.get(`/public/book/status/${statusToken}`);
+        const payload = res?.data?.data || res?.data || res;
+        if (!stopped && payload?.paymentStatus === "PAID") {
+          setPaidConfirmed(true);
+        }
+      } catch {
+        // silencioso: tenta de novo no proximo ciclo
+      }
+    };
+
+    const interval = setInterval(check, 4000);
+    check();
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [isPendingPayment, statusToken]);
 
   // 🌟 2. O Disparo dos Confetes!
   useEffect(() => {

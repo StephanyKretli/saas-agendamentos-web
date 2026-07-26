@@ -75,4 +75,5 @@ export type CreatePublicAppointmentResponse = {
     ticketUrl?: string;
   } | null;
   publicCancelPath?: string;
+  publicCancelToken?: string;
 };
