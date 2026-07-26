@@ -42,7 +42,9 @@ export default function SettingsPage() {
   const { data: profile, isLoading } = useSettings();
   const isSalonOwner = !(profile as any)?.ownerId;
   const isAdmin = isSalonOwner || (profile as any)?.role === 'ADMIN'; 
-  const adminCentralizedPayments = (profile as any)?.owner?.centralizePayments ?? false;
+  // Pagamento sempre centralizado (opcao descentralizada removida): a equipe
+  // sempre ve a gestao como centralizada; so a dona configura o financeiro.
+  const adminCentralizedPayments = true;
   const currentPlan = (profile as any)?.plan || 'STARTER';
   const isProPlan = currentPlan === 'PRO';
   
@@ -207,7 +209,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       phone: formData.phone,
       document: formData.document.replace(/\D/g, ''), 
       bio: formData.bio, 
-      centralizePayments: formData.centralizePayments,
+      centralizePayments: true, // opcao removida: pagamento sempre centralizado no salao
     };
     
     const financialPayload = {
@@ -578,22 +580,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   </div>
 
                   <div className="p-6 sm:p-8 space-y-8 bg-card">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/50">
-                      <div className="max-w-md">
-                        <label className="text-base font-bold text-foreground">Centralizar Pagamentos</label>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Se ativo, todo o valor dos agendamentos entra na conta do salão.</p>
-                      </div>
-                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                        <input 
-                          type="checkbox" 
-                          className="peer sr-only" 
-                          checked={formData.centralizePayments} 
-                          onChange={(e) => setFormData({...formData, centralizePayments: e.target.checked})} 
-                        />
-                        <div className="peer h-7 w-14 rounded-full bg-muted/60 border border-border after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:border-primary peer-checked:after:translate-x-full"></div>
-                      </label>
-                    </div>
-
                     <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-border/50">
                       <div className="max-w-md">
                         <label className="text-base font-bold text-foreground">Absorver Taxa do PIX</label>
