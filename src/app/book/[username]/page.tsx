@@ -247,9 +247,11 @@ export default function BookingPage() {
   if (!data) return null;
 
   const totalDepositCents = cart.reduce((acc, item) => acc + Math.round(item.finalPrice * 0.2), 0);
+  const totalPriceCents = cart.reduce((acc, item) => acc + item.finalPrice, 0);
+  const totalMinutes = cart.reduce((acc, item) => acc + item.finalDuration, 0);
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+    <main className="mx-auto min-h-screen max-w-6xl px-4 pt-8 pb-28 md:pb-8">
       <div className="space-y-8">
         <ProfessionalHeader user={data.user} />
 
@@ -319,15 +321,6 @@ export default function BookingPage() {
                           ))}
                         </div>
                         
-                        {/* 🌟 NOVO BOTÃO DE AVANÇAR NO MOBILE */}
-                        <div className="mt-4 pt-4 border-t border-primary/20 md:hidden">
-                          <Button 
-                            className="w-full"
-                            onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
-                          >
-                            Avançar para Profissional
-                          </Button>
-                        </div>
                       </div>
                     )}
 
@@ -397,7 +390,7 @@ export default function BookingPage() {
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                    <div className="pt-4 border-t border-border hidden md:flex items-center justify-between">
                       <p className="text-sm font-medium">
                         {cart.length} procedimento(s) na lista
                       </p>
@@ -536,6 +529,43 @@ export default function BookingPage() {
                 />
               </div>
             </div>
+
+            {/* Barra fixa inferior (mobile): total sempre visivel + acao do passo.
+                Passos 2-4 avançam ao selecionar, entao ali a barra so mostra a dica. */}
+            {currentStep >= 1 && currentStep <= 4 && (
+              <div
+                className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-md md:hidden"
+                style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+              >
+                <div className="mx-auto flex max-w-6xl items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    {cart.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Selecione um serviço para começar</p>
+                    ) : (
+                      <>
+                        <p className="text-base font-semibold text-foreground">{formatPrice(totalPriceCents)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cart.length} serviço{cart.length > 1 ? "s" : ""} · {totalMinutes} min
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  {currentStep === 1 ? (
+                    <Button
+                      disabled={cart.length === 0}
+                      onClick={() => { setSelectedProfessional(null); setCurrentStep(2); }}
+                      className="shrink-0"
+                    >
+                      Continuar
+                    </Button>
+                  ) : (
+                    <span className="shrink-0 text-sm font-medium text-muted-foreground">
+                      {currentStep === 2 ? "Escolha o profissional" : currentStep === 3 ? "Escolha a data" : "Escolha o horário"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
