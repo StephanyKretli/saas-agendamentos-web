@@ -14,6 +14,13 @@ import { usePathname } from "next/navigation";
  */
 const NO_TRACKING_ROUTES = ["/auth/callback"];
 
+/**
+ * Mesmo ID usado pelo pixel do navegador e pela API de Conversoes (/api/meta-capi).
+ * Se as duas pernas apontarem para datasets diferentes, a deduplicacao por event_id
+ * nao acontece e o Gerenciador de Eventos mostra metade dos cadastros.
+ */
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+
 export function AnalyticsScripts() {
   const pathname = usePathname();
 
@@ -28,7 +35,12 @@ export function AnalyticsScripts() {
         strategy="afterInteractive"
       />
 
-      {/* Base do Meta Pixel */}
+      {/* Base do Meta Pixel.
+          O ID vem da variavel de ambiente, sem valor fixo de reserva: um fallback
+          embutido esconde a variavel ausente e o pixel do navegador segue disparando
+          enquanto a API de Conversoes falha calada — foi o que aconteceu ate 14/08/2026,
+          quando os eventos server-side pararam de ser enviados sem ninguem perceber. */}
+      {META_PIXEL_ID && (
       <Script
         id="meta-pixel"
         strategy="afterInteractive"
@@ -42,11 +54,12 @@ export function AnalyticsScripts() {
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1092047139463333');
+              fbq('init', '${META_PIXEL_ID}');
               fbq('track', 'PageView');
             `,
         }}
       />
+      )}
 
       <GoogleAnalytics gaId="G-2G70NFE4Q5" />
     </>

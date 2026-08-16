@@ -1,0 +1,25 @@
+# Segredos NUNCA entram na imagem. Sem esta linha, o `COPY . .` grava o .env
+# numa camada do Docker — qualquer um com a imagem lê o token em texto puro.
+# As variáveis chegam por ARG (build) e env_file (runtime), nunca por cópia.
+.env
+.env.*
+
+# Reinstalados/reconstruídos dentro do container
+node_modules
+.next
+out
+build
+
+# Não servem para nada em produção e engordam o contexto de build
+.git
+.github
+.vscode
+test-results
+playwright-report
+blob-report
+playwright/.cache
+playwright/.auth
+tests
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store

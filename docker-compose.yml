@@ -1,0 +1,19 @@
+services:
+  web:
+    container_name: saas_agendamentos_web
+    build:
+      context: .
+      # Variáveis de build: o Next inlina NEXT_PUBLIC_* no bundle do navegador
+      # durante o `next build`. Os valores vêm do .env desta pasta (o Compose lê
+      # esse arquivo sozinho para interpolar ${...}).
+      args:
+        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_BOOKING_BASE_URL: ${NEXT_PUBLIC_BOOKING_BASE_URL}
+    restart: always
+    # Variáveis de runtime: segredos do servidor, como o token da API de
+    # Conversões. Ficam só no processo, nunca dentro da imagem.
+    env_file:
+      - .env
+    ports:
+      - "3001:3000"

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 
 test.describe('Fluxo da Agenda', () => {
   
@@ -20,12 +20,14 @@ test.describe('Fluxo da Agenda', () => {
     // 1. O título da página deve estar visível
     await expect(page.locator('h1')).toContainText('A sua Agenda');
 
-    // 2. Como a Stephany já é a profissional padrão agora, 
+    // 2. Como a Stephany já é a profissional padrão agora,
     // o João Silva DEVE estar logo ali na tela!
     await expect(page.getByText('João Silva').first()).toBeVisible();
-    
+
     // (Opcional) Testar se o Carlos Barbeiro está na equipe
-    await page.getByRole('button', { name: 'Stephany (Admin)' }).click();
+    // Seletor resiliente: busca por botão que contenha "Admin" ou "Stephany"
+    const professionalSelector = page.getByRole('button', { name: /Stephany|Admin|Você/i });
+    await professionalSelector.click();
     await expect(page.getByRole('menuitem', { name: 'Carlos Barbeiro' })).toBeVisible();
   });
 

@@ -8,7 +8,8 @@ import { useRegister } from "@/features/auth/hooks/use-register";
 import { toast } from "react-hot-toast";
 import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff, Phone } from "lucide-react";
 import { api } from "@/lib/api"; 
-import { saveAccessToken } from "@/lib/auth-storage"; 
+import { saveAccessToken } from "@/lib/auth-storage";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import { signIn } from "next-auth/react";
 
 function RegisterContent() {
@@ -87,14 +88,18 @@ function RegisterContent() {
       console.log("PASSO 1: A criar conta na API...");
       await registerMutation.mutateAsync(dataToSend);
       
-      // 🎯 DISPARO DO PIXEL DA META (FRONTEND)
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'CompleteRegistration', {
+      // 🎯 DISPARO DO EVENTO DA META (navegador + servidor, deduplicados por event_id)
+      // Sem await de propósito: rastreamento não pode adicionar latência ao cadastro.
+      // Os dois passos seguintes (login + sessão) seguram a página tempo suficiente
+      // para a requisição terminar.
+      void trackMetaEvent('CompleteRegistration', {
+        email: formData.email,
+        phone: cleanPhone,
+        customData: {
           content_name: 'Cadastro Syncro',
-          status: 'success'
-        });
-        console.log("🎯 [Meta Pixel] Evento CompleteRegistration disparado no navegador!");
-      }
+          status: 'success',
+        },
+      });
 
       toast.success("Conta criada! A preparar o seu ambiente...");
 
