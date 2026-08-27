@@ -12,6 +12,12 @@ import { saveAccessToken } from "@/lib/auth-storage";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 import { signIn } from "next-auth/react";
 
+// Texto exato exibido ao lado do checkbox — enviado verbatim pro backend
+// (whatsappOptinTexto) pra virar a prova de consentimento. Se este texto
+// mudar, a prova muda junto: nunca reconstruído a partir de outro lugar.
+const WHATSAPP_OPTIN_TEXTO =
+  "Quero receber ajuda do Syncro pelo WhatsApp durante o teste (lembretes de configuração e suporte). Você pode pedir pra parar a qualquer momento.";
+
 function RegisterContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -26,7 +32,10 @@ function RegisterContent() {
     phone: "",
     username: "",
     password: "",
-    confirmPassword: "", 
+    confirmPassword: "",
+    // Desmarcado por padrão de propósito — caixa pré-marcada não é
+    // consentimento válido (LGPD/Meta). O cadastro funciona sem marcar.
+    whatsappOptin: false,
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -83,7 +92,14 @@ function RegisterContent() {
 
     try {
       const { confirmPassword, phone, ...dadosDoUsuario } = formData;
-      const dataToSend = { ...dadosDoUsuario, phone: cleanPhone, plan: planoEscolhido || 'PRO' };
+      const dataToSend = {
+        ...dadosDoUsuario,
+        phone: cleanPhone,
+        plan: planoEscolhido || 'PRO',
+        // Só manda o texto se ela de fato marcou — sem isso o backend não
+        // tem o que provar, e não deveria fingir que perguntou.
+        whatsappOptinTexto: formData.whatsappOptin ? WHATSAPP_OPTIN_TEXTO : undefined,
+      };
 
       console.log("PASSO 1: A criar conta na API...");
       await registerMutation.mutateAsync(dataToSend);
@@ -213,6 +229,16 @@ function RegisterContent() {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+
+            <label className="flex items-start gap-3 rounded-xl border border-border bg-card/30 p-3 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={formData.whatsappOptin}
+                onChange={(e) => setFormData({ ...formData, whatsappOptin: e.target.checked })}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+              />
+              <span>{WHATSAPP_OPTIN_TEXTO}</span>
+            </label>
 
             <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl font-bold text-base shadow-md transition-all hover:shadow-lg active:scale-95 mt-4 relative overflow-hidden">
               {isLoading ? "A preparar ambiente..." : "Começar 14 dias grátis"}
