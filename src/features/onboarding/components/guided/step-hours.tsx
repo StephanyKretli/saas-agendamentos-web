@@ -48,37 +48,41 @@ export function StepHours({ saving, serverError, onContinue }: Props) {
               aria-checked={row.enabled}
               aria-label={row.label}
               onClick={() => patch(row.weekday, { enabled: !row.enabled })}
-              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+              className={`relative h-6 w-10 shrink-0 overflow-hidden rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                 row.enabled ? "bg-primary" : "bg-zinc-700"
               }`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                  row.enabled ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  row.enabled ? "translate-x-4" : "translate-x-0"
                 }`}
               />
             </button>
 
-            <span className="w-20 shrink-0 text-sm font-bold text-zinc-200">{row.label}</span>
+            <span className="w-16 shrink-0 text-sm font-bold text-zinc-200 sm:w-20">
+              {row.label}
+            </span>
 
             {row.enabled ? (
-              <div className="flex flex-1 items-center justify-end gap-2">
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
                 <input
                   type="time"
                   value={row.start}
                   onChange={(e) => patch(row.weekday, { start: e.target.value })}
-                  className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
+                  className="w-full min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
                 />
-                <span className="text-zinc-600">–</span>
+                <span className="shrink-0 text-zinc-600">–</span>
                 <input
                   type="time"
                   value={row.end}
                   onChange={(e) => patch(row.weekday, { end: e.target.value })}
-                  className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
+                  className="w-full min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
                 />
               </div>
             ) : (
-              <span className="flex-1 text-right text-xs font-medium text-zinc-600">Fechado</span>
+              <span className="min-w-0 flex-1 text-right text-xs font-medium text-zinc-600">
+                Fechado
+              </span>
             )}
           </div>
         ))}
