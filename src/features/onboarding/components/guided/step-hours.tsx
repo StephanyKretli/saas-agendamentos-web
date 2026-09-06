@@ -38,7 +38,7 @@ export function StepHours({ saving, serverError, onContinue }: Props) {
         {rows.map((row) => (
           <div
             key={row.weekday}
-            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+            className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-2.5 transition-colors ${
               row.enabled ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-800/60 bg-zinc-900/20"
             }`}
           >
@@ -59,30 +59,31 @@ export function StepHours({ saving, serverError, onContinue }: Props) {
               />
             </button>
 
-            <span className="w-16 shrink-0 text-sm font-bold text-zinc-200 sm:w-20">
+            <span className="min-w-0 flex-1 text-sm font-bold text-zinc-200">
               {row.label}
             </span>
 
             {row.enabled ? (
-              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+              // w-full força o par de horários pra linha de baixo — toggle + dia
+              // ficam na primeira linha, os horários ocupam a largura toda na
+              // segunda. Robusto em qualquer viewport, sem depender de breakpoint.
+              <div className="flex w-full items-center gap-1.5">
                 <input
                   type="time"
                   value={row.start}
                   onChange={(e) => patch(row.weekday, { start: e.target.value })}
-                  className="w-full min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
+                  className="min-w-18 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-primary/50"
                 />
                 <span className="shrink-0 text-zinc-600">–</span>
                 <input
                   type="time"
                   value={row.end}
                   onChange={(e) => patch(row.weekday, { end: e.target.value })}
-                  className="w-full min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-primary/50"
+                  className="min-w-18 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-primary/50"
                 />
               </div>
             ) : (
-              <span className="min-w-0 flex-1 text-right text-xs font-medium text-zinc-600">
-                Fechado
-              </span>
+              <span className="shrink-0 text-xs font-medium text-zinc-600">Fechado</span>
             )}
           </div>
         ))}
