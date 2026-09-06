@@ -15,6 +15,8 @@ export type UserSettings = {
   maxMembers: number;
   
   ownerId: string | null;
+  /** Fim do fluxo guiado (/onboarding). Enquanto null, o wizard antigo fica oculto. */
+  onboardingCompletedAt?: string | null;
   requirePixDeposit?: boolean;
   pixDepositPercentage?: number | null;
   /**

@@ -6,6 +6,7 @@ import { getAccessToken } from "@/lib/auth-storage";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { OnboardingWizard } from "@/features/onboarding/components/onboarding-wizard";
+import { useOnboardingState } from "@/features/onboarding/hooks/use-onboarding-state";
 
 export default function DashboardLayout({
   children,
@@ -26,7 +27,26 @@ export default function DashboardLayout({
     setIsReady(true);
   }, [router]);
 
-  if (!isReady) {
+  // Gate do onboarding guiado: quem é dona de salão, ainda não terminou o fluxo
+  // e não tem o mínimo (serviço + horário) é mandada pra /onboarding. Sem
+  // condição de assinatura — quem já paga e nunca configurou é quem mais precisa.
+  const { data: onboarding, isError: onboardingError, isFetched: onboardingFetched } =
+    useOnboardingState(isReady);
+  const needsOnboarding = Boolean(
+    onboarding &&
+      onboarding.applies &&
+      !onboarding.onboardingCompletedAt &&
+      (!onboarding.hasService || !onboarding.hasBusinessHours),
+  );
+  // Enquanto a verificação não assentou (nem dados, nem erro), segura o painel —
+  // evita o flash de dashboard antes do redirect. Se a API falhar, libera (fail-open).
+  const gateResolving = isReady && !onboardingFetched && !onboardingError;
+
+  React.useEffect(() => {
+    if (needsOnboarding) router.replace("/onboarding");
+  }, [needsOnboarding, router]);
+
+  if (!isReady || gateResolving || needsOnboarding) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <p className="text-sm text-muted-foreground">Carregando painel...</p>

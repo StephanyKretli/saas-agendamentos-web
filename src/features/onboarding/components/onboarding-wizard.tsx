@@ -101,6 +101,11 @@ export function OnboardingWizard() {
 
   if (status.isLoading || status.isFullyOnboarded) return null;
 
+  // O fluxo guiado (/onboarding) é o novo onboarding de ativação. Este wizard de
+  // 7 passos só reaparece DEPOIS dele concluído (onboardingCompletedAt), como
+  // configuração avançada pós-ativação — é lá que o CPF segue sendo pedido.
+  if (!settings?.onboardingCompletedAt) return null;
+
   const isCelebrating = celebratingStepId !== null;
 
   function goToStepRoute(route: string) {
