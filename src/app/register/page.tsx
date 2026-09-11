@@ -10,6 +10,7 @@ import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff, Phone } from
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage";
 import { trackMetaEvent } from "@/lib/meta-pixel";
+import { trackGoogleAdsSignupConversion } from "@/lib/google-ads";
 import { signIn } from "next-auth/react";
 
 // Texto exato exibido ao lado do checkbox — enviado verbatim pro backend
@@ -116,6 +117,10 @@ function RegisterContent() {
           status: 'success',
         },
       });
+
+      // Conversão de cadastro do Google Ads, ao lado da do Meta acima — sem
+      // mexer nela. Mesmo ponto (cadastro concluído com sucesso), síncrona.
+      trackGoogleAdsSignupConversion();
 
       toast.success("Conta criada! A preparar o seu ambiente...");
 

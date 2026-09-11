@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { usePathname } from "next/navigation";
@@ -21,10 +22,31 @@ const NO_TRACKING_ROUTES = ["/auth/callback"];
  */
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
+/**
+ * ID da conta do Google Ads. Sem valor de reserva embutido — de propósito:
+ * o Google Ads faz lance automático a partir do evento de conversão, e um ID
+ * fixo escondido faria a tag "funcionar" apontando pro lugar errado sem que
+ * ninguém notasse a variável ausente.
+ */
+const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+
+let hasWarnedMissingGoogleAdsId = false;
+
 export function AnalyticsScripts() {
   const pathname = usePathname();
 
   const isBlocked = NO_TRACKING_ROUTES.some((route) => pathname?.startsWith(route));
+
+  useEffect(() => {
+    if (isBlocked) return;
+    if (!GOOGLE_ADS_ID && !hasWarnedMissingGoogleAdsId) {
+      hasWarnedMissingGoogleAdsId = true;
+      console.warn(
+        "[Google Ads] NEXT_PUBLIC_GOOGLE_ADS_ID ausente — a medição de conversão do Google Ads está DESLIGADA."
+      );
+    }
+  }, [isBlocked]);
+
   if (isBlocked) return null;
 
   return (
@@ -59,6 +81,31 @@ export function AnalyticsScripts() {
             `,
         }}
       />
+      )}
+
+      {/* Tag do Google Ads (gtag.js). Necessária pro lance automático da conta
+          aprender com a conversão de cadastro — sem ela a conta só paga por
+          clique e não otimiza nada. */}
+      {GOOGLE_ADS_ID && (
+        <>
+          <Script
+            id="google-ads-src"
+            src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script
+            id="google-ads-init"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GOOGLE_ADS_ID}');
+              `,
+            }}
+          />
+        </>
       )}
 
       <GoogleAnalytics gaId="G-2G70NFE4Q5" />
