@@ -21,6 +21,13 @@ export interface OnboardingState {
   hasBusinessHours: boolean;
   onboardingCompletedAt: string | null;
   /**
+   * Quando termina o trial de 14 dias — mesmo valor que o backend manda pro
+   * Asaas como `nextDueDate` no passo 5 (setBilling). O passo 5 exibe essa
+   * data na copy do cartão; nunca recalcular hoje+14 no front, ou o texto
+   * pode divergir do que é cobrado de verdade.
+   */
+  trialEndsAt: string | null;
+  /**
    * 1 | 3 | 4 — piso de retomada calculado pelo backend. Nunca chega a 5: o
    * backend não tem como saber que a pessoa já viu a tela do passo 4 (só
    * onboardingCompletedAt, que agora só é setado no passo 5) — quem carrega

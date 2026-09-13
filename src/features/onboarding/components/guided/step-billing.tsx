@@ -3,20 +3,41 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
-import { maskCpfCnpj, maskCardNumber, maskPostalCode } from "../../lib/onboarding-utils";
+import { maskCpfCnpj, maskCardNumber, maskPostalCode, formatTrialEndDate } from "../../lib/onboarding-utils";
+import {
+  validateBillingForm,
+  firstInvalidField,
+  normalizeExpiryYear,
+  onlyDigits,
+  type BillingFormValues,
+  type BillingFormErrors,
+} from "../../lib/billing-validation";
 import type { OnboardingBillingPayload } from "../../api/onboarding.api";
 
 interface Props {
   saving: boolean;
   serverError: string | null;
+  /** ISO — mesmo `trialEndsAt` que o backend manda pro Asaas como nextDueDate. */
+  trialEndsAt: string | null;
   onContinue: (payload: OnboardingBillingPayload) => void;
 }
 
+type FocusableField = HTMLInputElement | HTMLSelectElement;
+
 const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
 const inputStyle =
-  "w-full rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3.5 text-sm text-zinc-100 outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/20";
+  "w-full rounded-xl border bg-zinc-900/60 px-4 py-3.5 text-sm text-zinc-100 outline-none transition-colors focus:ring-1";
+const inputBorder = (hasError: boolean) =>
+  hasError
+    ? "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20"
+    : "border-zinc-800 focus:border-primary/50 focus:ring-primary/20";
 
-export function StepBilling({ saving, serverError, onContinue }: Props) {
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1.5 text-xs font-medium text-red-400">{message}</p>;
+}
+
+export function StepBilling({ saving, serverError, trialEndsAt, onContinue }: Props) {
   // Nome evita colidir com o `document` global do DOM dentro do componente.
   const [cpfCnpj, setCpfCnpj] = React.useState("");
   const [cardHolderName, setCardHolderName] = React.useState("");
@@ -27,33 +48,55 @@ export function StepBilling({ saving, serverError, onContinue }: Props) {
   const [postalCode, setPostalCode] = React.useState("");
   const [addressNumber, setAddressNumber] = React.useState("");
   const [phone, setPhone] = React.useState("");
+  const [errors, setErrors] = React.useState<BillingFormErrors>({});
 
-  const documentDigits = cpfCnpj.replace(/\D/g, "");
-  const cardNumberDigits = cardNumber.replace(/\D/g, "");
+  const fieldRefs = React.useRef<Partial<Record<keyof BillingFormValues, FocusableField | null>>>({});
 
-  const canContinue =
-    (documentDigits.length === 11 || documentDigits.length === 14) &&
-    cardHolderName.trim().length > 0 &&
-    cardNumberDigits.length >= 13 &&
-    cardExpiryMonth.length === 2 &&
-    cardExpiryYear.length === 4 &&
-    cardCcv.length >= 3 &&
-    postalCode.replace(/\D/g, "").length === 8 &&
-    addressNumber.trim().length > 0 &&
-    phone.replace(/\D/g, "").length >= 10 &&
-    !saving;
+  // Corrigir um campo apaga só o erro dele — não precisa reenviar o form
+  // inteiro pra ver o feedback sumir.
+  function clearFieldError(field: keyof BillingFormValues) {
+    setErrors((prev) => {
+      if (prev[field] === undefined) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }
 
   function handleSubmit() {
-    onContinue({
-      document: documentDigits,
-      cardHolderName: cardHolderName.trim(),
-      cardNumber: cardNumberDigits,
+    const values: BillingFormValues = {
+      document: cpfCnpj,
+      cardHolderName,
+      cardNumber,
       cardExpiryMonth,
       cardExpiryYear,
       cardCcv,
-      postalCode: postalCode.replace(/\D/g, ""),
+      postalCode,
+      addressNumber,
+      phone,
+    };
+
+    const validationErrors = validateBillingForm(values);
+    setErrors(validationErrors);
+
+    const first = firstInvalidField(validationErrors);
+    if (first) {
+      fieldRefs.current[first]?.focus();
+      return;
+    }
+
+    onContinue({
+      document: onlyDigits(cpfCnpj),
+      cardHolderName: cardHolderName.trim(),
+      cardNumber: onlyDigits(cardNumber),
+      cardExpiryMonth,
+      // Normaliza aqui, na hora de montar o payload — nunca no onChange do
+      // campo (ver normalizeExpiryYear). "30" digitado vira "2030" só agora.
+      cardExpiryYear: normalizeExpiryYear(cardExpiryYear),
+      cardCcv,
+      postalCode: onlyDigits(postalCode),
       addressNumber: addressNumber.trim(),
-      phone: phone.replace(/\D/g, ""),
+      phone: onlyDigits(phone),
     });
   }
 
@@ -66,10 +109,15 @@ export function StepBilling({ saving, serverError, onContinue }: Props) {
     >
       <header className="space-y-2">
         <h1 className="text-2xl font-black text-zinc-100">Garanta sua vaga</h1>
-        <p className="text-sm text-zinc-400 leading-relaxed">
-          Seu teste grátis continua valendo. Só pedimos o cartão agora pra garantir sua
-          assinatura quando os 14 dias acabarem — nada é cobrado hoje.
-        </p>
+        {trialEndsAt ? (
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            Você não será cobrado hoje. A primeira cobrança de R$ 97 é em{" "}
+            <span className="font-bold text-zinc-200">{formatTrialEndDate(trialEndsAt)}</span>,
+            quando terminam seus 14 dias. Cancele antes disso e não paga nada.
+          </p>
+        ) : (
+          <p className="text-sm text-zinc-500">Carregando…</p>
+        )}
       </header>
 
       <div className="space-y-2.5">
@@ -78,13 +126,20 @@ export function StepBilling({ saving, serverError, onContinue }: Props) {
             CPF ou CNPJ
           </span>
           <input
+            ref={(el) => {
+              fieldRefs.current.document = el;
+            }}
             autoFocus
             inputMode="numeric"
             value={cpfCnpj}
-            onChange={(e) => setCpfCnpj(maskCpfCnpj(e.target.value))}
+            onChange={(e) => {
+              setCpfCnpj(maskCpfCnpj(e.target.value));
+              clearFieldError("document");
+            }}
             placeholder="000.000.000-00"
-            className={inputStyle}
+            className={`${inputStyle} ${inputBorder(!!errors.document)}`}
           />
+          <FieldError message={errors.document} />
         </label>
       </div>
 
@@ -94,73 +149,148 @@ export function StepBilling({ saving, serverError, onContinue }: Props) {
           Cartão de crédito
         </div>
 
-        <input
-          value={cardHolderName}
-          onChange={(e) => setCardHolderName(e.target.value.toUpperCase())}
-          placeholder="Nome impresso no cartão"
-          className={inputStyle}
-        />
+        <div>
+          <input
+            ref={(el) => {
+              fieldRefs.current.cardHolderName = el;
+            }}
+            value={cardHolderName}
+            onChange={(e) => {
+              setCardHolderName(e.target.value.toUpperCase());
+              clearFieldError("cardHolderName");
+            }}
+            placeholder="Nome impresso no cartão"
+            className={`${inputStyle} ${inputBorder(!!errors.cardHolderName)}`}
+          />
+          <FieldError message={errors.cardHolderName} />
+        </div>
 
-        <input
-          inputMode="numeric"
-          value={cardNumber}
-          onChange={(e) => setCardNumber(maskCardNumber(e.target.value))}
-          placeholder="Número do cartão"
-          className={inputStyle}
-        />
+        <div>
+          <input
+            ref={(el) => {
+              fieldRefs.current.cardNumber = el;
+            }}
+            inputMode="numeric"
+            value={cardNumber}
+            onChange={(e) => {
+              setCardNumber(maskCardNumber(e.target.value));
+              clearFieldError("cardNumber");
+            }}
+            placeholder="Número do cartão"
+            className={`${inputStyle} ${inputBorder(!!errors.cardNumber)}`}
+          />
+          <FieldError message={errors.cardNumber} />
+        </div>
 
+        <span className="block text-xs font-bold uppercase tracking-wider text-zinc-500">
+          Validade (MM/AA) e CVV
+        </span>
         <div className="grid grid-cols-3 gap-2.5">
-          <select
-            value={cardExpiryMonth}
-            onChange={(e) => setCardExpiryMonth(e.target.value)}
-            className={`${inputStyle} appearance-none`}
-          >
-            <option value="">Mês</option>
-            {MONTHS.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <input
-            inputMode="numeric"
-            value={cardExpiryYear}
-            onChange={(e) => setCardExpiryYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="Ano"
-            className={inputStyle}
-          />
-          <input
-            inputMode="numeric"
-            value={cardCcv}
-            onChange={(e) => setCardCcv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="CVV"
-            className={inputStyle}
-          />
+          <div>
+            <select
+              ref={(el) => {
+                fieldRefs.current.cardExpiryMonth = el;
+              }}
+              value={cardExpiryMonth}
+              onChange={(e) => {
+                setCardExpiryMonth(e.target.value);
+                clearFieldError("cardExpiryMonth");
+              }}
+              className={`${inputStyle} ${inputBorder(!!errors.cardExpiryMonth)} appearance-none`}
+            >
+              <option value="">Mês</option>
+              {MONTHS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <FieldError message={errors.cardExpiryMonth} />
+          </div>
+          <div>
+            <input
+              ref={(el) => {
+                fieldRefs.current.cardExpiryYear = el;
+              }}
+              inputMode="numeric"
+              value={cardExpiryYear}
+              onChange={(e) => {
+                setCardExpiryYear(e.target.value.replace(/\D/g, "").slice(0, 4));
+                clearFieldError("cardExpiryYear");
+              }}
+              placeholder="AA"
+              className={`${inputStyle} ${inputBorder(!!errors.cardExpiryYear)}`}
+            />
+            <FieldError message={errors.cardExpiryYear} />
+          </div>
+          <div>
+            <input
+              ref={(el) => {
+                fieldRefs.current.cardCcv = el;
+              }}
+              inputMode="numeric"
+              value={cardCcv}
+              onChange={(e) => {
+                setCardCcv(e.target.value.replace(/\D/g, "").slice(0, 4));
+                clearFieldError("cardCcv");
+              }}
+              placeholder="CVV"
+              className={`${inputStyle} ${inputBorder(!!errors.cardCcv)}`}
+            />
+            <FieldError message={errors.cardCcv} />
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <input
-          inputMode="numeric"
-          value={postalCode}
-          onChange={(e) => setPostalCode(maskPostalCode(e.target.value))}
-          placeholder="CEP"
-          className={inputStyle}
-        />
-        <input
-          value={addressNumber}
-          onChange={(e) => setAddressNumber(e.target.value)}
-          placeholder="Número"
-          className={inputStyle}
-        />
+        <div>
+          <input
+            ref={(el) => {
+              fieldRefs.current.postalCode = el;
+            }}
+            inputMode="numeric"
+            value={postalCode}
+            onChange={(e) => {
+              setPostalCode(maskPostalCode(e.target.value));
+              clearFieldError("postalCode");
+            }}
+            placeholder="CEP"
+            className={`${inputStyle} ${inputBorder(!!errors.postalCode)}`}
+          />
+          <FieldError message={errors.postalCode} />
+        </div>
+        <div>
+          <input
+            ref={(el) => {
+              fieldRefs.current.addressNumber = el;
+            }}
+            value={addressNumber}
+            onChange={(e) => {
+              setAddressNumber(e.target.value);
+              clearFieldError("addressNumber");
+            }}
+            placeholder="Número"
+            className={`${inputStyle} ${inputBorder(!!errors.addressNumber)}`}
+          />
+          <FieldError message={errors.addressNumber} />
+        </div>
       </div>
 
-      <input
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder="WhatsApp (11) 99999-9999"
-        className={inputStyle}
-      />
+      <div>
+        <input
+          ref={(el) => {
+            fieldRefs.current.phone = el;
+          }}
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            clearFieldError("phone");
+          }}
+          placeholder="WhatsApp (11) 99999-9999"
+          className={`${inputStyle} ${inputBorder(!!errors.phone)}`}
+        />
+        <FieldError message={errors.phone} />
+      </div>
 
       <p className="flex items-start gap-2 text-[11px] text-zinc-500">
         <ShieldCheck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
@@ -172,7 +302,7 @@ export function StepBilling({ saving, serverError, onContinue }: Props) {
 
       <button
         type="button"
-        disabled={!canContinue}
+        disabled={saving}
         onClick={handleSubmit}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
       >

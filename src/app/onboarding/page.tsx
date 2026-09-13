@@ -232,7 +232,12 @@ export default function OnboardingPage() {
           )}
           {step === 4 && <StepReady username={username} onContinue={() => advanceTo(5)} />}
           {step === 5 && (
-            <StepBilling saving={saving} serverError={error} onContinue={handleBilling} />
+            <StepBilling
+              saving={saving}
+              serverError={error}
+              trialEndsAt={state?.trialEndsAt ?? null}
+              onContinue={handleBilling}
+            />
           )}
         </div>
       </div>

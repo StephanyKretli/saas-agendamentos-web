@@ -106,6 +106,20 @@ export function maskPostalCode(raw: string): string {
   return digits.replace(/(\d{5})(\d)/, "$1-$2");
 }
 
+/**
+ * "dd/MM" no fuso America/Sao_Paulo — mesma formatação que o backend usa pro
+ * aviso de trial vencendo (whatsapp.service.ts: sendVenceAmanha). Usada pra
+ * mostrar a data real da 1ª cobrança no passo 5; nunca calcular hoje+14 aqui,
+ * isso é o `trialEndsAt` que o próprio backend manda pro Asaas.
+ */
+export function formatTrialEndDate(iso: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(iso));
+}
+
 export const SERVICE_NAME_SUGGESTIONS = [
   "Corte",
   "Escova",
