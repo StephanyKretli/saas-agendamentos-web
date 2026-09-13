@@ -74,6 +74,38 @@ export function toMinutes(hhmm: string): number {
   return h * 60 + m;
 }
 
+// --- Passo 5 (cobrança) — máscaras de digitação ----------------------------
+
+/** Mesma máscara do campo CPF/CNPJ em Configurações (settings/page.tsx). */
+export function maskCpfCnpj(raw: string): string {
+  let value = (raw || "").replace(/\D/g, "");
+  if (value.length <= 11) {
+    value = value
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  } else {
+    value = value
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return value.substring(0, 18);
+}
+
+/** "5555 5555 5555 4444" — só pra leitura, o backend recebe só dígitos. */
+export function maskCardNumber(raw: string): string {
+  const digits = (raw || "").replace(/\D/g, "").slice(0, 19);
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+/** "01310-100". */
+export function maskPostalCode(raw: string): string {
+  const digits = (raw || "").replace(/\D/g, "").slice(0, 8);
+  return digits.replace(/(\d{5})(\d)/, "$1-$2");
+}
+
 export const SERVICE_NAME_SUGGESTIONS = [
   "Corte",
   "Escova",

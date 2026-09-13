@@ -8,10 +8,10 @@ import { bookingUrl, bookingUrlLabel } from "../../lib/onboarding-utils";
 
 interface Props {
   username: string;
-  onGoToDashboard: () => void;
+  onContinue: () => void;
 }
 
-export function StepReady({ username, onGoToDashboard }: Props) {
+export function StepReady({ username, onContinue }: Props) {
   const [copied, setCopied] = React.useState(false);
   const url = bookingUrl(username);
 
@@ -72,10 +72,10 @@ export function StepReady({ username, onGoToDashboard }: Props) {
 
       <button
         type="button"
-        onClick={onGoToDashboard}
-        className="text-sm font-bold text-zinc-400 transition-colors hover:text-zinc-200"
+        onClick={onContinue}
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-5 py-3.5 text-sm font-bold text-zinc-200 transition-colors hover:bg-zinc-800"
       >
-        Ir para meu painel
+        Continuar
       </button>
     </motion.div>
   );

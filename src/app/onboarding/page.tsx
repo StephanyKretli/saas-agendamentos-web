@@ -10,18 +10,20 @@ import {
   setOnboardingUsername,
   createOnboardingService,
   setOnboardingBusinessHours,
-  completeOnboarding,
+  setOnboardingBilling,
   logOnboardingEvent,
   type OnboardingBusinessHour,
+  type OnboardingBillingPayload,
 } from "@/features/onboarding/api/onboarding.api";
 import { slugifyUsername } from "@/features/onboarding/lib/onboarding-utils";
 import { StepLink } from "@/features/onboarding/components/guided/step-link";
 import { StepService } from "@/features/onboarding/components/guided/step-service";
 import { StepHours } from "@/features/onboarding/components/guided/step-hours";
 import { StepReady } from "@/features/onboarding/components/guided/step-ready";
+import { StepBilling } from "@/features/onboarding/components/guided/step-billing";
 
 const STEP_STORAGE_KEY = "syncro:onboarding:step";
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 function readStoredStep(): number {
   if (typeof window === "undefined") return 1;
@@ -155,23 +157,26 @@ export default function OnboardingPage() {
     }
   }
 
-  // Passo 4 (render): marca o fim do onboarding. Idempotente no backend.
-  const completedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (step !== 4 || completedRef.current) return;
-    completedRef.current = true;
-    (async () => {
-      try {
-        const res = await completeOnboarding();
-        if (res.username) setUsername(res.username);
-      } catch {
-        /* se falhar, o gate ainda solta (já tem serviço + horário) e o painel tenta de novo */
-      }
-      void logOnboardingEvent(4, "concluiu");
+  // Passo 5 — cobrança. Único passo que marca onboardingCompletedAt: falha
+  // aqui (cartão recusado, Asaas fora do ar) NUNCA refaz link/serviço/horário,
+  // só mantém a pessoa no passo 5 pra tentar de novo.
+  async function handleBilling(payload: OnboardingBillingPayload) {
+    setSaving(true);
+    setError(null);
+    try {
+      await setOnboardingBilling(payload);
+      void logOnboardingEvent(5, "concluiu");
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       queryClient.invalidateQueries({ queryKey: ["onboarding-state"] });
-    })();
-  }, [step, queryClient]);
+      goToDashboard();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Não consegui validar o cartão agora. Tente de novo.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function goToDashboard() {
     try {
@@ -225,7 +230,10 @@ export default function OnboardingPage() {
           {step === 3 && (
             <StepHours saving={saving} serverError={error} onContinue={handleHours} />
           )}
-          {step === 4 && <StepReady username={username} onGoToDashboard={goToDashboard} />}
+          {step === 4 && <StepReady username={username} onContinue={() => advanceTo(5)} />}
+          {step === 5 && (
+            <StepBilling saving={saving} serverError={error} onContinue={handleBilling} />
+          )}
         </div>
       </div>
     </main>

@@ -34,7 +34,7 @@ test("retomada do onboarding preserva o passo 1 (link) após abandono no passo 2
   // --- Gate manda pra /onboarding, passo 1 -------------------------------------
   await expect(page).toHaveURL(new RegExp(`${BASE_URL}/onboarding`), { timeout: 20000 });
   await expect(page.getByRole("heading", { name: "Seu link de agendamento" })).toBeVisible();
-  await expect(page.getByText("Passo 1 de 4")).toBeVisible();
+  await expect(page.getByText("Passo 1 de 5")).toBeVisible();
 
   // O link vem pré-preenchido com o username do cadastro.
   const linkInput = page.locator('input[placeholder="studio-beauty"]');
@@ -45,7 +45,7 @@ test("retomada do onboarding preserva o passo 1 (link) após abandono no passo 2
   await expect(page.getByRole("heading", { name: "Seu principal serviço" })).toBeVisible({
     timeout: 15000,
   });
-  await expect(page.getByText("Passo 2 de 4")).toBeVisible();
+  await expect(page.getByText("Passo 2 de 5")).toBeVisible();
 
   // --- Abandona (reload) e retoma -----------------------------------------------
   await page.reload();
@@ -54,6 +54,6 @@ test("retomada do onboarding preserva o passo 1 (link) após abandono no passo 2
   await expect(page.getByRole("heading", { name: "Seu principal serviço" })).toBeVisible({
     timeout: 15000,
   });
-  await expect(page.getByText("Passo 2 de 4")).toBeVisible();
+  await expect(page.getByText("Passo 2 de 5")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Seu link de agendamento" })).toHaveCount(0);
 });

@@ -20,7 +20,12 @@ export interface OnboardingState {
   hasService: boolean;
   hasBusinessHours: boolean;
   onboardingCompletedAt: string | null;
-  /** 1 | 3 | 4 — piso de retomada calculado pelo backend. */
+  /**
+   * 1 | 3 | 4 — piso de retomada calculado pelo backend. Nunca chega a 5: o
+   * backend não tem como saber que a pessoa já viu a tela do passo 4 (só
+   * onboardingCompletedAt, que agora só é setado no passo 5) — quem carrega
+   * esse piso pro passo 5 é o breadcrumb local (ver STEP_STORAGE_KEY).
+   */
   resumeStep: number;
 }
 
@@ -45,6 +50,18 @@ export interface OnboardingBusinessHour {
 }
 
 export type OnboardingEventAction = "entrou" | "concluiu" | "pulou";
+
+export interface OnboardingBillingPayload {
+  document: string; // CPF ou CNPJ, com ou sem máscara — o backend normaliza
+  cardHolderName: string;
+  cardNumber: string;
+  cardExpiryMonth: string; // "01".."12"
+  cardExpiryYear: string; // "2030"
+  cardCcv: string;
+  postalCode: string;
+  addressNumber: string;
+  phone: string;
+}
 
 // ---------------------------------------------------------------------------
 // Chamadas
@@ -95,12 +112,17 @@ export async function setOnboardingBusinessHours(
   return unwrap<{ created: number; allDaysOff: boolean }>(response);
 }
 
-export async function completeOnboarding(): Promise<{
-  onboardingCompletedAt: string | null;
-  username: string | null;
-  justCompleted: boolean;
-}> {
-  const response: any = await api.post("/onboarding/complete", {}, { headers: getAuthHeaders() });
+/**
+ * Passo 5 — único que marca onboardingCompletedAt. Não existe mais
+ * /onboarding/complete: pedir cartão antes de liberar o painel é o filtro
+ * que este passo implementa, então nada mais pode concluir o fluxo sozinho.
+ */
+export async function setOnboardingBilling(
+  payload: OnboardingBillingPayload,
+): Promise<{ onboardingCompletedAt: string | null; justCompleted: boolean }> {
+  const response: any = await api.post("/onboarding/billing", payload, {
+    headers: getAuthHeaders(),
+  });
   return unwrap(response);
 }
 

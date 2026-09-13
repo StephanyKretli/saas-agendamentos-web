@@ -177,7 +177,7 @@ function RegisterContent() {
             Crie a sua conta agora e ganhe 14 dias de acesso Premium gratuito. Acabe com as faltas dos clientes cobrando sinais via PIX.
           </p>
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-4 py-2 text-sm font-bold text-amber-600">
-            <Sparkles className="h-4 w-4" /> Sem cartão de crédito no registo
+            <Sparkles className="h-4 w-4" /> 14 dias grátis. Cancele antes e não paga nada.
           </div>
         </div>
       </div>
