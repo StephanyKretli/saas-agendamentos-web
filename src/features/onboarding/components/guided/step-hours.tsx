@@ -29,7 +29,7 @@ export function StepHours({ saving, serverError, onContinue }: Props) {
       <header className="space-y-2">
         <h1 className="text-2xl font-black text-zinc-100">Seus horários</h1>
         <p className="text-sm text-zinc-400 leading-relaxed">
-          Já deixamos um padrão. Só confirme os dias que você atende — ajuste o que
+          Já deixamos um padrão. Só confirme os dias que você atende, ajuste o que
           for diferente.
         </p>
       </header>
@@ -74,7 +74,7 @@ export function StepHours({ saving, serverError, onContinue }: Props) {
                   onChange={(e) => patch(row.weekday, { start: e.target.value })}
                   className="min-w-18 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-primary/50"
                 />
-                <span className="shrink-0 text-zinc-600">–</span>
+                <span className="shrink-0 text-zinc-600">-</span>
                 <input
                   type="time"
                   value={row.end}

@@ -22,7 +22,7 @@ export function StepReady({ username, onContinue }: Props) {
         toast.success("Link copiado!");
         setTimeout(() => setCopied(false), 2000);
       },
-      () => toast.error("Não consegui copiar — segure no link para copiar manualmente."),
+      () => toast.error("Não consegui copiar. Segure no link para copiar manualmente."),
     );
   }
 

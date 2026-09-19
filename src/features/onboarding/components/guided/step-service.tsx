@@ -33,7 +33,7 @@ export function StepService({ saving, serverError, onContinue }: Props) {
       <header className="space-y-2">
         <h1 className="text-2xl font-black text-zinc-100">Seu principal serviço</h1>
         <p className="text-sm text-zinc-400 leading-relaxed">
-          Só um por enquanto — o que você mais faz. Os outros você adiciona depois no painel.
+          Só um por enquanto: o que você mais faz. Os outros você adiciona depois no painel.
         </p>
       </header>
 

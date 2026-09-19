@@ -93,7 +93,7 @@ export function BusinessHourCard({ item }: { item: BusinessHour }) {
               {weekdaysMap[item.weekday] ?? `Dia ${item.weekday}`}
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              {item.start} — {item.end}
+              {item.start} às {item.end}
             </p>
           </div>
 

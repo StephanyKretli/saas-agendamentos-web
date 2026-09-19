@@ -5,6 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeAccessToken } from "@/lib/auth-storage";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import {
+  getCurrentUserId,
+  clearOnboardingStep,
+} from "@/features/onboarding/lib/onboarding-step-storage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -67,6 +71,8 @@ export function MobileBottomNav() {
   }, [pathname]);
 
   function handleLogout() {
+    // Le o id ANTES de derrubar o token (depois nao da mais pra decodificar).
+    clearOnboardingStep(getCurrentUserId());
     removeAccessToken();
     if (typeof window !== "undefined") window.location.href = "/login";
     else router.push("/login");

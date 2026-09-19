@@ -63,7 +63,7 @@ export function StepLink({ initialUsername, saving, serverError, onContinue }: P
       <header className="space-y-2">
         <h1 className="text-2xl font-black text-zinc-100">Seu link de agendamento</h1>
         <p className="text-sm text-zinc-400 leading-relaxed">
-          É o endereço que você vai colar na bio do Instagram. Confira o nome — dá para
+          É o endereço que você vai colar na bio do Instagram. Confira o nome: dá para
           mudar depois nas configurações.
         </p>
       </header>

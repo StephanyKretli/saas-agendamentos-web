@@ -32,7 +32,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Perfil",
     headline: "Libere o PIX e a agenda paga",
     description:
-      "Sem CPF ou CNPJ cadastrado, o Mercado Pago não libera cobranças de sinal — e sem sinal, falta continua custando caro.",
+      "Sem CPF ou CNPJ cadastrado, o Mercado Pago não libera cobranças de sinal, e sem sinal, falta continua custando caro.",
     checklist: [
       "Documento valida o Escudo Anti-Faltas",
       "Necessário para o Mercado Pago aceitar sua conta",
@@ -49,7 +49,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Vitrine",
     headline: "Sua vitrine já está no ar",
     description:
-      "Desde o seu cadastro você já tem um link próprio para receber agendamentos — não precisa fazer nada agora.",
+      "Desde o seu cadastro você já tem um link próprio para receber agendamentos. Não precisa fazer nada agora.",
     checklist: [
       "Link ativo desde o seu cadastro",
       "Pronto para compartilhar na bio do Instagram",
@@ -83,7 +83,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Equipe",
     headline: "Multiplique sua agenda com a equipe",
     description:
-      "Convide profissionais para dividir os agendamentos — ou nos diga que trabalha sozinha para seguir em frente.",
+      "Convide profissionais para dividir os agendamentos, ou nos diga que trabalha sozinha para seguir em frente.",
     checklist: [
       "Cada profissional tem a própria agenda",
       "Comissionamento configurável por serviço",

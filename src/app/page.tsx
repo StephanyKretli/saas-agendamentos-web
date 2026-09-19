@@ -290,7 +290,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
             <h2 className="text-4xl md:text-5xl font-black mb-6">Eleve o nível do seu atendimento hoje.</h2>
-            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">Experimente o Syncro por 14 dias. Você só é cobrado no fim do teste — cancele antes e não paga nada.</p>
+            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">Experimente o Syncro por 14 dias. Você só é cobrado no fim do teste. Cancele antes e não paga nada.</p>
             <Link 
               href="/register"
               className="inline-flex h-14 items-center justify-center rounded-2xl bg-zinc-100 px-10 font-bold text-zinc-950 transition-all hover:scale-105 shadow-[0_0_30px_rgba(244,244,245,0.15)]"

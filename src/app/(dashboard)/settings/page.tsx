@@ -532,7 +532,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                                     type={showToken ? "text" : "password"} 
                                     placeholder={
                                       (profile as any)?.mercadoPagoAccessTokenConfigured
-                                        ? `Token configurado (${(profile as any)?.mercadoPagoAccessTokenPreview ?? "****"}) — digite um novo para substituir`
+                                        ? `Token configurado (${(profile as any)?.mercadoPagoAccessTokenPreview ?? "****"}), digite um novo para substituir`
                                         : "APP_USR-..."
                                     }
                                     value={formData.mercadoPagoAccessToken} 

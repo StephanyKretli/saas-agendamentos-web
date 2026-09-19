@@ -9,6 +9,10 @@ import { toast } from "react-hot-toast";
 import { User, Mail, Link as LinkIcon, Lock, Sparkles, Eye, EyeOff, Phone } from "lucide-react";
 import { api } from "@/lib/api"; 
 import { saveAccessToken } from "@/lib/auth-storage";
+import {
+  getCurrentUserId,
+  clearOnboardingStep,
+} from "@/features/onboarding/lib/onboarding-step-storage";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 import { trackGoogleAdsSignupConversion } from "@/lib/google-ads";
 import { signIn } from "next-auth/react";
@@ -134,7 +138,10 @@ function RegisterContent() {
       const token = (loginResponse as any).access_token || (loginResponse as any).data?.access_token;
       if (token) {
         console.log("✅ Token recebido e salvo no navegador!");
-        saveAccessToken(token); 
+        saveAccessToken(token);
+        // Cadastro novo: garante que nenhum breadcrumb de onboarding de uma
+        // conta anterior (mesmo aparelho/navegador) sobrevive pra essa conta.
+        clearOnboardingStep(getCurrentUserId());
       } else {
         console.error("❌ ALERTA: A API não devolveu o access_token!");
       }

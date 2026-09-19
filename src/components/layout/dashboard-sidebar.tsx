@@ -5,6 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeAccessToken } from "@/lib/auth-storage";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import {
+  getCurrentUserId,
+  clearOnboardingStep,
+} from "@/features/onboarding/lib/onboarding-step-storage";
 import { Moon, Sun, Menu, X } from "lucide-react"; 
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion"; // 🌟 Importamos a magia
@@ -52,6 +56,10 @@ export function DashboardSidebar() {
   }, [pathname]);
 
   function handleLogout() {
+    // Le o id ANTES de derrubar o token (depois nao da mais pra decodificar) —
+    // sem isso o breadcrumb do onboarding desta conta ficava orfao no
+    // navegador, pronto pra vazar pra proxima conta que logar aqui.
+    clearOnboardingStep(getCurrentUserId());
     removeAccessToken();
     // Limpa o cache do React Query antes de sair: sem isso os dados do salao
     // anterior podiam aparecer para a proxima conta no mesmo dispositivo.

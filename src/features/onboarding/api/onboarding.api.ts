@@ -31,7 +31,7 @@ export interface OnboardingState {
    * 1 | 3 | 4 — piso de retomada calculado pelo backend. Nunca chega a 5: o
    * backend não tem como saber que a pessoa já viu a tela do passo 4 (só
    * onboardingCompletedAt, que agora só é setado no passo 5) — quem carrega
-   * esse piso pro passo 5 é o breadcrumb local (ver STEP_STORAGE_KEY).
+   * esse piso pro passo 5 é o breadcrumb local (ver onboarding-step-storage.ts).
    */
   resumeStep: number;
 }

@@ -16,28 +16,19 @@ import {
   type OnboardingBillingPayload,
 } from "@/features/onboarding/api/onboarding.api";
 import { slugifyUsername } from "@/features/onboarding/lib/onboarding-utils";
+import {
+  getCurrentUserId,
+  readOnboardingStep,
+  storeOnboardingStep,
+  clearOnboardingStep,
+} from "@/features/onboarding/lib/onboarding-step-storage";
 import { StepLink } from "@/features/onboarding/components/guided/step-link";
 import { StepService } from "@/features/onboarding/components/guided/step-service";
 import { StepHours } from "@/features/onboarding/components/guided/step-hours";
 import { StepReady } from "@/features/onboarding/components/guided/step-ready";
 import { StepBilling } from "@/features/onboarding/components/guided/step-billing";
 
-const STEP_STORAGE_KEY = "syncro:onboarding:step";
 const TOTAL_STEPS = 5;
-
-function readStoredStep(): number {
-  if (typeof window === "undefined") return 1;
-  const raw = Number(window.localStorage.getItem(STEP_STORAGE_KEY));
-  return Number.isFinite(raw) && raw >= 1 && raw <= TOTAL_STEPS ? raw : 1;
-}
-
-function storeStep(step: number) {
-  try {
-    window.localStorage.setItem(STEP_STORAGE_KEY, String(step));
-  } catch {
-    /* modo privado / storage bloqueado — sem breadcrumb, o servidor ainda retoma */
-  }
-}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -62,6 +53,10 @@ export default function OnboardingPage() {
   // Decide o passo inicial uma única vez, quando o estado do servidor chega.
   // Piso do servidor (tem serviço? tem horário?) OU o breadcrumb local — o que
   // estiver mais adiante. Fechar a aba no passo 3 não joga de volta pro 1.
+  // O breadcrumb é por usuário (ver onboarding-step-storage) e nunca pode
+  // levar a pessoa mais de um passo além do que o servidor sustenta — do
+  // contrário lixo de uma conta anterior no mesmo navegador empurra uma
+  // conta nova direto pro passo do cartão.
   const decidedRef = React.useRef(false);
   React.useEffect(() => {
     if (decidedRef.current) return;
@@ -79,9 +74,11 @@ export default function OnboardingPage() {
     }
 
     const serverFloor = state?.resumeStep ?? 1;
+    const userId = getCurrentUserId();
+    const storedStep = readOnboardingStep(userId, serverFloor, TOTAL_STEPS);
     const initial = Math.min(
       TOTAL_STEPS,
-      Math.max(1, serverFloor, readStoredStep()),
+      Math.max(1, serverFloor, storedStep ?? 0),
     );
     setUsername(slugifyUsername(state?.username || state?.nameSlug || ""));
     setStep(initial);
@@ -99,7 +96,7 @@ export default function OnboardingPage() {
 
   function advanceTo(next: number) {
     setError(null);
-    storeStep(next);
+    storeOnboardingStep(getCurrentUserId(), next);
     setStep(next);
   }
 
@@ -179,11 +176,7 @@ export default function OnboardingPage() {
   }
 
   function goToDashboard() {
-    try {
-      window.localStorage.removeItem(STEP_STORAGE_KEY);
-    } catch {
-      /* noop */
-    }
+    clearOnboardingStep(getCurrentUserId());
     window.location.href = "/dashboard";
   }
 
